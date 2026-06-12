@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data workspace: fetched raw XML and generated Parquet live under
+# data/ and are never committed, except the tiny sample used by tests.
+data/*
+!data/sample/
