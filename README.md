@@ -1,4 +1,3 @@
-
 # Serenata Europa
 
 An open-source pipeline that reads the EU's public procurement notices and flags
@@ -35,6 +34,9 @@ and flags concern institutions and companies, never private individuals.
 
 ## Status
 
+**Week 1 — scaffolding** (June 2026): package skeleton, tests, CI, and design
+records exist; the pipeline does not fetch, parse, or classify anything yet.
+The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
@@ -44,6 +46,23 @@ and flags concern institutions and companies, never private individuals.
 | 4 | Public API and versioned bulk data releases | not started |
 | 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |
 | 6 | Documentation, packaging, contributor onboarding | not started |
+
+## Layout
+
+```
+serenata_europa/
+  fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
+  parse/        # eForms and legacy-TED XML -> typed intermediate records
+  normalise/    # intermediate records -> the documented model -> Parquet
+  classify/     # hypothesis classifiers, one module each
+  cli.py        # entry point: serenata fetch|normalise|classify
+tests/
+docs/
+  adr/          # architecture decision records
+  data-model.md
+  hypotheses/   # one file per classifier: hypothesis, sources, base rates
+data/           # gitignored workspace, except the committed sample/
+```
 
 ## Running the tests
 
@@ -70,17 +89,3 @@ recorded in [`docs/adr/`](docs/adr/). Issues and questions welcome.
 [AGPL-3.0](LICENSE). The original Serenata used MIT; this project uses AGPL so
 that hosted forks of the pipeline stay open, which matters for a project whose
 entire value is that you can check its work.
-
-
-serenata/
-     fetch/        # TED API + bulk download, raw XML archiving
-     parse/        # eForms and legacy-TED XML -> typed intermediate records
-     normalise/    # intermediate records -> the documented model -> Parquet
-     classify/     # hypothesis classifiers, one module each
-     cli.py        # entry point: serenata fetch|normalise|classify
-   tests/
-   docs/
-     adr/
-     data-model.md
-     hypotheses/   # one file per classifier, written hypothesis + sources
-   data/           # gitignored except a tiny committed sample/ for tests
