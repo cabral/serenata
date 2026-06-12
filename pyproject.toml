@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Anomaly detection pipeline for EU public procurement notices (TED/eForms)"
 readme = "README.md"
 authors = [{ name = "Felipe B. Cabral", email = "felipe.benites@gmail.com" }]
-license = "AGPL-3.0-or-later"
+license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = []
