@@ -1,6 +1,6 @@
 # Classifier hypotheses
 
-One file per classifier, named after its module in `serenata_europa/classify/`.
+One file per classifier, named after its module in `serenata/classify/`.
 A classifier may not be merged without its file here. Each file must contain:
 
 1. **Hypothesis** — one falsifiable paragraph: what pattern is anomalous and

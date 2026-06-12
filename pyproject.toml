@@ -1,5 +1,5 @@
 [project]
-name = "serenata-europa"
+name = "serenata"
 version = "0.1.0"
 description = "Anomaly detection pipeline for EU public procurement notices (TED/eForms)"
 readme = "README.md"
@@ -13,7 +13,7 @@ dependencies = []
 Repository = "https://github.com/cabral/serenata"
 
 [project.scripts]
-serenata = "serenata_europa.cli:main"
+serenata = "serenata.cli:main"
 
 [dependency-groups]
 dev = [

@@ -2,7 +2,7 @@
 
 import pytest
 
-from serenata_europa.cli import STAGES, build_parser, main
+from serenata.cli import STAGES, build_parser, main
 
 
 def test_help_lists_every_stage(capsys):

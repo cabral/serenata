@@ -50,7 +50,7 @@ The milestone plan:
 ## Layout
 
 ```
-serenata_europa/
+serenata/
   fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
   parse/        # eForms and legacy-TED XML -> typed intermediate records
   normalise/    # intermediate records -> the documented model -> Parquet

@@ -20,7 +20,7 @@ STAGES = {
 
 def _version() -> str:
     try:
-        return version("serenata-europa")
+        return version("serenata")
     except PackageNotFoundError:  # running from an uninstalled source tree
         return "unknown"
 

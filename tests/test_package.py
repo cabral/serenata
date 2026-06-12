@@ -5,11 +5,11 @@ import importlib
 import pytest
 
 STAGE_MODULES = [
-    "serenata_europa",
-    "serenata_europa.fetch",
-    "serenata_europa.parse",
-    "serenata_europa.normalise",
-    "serenata_europa.classify",
+    "serenata",
+    "serenata.fetch",
+    "serenata.parse",
+    "serenata.normalise",
+    "serenata.classify",
 ]
 
 
