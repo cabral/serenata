@@ -128,8 +128,22 @@ places to start. The constraints that govern all code in this repository are in
 [`CLAUDE.md`](CLAUDE.md) (they apply to humans too), and design decisions are
 recorded in [`docs/adr/`](docs/adr/). Issues and questions welcome.
 
+## Data source and attribution
+
+© European Union, 1998–2026. Source: [TED](https://ted.europa.eu), the Supplement
+to the Official Journal of the European Union. Notices published there may be
+freely reused for commercial and non-commercial purposes, on condition that the
+source is acknowledged, under Commission Decision
+[2011/833/EU](https://eur-lex.europa.eu/eli/dec/2011/833/oj/eng).
+
+[`docs/data-reuse.md`](docs/data-reuse.md) records the specific terms, what this
+project does not do under them, and the still-open question of which licence
+this project's own published datasets carry.
+
 ## License
 
-[AGPL-3.0](LICENSE). The original Serenata used MIT; this project uses AGPL so
-that hosted forks of the pipeline stay open, which matters for a project whose
-entire value is that you can check its work.
+[AGPL-3.0](LICENSE) for the code. The original Serenata used MIT; this project
+uses AGPL so that hosted forks of the pipeline stay open, which matters for a
+project whose entire value is that you can check its work. The licence for
+published datasets is a separate decision and is not yet settled — see
+[`docs/data-reuse.md`](docs/data-reuse.md).

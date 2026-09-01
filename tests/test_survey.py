@@ -334,6 +334,17 @@ class TestRender:
             "202600157", ""
         ), "provenance is the package and its checksum, never a generation clock"
 
+    def test_it_carries_the_ted_attribution(self, tmp_path):
+        # Reuse of TED data is conditioned on acknowledging the source
+        # (Commission Decision 2011/833/EU). Generated, not pasted, so that
+        # regenerating the report cannot quietly drop the acknowledgement.
+        package = write_package(tmp_path, {"d/00000001_2026.xml": notice_xml()})
+        document = render(survey_package(package))
+
+        assert "© European Union" in document
+        assert "2011/833/EU" in document
+        assert "ted.europa.eu" in document
+
     def test_it_reports_what_was_surveyed(self, tmp_path):
         package = write_package(
             tmp_path,

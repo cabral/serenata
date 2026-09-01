@@ -21,6 +21,20 @@ from serenata.survey.paths import NoticeRejected, NoticeShape, read_notice
 #: than quietly dropping them.
 EFORMS_DIGITS = 8
 
+#: Reuse of TED data is conditioned on acknowledging the source (Commission
+#: Decision 2011/833/EU). Generated into every report rather than pasted into
+#: the file, so regenerating cannot quietly drop it. See docs/data-reuse.md.
+ATTRIBUTION = (
+    # The en dash in the year range is the form the official copyright notice
+    # uses; this is a legal acknowledgement, so it is reproduced rather than
+    # normalised to an ASCII hyphen.
+    "© European Union, 1998–2026. Source: [TED](https://ted.europa.eu), the "  # noqa: RUF001
+    "Supplement to the Official Journal of the European Union. Reuse authorised "
+    "under Commission Decision 2011/833/EU; see "
+    "[data-reuse.md](data-reuse.md). This report is a derived measurement — it "
+    "carries element paths and frequencies, never field values."
+)
+
 
 @dataclass
 class Survey:
@@ -114,6 +128,8 @@ def render(survey: Survey) -> str:
         "[open-work #2](open-work.md"
         "#2-survey-which-eforms-fields-notices-actually-populate)."
     )
+    add("")
+    add(f"> {ATTRIBUTION}")
     add("")
 
     add("## What was surveyed")
