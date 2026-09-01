@@ -108,11 +108,13 @@ uv run pytest
 ```
 
 Tests run offline against fixtures in `tests/fixtures/`; nothing in the test
-suite touches the network.
+suite touches the network, and the suite refuses a socket if anything tries.
 
 ## Contributing
 
-Early days. The constraints that govern all code in this repository are in
+Early days. What is open, and what each piece requires, is in
+[`docs/open-work.md`](docs/open-work.md) — a few items there are marked as good
+places to start. The constraints that govern all code in this repository are in
 [`CLAUDE.md`](CLAUDE.md) (they apply to humans too), and design decisions are
 recorded in [`docs/adr/`](docs/adr/). Issues and questions welcome.
 

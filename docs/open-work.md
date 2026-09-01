@@ -1,0 +1,275 @@
+# Open work
+
+Known gaps and the work planned against them, in enough detail to be picked up
+without a conversation first. The README's milestone table says where the
+project is going; this says what is actually open right now and what each item
+requires.
+
+Every item states the constraints that bind it. That is not ceremony: the rules
+in [`CLAUDE.md`](../CLAUDE.md) are strict enough that a well-meant change can
+violate one without its author noticing — an incompatible dependency licence, a
+field that quietly carries a person's name, a classifier without a measured
+false-positive profile. Those are cheaper to prevent than to review.
+
+If you pick something up, say so on the tracker so two people don't start the
+same thing. Questions are welcome before code, especially on the blocking items.
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | [Write the data model contract](#1-write-the-data-model-contract) | blocking |
+| 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | start here |
+| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | blocking |
+| 4 | [Build the parse stage](#4-build-the-parse-stage) | milestone 1 |
+| 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later |
+| 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
+| 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
+
+**Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
+6 is filed so it is not discovered late, not because it should be done now.
+
+---
+
+## 1. Write the data model contract
+
+`docs/data-model.md` is currently a table of contents, not a model. It is the
+contract the normalise stage is written against, so nothing downstream of parse
+can start until it exists. This is the gate for the rest of milestone 1.
+
+**What to write.** One relational model spanning eForms and legacy TED notices:
+
+- **Entities and relations** — contracting authorities, companies,
+  procedures/notices, lots, awards.
+- **Per-field provenance** — which source field (eForms BT code or legacy TED
+  element) each value came from, and from which notice.
+- **Absence semantics** — "not provided" and "not applicable" are different
+  facts and are recorded as such. They must not collapse into one NULL.
+- **Excluded by design** — fields dropped because they could carry a natural
+  person's name. These get no column, and the document says which and why.
+- **Keys** — how every derived record traces back to its source notice ID.
+
+**Constraints.** Constraint 2 (no personal data) decides what may appear here at
+all: a field that could name a natural person gets no column, not even a
+nullable one. Constraint 5: the model serves structured-field classifiers, not
+free text. [ADR-0001](adr/0001-parquet-duckdb-storage.md) fixes storage as
+Parquet queried with DuckDB.
+
+**Done when** the document describes every entity, its fields, their source
+mappings for both eForms and legacy TED, and the absence encoding; a reader can
+tell for any field which source element produced it; and [#2](#2-survey-which-eforms-fields-notices-actually-populate)
+has run, so the field list reflects what notices carry rather than what the
+spec permits.
+
+---
+
+## 2. Survey which eForms fields notices actually populate
+
+eForms permits far more fields than any notice uses, and usage varies by member
+state — optional fields are often empty. Designing the model from the spec would
+produce columns that are empty in practice and miss the ones that matter.
+Measure it, then write [#1](#1-write-the-data-model-contract) against the
+measurements.
+
+**What to do.** Take one or more archived daily packages (`serenata fetch`
+produces them; one day is ~3,190 notices) and report, per eForms field: how
+often it is present and non-empty, broken down by publishing member state and
+notice subtype, with the count of notices surveyed and the period covered.
+Output a document under `docs/` that #1 can cite. A throwaway script is fine,
+but say where it lives and how to re-run it.
+
+**Constraints.** Constraint 4 (determinism): the survey reads archived packages
+from disk, does not fetch, and gives the same numbers on the same archive.
+Constraint 2: it counts field *presence* — it does not reproduce values from
+person-carrying fields, not even as examples. Structured fields only.
+
+**Done when** the report covers a stated, reproducible set of notices,
+distinguishes "field absent" from "field present but empty", and is enough for
+someone writing #1 to decide which fields are worth modelling.
+
+**Good entry point:** needs no pipeline code, only the archive and the eForms
+field list. Start from one package rather than a year.
+
+---
+
+## 3. Document and drop the fields that can name a natural person
+
+Constraint 2 says person-carrying fields are dropped **at ingestion**, not
+stored and filtered later. The parse stage is where that happens, so it needs a
+written list of which fields those are before it is built — otherwise the rule
+is enforced by whoever happens to be reading the XML that day.
+
+This is a legal constraint (GDPR, Swedish defamation law), not a style
+preference. [ADR-0002](adr/0002-fetch-daily-bulk-packages.md) states the
+boundary the project works to: raw archives are a local cache of already-public
+official documents, and nothing derived from them carries a person's name.
+
+**What to do.** Produce a documented list, for both eForms and legacy TED, of
+every source field that can contain a natural person's name or personal contact
+details — contact points, sole traders, signatories, anything else the schemas
+allow. For each: the field identifier, why it is person-carrying, and whether it
+is dropped outright or has a non-personal part worth keeping (an organisation
+name sharing an element with a contact name, say).
+
+**Constraints.** The list is the authority the parse stage implements against;
+if a field is not on it, that was a decision, so the document says why. Err
+toward dropping — a dropped field that turns out to be safe costs a later
+change, a retained one that carries a name is a legal problem. Fields on this
+list get no column in #1.
+
+**Done when** the list exists under `docs/` covering both formats, every entry
+says what it is and why it is excluded, and #1 and #4 can both be written
+against it without further judgement calls about individual fields.
+
+---
+
+## 4. Build the parse stage
+
+`serenata/parse/` is a docstring. It turns archived notices into typed
+intermediate records, running offline against the packages `fetch` produces.
+Depends on [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person);
+easier once #1 lands, though the intermediate record shape need not wait for the
+full relational model.
+
+**What to do.**
+
+- Read notices out of the archived `.tar.gz` packages without extracting them to
+  disk first, where practical.
+- Dispatch on notice format. Packages mix both: eForms filenames carry eight
+  digits and the year (`00566631_2026.xml`), legacy TED six. Confirm against the
+  XML root element rather than trusting the filename alone.
+- Drop person-carrying fields here, per #3 — they must not reach an intermediate
+  record, not even to be filtered out downstream.
+- Carry the source notice ID on every record.
+
+**Constraints.** Constraint 4: parse is offline and deterministic — no network,
+no wall-clock in outputs, no unseeded randomness. Constraint 5: structured
+fields only, no NLP or LLM calls. The raw package is read-only input; parse
+never writes back into the archive.
+
+**Done when** both eForms and legacy TED notices from a real archived package
+parse into typed records; tests run offline against `tests/fixtures/` per that
+directory's rules; and a malformed notice fails loudly with its notice ID rather
+than being silently skipped.
+
+---
+
+## 5. Add an opt-in test for TED's live contract
+
+The fetch tests run against a stand-in TED whose responses were shaped from
+observed behaviour. They catch regressions in our logic but not a change on
+TED's side: if `ojs-number` were renamed, or the `limit` cap dropped below 250,
+the suite would stay green and a backfill would fail. We want a tripwire, kept
+out of the default suite so the offline promise holds.
+
+**What the current code assumes**, verified against the live service on
+2026-09-01 and recorded in [ADR-0002](adr/0002-fetch-daily-bulk-packages.md):
+
+- `POST https://api.ted.europa.eu/v3/notices/search`, no authentication.
+- `fields` must be non-empty — an empty list is rejected with HTTP 400.
+- `limit` is capped at 250; above that returns `SEARCH_EXCEEDS_MAX_LIMIT`.
+- A notice carries `ojs-number` in the form `"157/2026"`.
+- `GET https://ted.europa.eu/packages/daily/{yyyynnnnn}` returns a gzipped tar
+  whose members sit under one `YYYYMMDD_NNN` directory.
+
+**What to do.** Assert each of those against the real service, marked so they
+are excluded by default (a pytest marker, run explicitly or on a schedule). They
+must not run in the normal `pytest` invocation — `tests/conftest.py` refuses
+sockets precisely so the default suite cannot reach the network. Keep them cheap
+and polite: a handful of `limit: 1` requests, not a crawl.
+
+**Done when** `uv run pytest` still runs fully offline with the socket guard
+intact; the contract tests can be run on demand and fail loudly naming which
+assumption broke; and if they run in CI, they run on a schedule rather than on
+every push.
+
+---
+
+## 6. Handle corrected and withdrawn notices
+
+The fetch stage archives whole publication days as immutable snapshots. TED
+notices can later be corrected or withdrawn, and a snapshot cannot represent
+that: the archive keeps saying what was published that day, which is correct as
+history but not as current state.
+
+This matters more than it sounds. A flag raised against a notice that was later
+corrected or withdrawn is a flag against something that no longer stands, and
+the project's whole promise is that a reader can check a flag against its
+source. ADR-0002 flagged it as the main limitation of whole-day snapshots.
+
+**What to decide** — a design decision, so an ADR rather than a patch:
+
+- How a correction is detected. TED publishes corrigenda as notices in their own
+  right; the relation to the original has to be read from the data.
+- Whether corrections are folded into the normalised model, tracked as a version
+  chain, or both.
+- What a flag on a superseded notice should do — suppressed, marked, or
+  withdrawn — and how a published finding is retracted.
+
+**Constraints.** Raw archives stay immutable: handling corrections means new
+records, never rewriting an archived package. Constraint 4 still binds — the
+same archive and code produce the same flags, so "current state" must be derived
+from archived inputs, not from a live lookup at classify time.
+
+**Done when** an ADR records the decision and its consequences, and the data
+model (#1) can represent whichever answer it reaches.
+
+**Do not start here.** It depends on the normalised model existing, and the
+answer partly depends on what corrections look like once notices are parsed.
+Filed now so it is not discovered late.
+
+---
+
+## 7. Commit a small sample package for end-to-end tests
+
+`data/sample/` is empty and says so: "Empty until the pipeline can read it." Now
+that `fetch` produces packages, it can. A committed sample lets tests exercise a
+real archive end to end without fetching. A full daily package is ~20 MB
+compressed and 3,190 notices — far too large to commit, so the sample is a
+handful of notices in the same shape.
+
+**What to do.** Build a small `.tar.gz` in the layout a real package uses:
+notices under one `YYYYMMDD_NNN` directory, eForms filenames with eight digits
+and the year. Include both an eForms and a legacy TED notice so #4 can be tested
+against both. Commit it under `data/sample/` and document what it contains and
+where it came from.
+
+**Constraints.** `data/sample/README.md` and `tests/fixtures/README.md` set the
+rules and they are not negotiable: obviously synthetic notices (impossible IDs,
+names like "EXAMPLE BODY"), or real public notices reproduced accurately and
+named after their notice ID. Never plausible-looking fabrications — nothing that
+could be mistaken for a real finding. Never anything containing a natural
+person's name; if reproducing a real notice, check it against #3 first.
+
+**Done when** the sample is committed and small enough to live in git
+comfortably, its README says what each notice is and which case it covers, and a
+test reads it through the archive layer without special-casing.
+
+---
+
+## 8. Write CONTRIBUTING.md
+
+The README points contributors at `CLAUDE.md` for the constraints and
+`docs/adr/` for decisions, which is accurate but assumes a reader knows to look
+and knows what an ADR is for. There is no single page telling someone how to
+land a change here.
+
+**What to write.**
+
+- How to get set up and run what CI runs: `uv sync`, `uv run pytest`,
+  `uv run ruff check .`, `uv run ruff format --check .`.
+- The hard constraints restated plainly, with the reasoning: AGPL-compatible
+  dependencies only, no personal data, flags are anomalies and never
+  accusations, determinism, structured fields only, and no classifier without a
+  documented hypothesis and measured base rates.
+- When to open an ADR rather than putting a decision in code.
+- Commit and PR expectations: small, one concern each, imperative messages.
+- What tests are expected to look like, including that the suite runs offline
+  and `tests/conftest.py` enforces it.
+
+**Constraints.** `CLAUDE.md` is the source of truth. CONTRIBUTING.md restates it
+for a newcomer and links to it; where the two disagree, `CLAUDE.md` wins and
+CONTRIBUTING.md is what needs fixing.
+
+**Done when** someone who has never seen the project can go from clone to a PR
+that passes CI and does not violate a constraint, without reading `CLAUDE.md`
+first.
