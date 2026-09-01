@@ -22,5 +22,9 @@ jobs:
         run: uv run ruff check .
       - name: Check formatting
         run: uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy
+      # Runs the constraint gates in tests/test_constraints.py alongside the
+      # rest of the suite, and enforces the coverage floor from pyproject.toml.
       - name: Test
         run: uv run pytest

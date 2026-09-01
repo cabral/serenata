@@ -17,8 +17,14 @@ Repository = "https://github.com/cabral/serenata"
 serenata = "serenata.cli:main"
 
 [dependency-groups]
+# Development tooling only; none of this ships with the distributed package.
+# All permissive and AGPL-3.0 compatible, and tests/test_constraints.py checks
+# that on every run rather than trusting this comment.
 dev = [
+    "mypy>=1.13",
+    "pip-audit>=2.7",
     "pytest>=8",
+    "pytest-cov>=5",
     "ruff>=0.8",
 ]
 
@@ -45,6 +51,14 @@ select = [
     "RUF", # ruff-specific rules
 ]
 
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["serenata"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+# The coverage floor is a rot detector, not a ratchet: the suite currently sits
+# at 99% with every fetch module at 100%, and 95 leaves room to add a stage
+# without a red build while still catching a stage that arrives untested.
+addopts = "-ra --cov=serenata --cov-report=term-missing --cov-fail-under=95"
