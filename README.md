@@ -34,9 +34,10 @@ and flags concern institutions and companies, never private individuals.
 
 ## Status
 
-**Week 1 — scaffolding** (June 2026): package skeleton, tests, CI, and design
-records exist; the pipeline does not fetch, parse, or classify anything yet.
-The milestone plan:
+**Milestone 1, fetch stage landed** (September 2026): `serenata fetch` archives
+TED's daily notice packages, with provenance and checksums. Nothing parses or
+classifies them yet — the archive is raw XML, and the normalised dataset does
+not exist. The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
@@ -52,6 +53,10 @@ The milestone plan:
 ```
 serenata/
   fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
+    client.py   #   throttled, retrying HTTP access to TED's public endpoints
+    ojs.py      #   calendar date -> Official Journal S issue
+    archive.py  #   the raw archive and the manifests vouching for it
+    packages.py #   fetch a date range into the archive
   parse/        # eForms and legacy-TED XML -> typed intermediate records
   normalise/    # intermediate records -> the documented model -> Parquet
   classify/     # hypothesis classifiers, one module each
@@ -63,6 +68,33 @@ docs/
   hypotheses/   # one file per classifier: hypothesis, sources, base rates
 data/           # gitignored workspace, except the committed sample/
 ```
+
+## Fetching notices
+
+TED publishes one package per publication day, addressed by its Official
+Journal S issue number. `fetch` resolves the dates you ask for to those issues
+and archives each package whole, with a manifest recording its source URL,
+SHA-256 and size:
+
+```
+uv run serenata fetch --from 2026-08-17 --to 2026-08-21
+uv run serenata fetch --from 2026-08-17 --dry-run   # resolve, download nothing
+```
+
+```
+data/raw/ted/daily/2026/202600157.tar.gz
+data/raw/ted/daily/2026/202600157.manifest.json
+```
+
+Days that published nothing — weekends, holidays — are reported as such rather
+than guessed at from a calendar. Re-running is safe: a package already archived
+and matching its checksum is skipped, and one whose bytes have changed stops
+the run instead of being overwritten, because raw files are ground truth.
+
+The stage requests one package per publication day rather than one file per
+notice, spaces its requests, backs off when asked to, and identifies itself in
+its User-Agent. [ADR-0002](docs/adr/0002-fetch-daily-bulk-packages.md) records
+why, and the verified facts about TED's interfaces behind it.
 
 ## Running the tests
 
