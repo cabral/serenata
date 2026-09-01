@@ -9,3 +9,12 @@ root. The short version: fields that could name a natural person are dropped
 at parse time, ``fetch`` is the only stage allowed network access, and every
 stage is deterministic — same input and same code produce the same bytes.
 """
+
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("serenata")
+except PackageNotFoundError:  # running from an uninstalled source tree
+    __version__ = "unknown"
+
+__all__ = ["__version__"]
