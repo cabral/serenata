@@ -11,6 +11,13 @@ violate one without its author noticing — an incompatible dependency licence, 
 field that quietly carries a person's name, a classifier without a measured
 false-positive profile. Those are cheaper to prevent than to review.
 
+Most of them no longer depend on you noticing.
+[`tests/test_constraints.py`](../tests/test_constraints.py) enforces constraints
+1, 3, 4, 5 and 6 in CI, so a change that violates one fails with a message
+naming it. **Constraint 2 — no personal data — is the exception**, and it is the
+one with legal weight: mechanizing it needs the field list in item 3 below,
+which is part of why that item is marked blocking.
+
 If you pick something up, say so on the tracker so two people don't start the
 same thing. Questions are welcome before code, especially on the blocking items.
 
@@ -24,9 +31,11 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
+| 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise |
 
 **Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
-6 is filed so it is not discovered late, not because it should be done now.
+6 is filed so it is not discovered late, not because it should be done now. 9
+cannot start until there is pipeline output to compare.
 
 ---
 
@@ -273,3 +282,36 @@ CONTRIBUTING.md is what needs fixing.
 **Done when** someone who has never seen the project can go from clone to a PR
 that passes CI and does not violate a constraint, without reading `CLAUDE.md`
 first.
+
+---
+
+## 9. Add the rerun-identity determinism test
+
+Constraint 4 says the same input data and the same code produce the same bytes.
+`tests/test_constraints.py` enforces the static half of that — no clock, no
+unseeded randomness in the stages downstream of fetch — but a static check
+cannot prove the output is actually stable. Only running the pipeline twice can.
+
+The `coding` skill already describes this test as though it exists: *"The test
+for this is not a code review, it's a rerun: execute the pipeline twice on the
+same fixtures and compare output checksums. That test lives in CI and must pass
+on every classifier PR."* It does not exist, because nothing downstream of fetch
+produces output yet.
+
+**What to do.** Once `normalise` writes Parquet, run the pipeline twice over the
+same fixture archive into two directories and assert the outputs are
+byte-identical, comparing checksums rather than parsed contents. Parquet is only
+byte-stable if the writer makes it so — [ADR-0001](adr/0001-parquet-duckdb-storage.md)
+puts that responsibility on the normalise stage: fixed row ordering, fixed
+schema and writer settings, pinned writer version.
+
+**Constraints.** The test runs offline against committed fixtures
+([#7](#7-commit-a-small-sample-package-for-end-to-end-tests) provides them). It
+must not depend on a clock, so nothing in the compared output may carry a
+timestamp that is not itself derived from the source data — the fetch manifest's
+`fetched_at` is provenance and is not pipeline output.
+
+**Done when** the pipeline runs twice in CI on every push and the outputs match
+byte for byte, and the claim in the `coding` skill is true rather than aspirational.
+
+**Blocked** until [#4](#4-build-the-parse-stage) and the normalise stage exist.

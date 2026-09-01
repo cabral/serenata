@@ -110,6 +110,16 @@ uv run pytest
 Tests run offline against fixtures in `tests/fixtures/`; nothing in the test
 suite touches the network, and the suite refuses a socket if anything tries.
 
+The constraints this project runs on are executable, not just documented.
+[`tests/test_constraints.py`](tests/test_constraints.py) enforces them on every
+run: fetch is the only stage that may import a network library, no stage
+downstream of it may read a clock or an unseeded random source, no module may
+import an NLP or LLM library, no user-facing string may call a flagged record
+corrupt or fraudulent, every classifier must have a complete hypothesis file,
+and every dependency's licence must be AGPL-3.0 compatible. Some of those gates
+have nothing to check yet; they are written now so they bind the code that
+arrives later rather than being argued about afterwards.
+
 ## Contributing
 
 Early days. What is open, and what each piece requires, is in
