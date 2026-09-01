@@ -174,18 +174,28 @@ full relational model.
   record, not even to be filtered out downstream.
 - Carry the source notice ID on every record.
 
+**XML handling is decided — follow it.**
+[ADR-0003](adr/0003-xml-parsing-without-defusedxml.md) settles the question that
+was open here: parse with the standard library, refuse any notice carrying a
+document type declaration, and stream rather than build a whole tree. No
+`defusedxml`. `serenata/survey/paths.py` already implements exactly this and is
+the reference to copy, not a thing to improve on.
+
+Two measurements from that work bind the parse design:
+
+- **One real notice is 40 MB**, 1,569 times the 25 KB median and a fifth of its
+  whole day's uncompressed volume. A whole-tree parse cost 161 MB for that one
+  file; streaming costs 0.5 MB, and a full 3,190-notice package surveys in
+  4.4 MB peak. Parse handles far more data than the survey does, so
+  `fromstring(handle.read())` is not an option — it will meet this notice.
+- **No real notice uses a DTD**: zero `<!DOCTYPE` and zero `<!ENTITY` across all
+  3,190 notices in OJ S 157/2026. Refusing them costs nothing and closes entity
+  amplification, the one attack the standard library's parser is open to.
+
 **Constraints.** Constraint 4: parse is offline and deterministic — no network,
 no wall-clock in outputs, no unseeded randomness. Constraint 5: structured
 fields only, no NLP or LLM calls. The raw package is read-only input; parse
 never writes back into the archive.
-
-**Decide on XML hardening.** `serenata/survey/` uses the standard library's
-`xml.etree.ElementTree`, which is adequate for a report over a checksummed
-archive of official publications but is not hardened against hostile XML
-(entity expansion in particular). Parse ingests the same bytes into the actual
-dataset, so it is the right place to decide whether `defusedxml` becomes a
-runtime dependency. It is a real decision, not a formality: it adds a dependency
-to a project that currently has one.
 
 **Done when** both eForms and legacy TED notices from a real archived package
 parse into typed records; tests run offline against `tests/fixtures/` per that
