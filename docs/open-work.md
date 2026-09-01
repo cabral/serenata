@@ -32,6 +32,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise |
+| 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | needs a decision, not code |
 
 **Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
 6 is filed so it is not discovered late, not because it should be done now. 9
@@ -357,3 +358,30 @@ timestamp that is not itself derived from the source data — the fetch manifest
 byte for byte, and the claim in the `coding` skill is true rather than aspirational.
 
 **Blocked** until [#4](#4-build-the-parse-stage) and the normalise stage exist.
+
+---
+
+## 10. Settle the licence for published datasets
+
+`docs/field-usage.md` is the first dataset this project has published, and it
+carries no licence of its own. The code is [AGPL-3.0](../LICENSE); a data licence
+is a separate decision and is not implied by it.
+
+The intended default is **CC BY 4.0** — free reuse including commercially,
+provided credit is given, the licence is linked, and changes are indicated.
+Version 4.0 also covers the EU's sui generis database rights, which is the right
+that actually attaches to a table of measurements. It is the same licence TED
+applies to its own editorial content, so a derived dataset's terms sit legibly
+next to its source.
+
+**What to do.** Confirm the choice once, then record it in an ADR so it stops
+being an open question, and state it in [`data-reuse.md`](data-reuse.md) and on
+each published dataset. This is a decision to take deliberately rather than to
+infer: it governs everything the project publishes afterwards, and changing a
+data licence after third parties have relied on it is far more awkward than
+choosing it now.
+
+**Done when** an ADR records the licence and its reasoning, `data-reuse.md`
+states it rather than marking it open, and published datasets carry it.
+
+**Not blocking the pipeline**, but it does gate the first public data release.
