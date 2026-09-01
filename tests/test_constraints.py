@@ -30,9 +30,11 @@ import pytest
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent / "serenata"
 DOCS_ROOT = Path(__file__).resolve().parent.parent / "docs"
 
-#: Stages downstream of fetch. Everything here transforms or classifies, and
-#: must be reproducible from its inputs alone (constraint 4).
-OFFLINE_STAGES = ("parse", "normalise", "classify")
+#: Everything downstream of fetch: it transforms, classifies, or reports on
+#: archived input, and must be reproducible from that input alone (constraint
+#: 4). ``survey`` is here because the data model cites its numbers, so a report
+#: that changed between runs would be worse than no report.
+OFFLINE_STAGES = ("parse", "normalise", "classify", "survey")
 
 
 def python_files(*within: str) -> list[Path]:
