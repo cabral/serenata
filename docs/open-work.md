@@ -24,7 +24,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | # | Item | Status |
 |---|------|--------|
 | 1 | [Write the data model contract](#1-write-the-data-model-contract) | blocking |
-| 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | start here |
+| 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** |
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | blocking |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | milestone 1 |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open |
@@ -63,15 +63,39 @@ nullable one. Constraint 5: the model serves structured-field classifiers, not
 free text. [ADR-0001](adr/0001-parquet-duckdb-storage.md) fixes storage as
 Parquet queried with DuckDB.
 
+**Start from the measurements.** [`docs/field-usage.md`](field-usage.md) already
+answers which paths carry data and which never do, across 3,190 real notices, so
+the model can be argued from evidence rather than from the specification's
+optionality. Note what it does not answer: it reports element paths rather than
+eForms BT codes, and the model needs to decide which of the two it is written
+against.
+
 **Done when** the document describes every entity, its fields, their source
-mappings for both eForms and legacy TED, and the absence encoding; a reader can
-tell for any field which source element produced it; and [#2](#2-survey-which-eforms-fields-notices-actually-populate)
-has run, so the field list reflects what notices carry rather than what the
-spec permits.
+mappings for both eForms and legacy TED, and the absence encoding; and a reader
+can tell for any field which source element produced it.
 
 ---
 
 ## 2. Survey which eForms fields notices actually populate
+
+**Done.** [`docs/field-usage.md`](field-usage.md) reports 3,190 eForms notices
+from OJ S 157/2026: **456 element paths carry a value, 296 appear only as
+containers or blank elements.** `serenata/survey/` produces it, and rerunning it
+against the same archive reproduces the file byte for byte.
+
+One finding shapes [#1](#1-write-the-data-model-contract): the report gives
+element paths, not eForms BT codes. Mapping a path to its BT code needs the
+eForms SDK, which the offline survey does not carry, so the data model has to
+either carry that mapping itself or be written against paths and say so.
+
+Surveying more days is worthwhile before the model is finalised — one publication
+day is one day's mix of notice types and member states. Rerun with more packages:
+
+```
+python -m serenata.survey data/raw/ted/daily/2026/*.tar.gz -o docs/field-usage.md
+```
+
+The original statement of the problem follows.
 
 eForms permits far more fields than any notice uses, and usage varies by member
 state — optional fields are often empty. Designing the model from the spec would
@@ -154,6 +178,14 @@ full relational model.
 no wall-clock in outputs, no unseeded randomness. Constraint 5: structured
 fields only, no NLP or LLM calls. The raw package is read-only input; parse
 never writes back into the archive.
+
+**Decide on XML hardening.** `serenata/survey/` uses the standard library's
+`xml.etree.ElementTree`, which is adequate for a report over a checksummed
+archive of official publications but is not hardened against hostile XML
+(entity expansion in particular). Parse ingests the same bytes into the actual
+dataset, so it is the right place to decide whether `defusedxml` becomes a
+runtime dependency. It is a real decision, not a formality: it adds a dependency
+to a project that currently has one.
 
 **Done when** both eForms and legacy TED notices from a real archived package
 parse into typed records; tests run offline against `tests/fixtures/` per that
