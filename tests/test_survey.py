@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import io
 import tarfile
+from xml.etree.ElementTree import ParseError
 
 import pytest
 
 from serenata.survey import __main__ as survey_cli
-from serenata.survey.paths import ROOT, qualified_name, read_notice
+from serenata.survey.paths import (
+    CHUNK_BYTES,
+    ROOT,
+    NoticeRejected,
+    qualified_name,
+    read_notice,
+)
 from serenata.survey.report import Survey, is_eforms, render, survey_package
 
 CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -82,8 +89,8 @@ class TestQualifiedName:
 
 class TestReadNotice:
     def test_it_normalises_the_varying_root_so_paths_compare(self):
-        award = read_notice(notice_xml(root="ContractAwardNotice"))
-        contract = read_notice(notice_xml(root="ContractNotice"))
+        award = read_notice(io.BytesIO(notice_xml(root="ContractAwardNotice")))
+        contract = read_notice(io.BytesIO(notice_xml(root="ContractNotice")))
 
         assert award.root_type == "ContractAwardNotice"
         assert contract.root_type == "ContractNotice"
@@ -91,39 +98,118 @@ class TestReadNotice:
         assert f"{ROOT}/cbc:ID" in award.valued_paths & contract.valued_paths
 
     def test_it_records_paths_that_carry_a_value(self):
-        shape = read_notice(notice_xml())
+        shape = read_notice(io.BytesIO(notice_xml()))
         assert (
             f"{ROOT}/cac:TenderingProcess/cbc:SubmissionDeadline" in shape.valued_paths
         )
 
     def test_a_blank_element_is_empty_not_valued(self):
-        shape = read_notice(notice_xml(blank_deadline=True))
+        shape = read_notice(io.BytesIO(notice_xml(blank_deadline=True)))
         path = f"{ROOT}/cac:TenderingProcess/cbc:SubmissionDeadline"
 
         assert path in shape.empty_paths
         assert path not in shape.valued_paths
 
     def test_containers_are_empty_not_valued(self):
-        shape = read_notice(notice_xml())
+        shape = read_notice(io.BytesIO(notice_xml()))
         assert f"{ROOT}/cac:ContractingParty" in shape.empty_paths
 
     def test_it_reads_the_notice_subtype(self):
-        assert read_notice(notice_xml(subtype="29")).subtype == "29"
+        assert read_notice(io.BytesIO(notice_xml(subtype="29"))).subtype == "29"
 
     def test_it_collects_every_country_the_notice_names(self):
-        shape = read_notice(notice_xml(countries=("DEU", "FRA")))
+        shape = read_notice(io.BytesIO(notice_xml(countries=("DEU", "FRA"))))
         assert shape.countries == frozenset({"DEU", "FRA"})
 
     def test_it_carries_no_field_values_into_its_output(self):
         # Constraint 2: the survey counts presence. A party name must not be
         # reachable from the result, even though the parser walked past it.
-        shape = read_notice(notice_xml(name="EXAMPLE BODY"))
+        shape = read_notice(io.BytesIO(notice_xml(name="EXAMPLE BODY")))
         rendered = repr(shape)
 
         assert "EXAMPLE BODY" not in rendered
         assert f"{ROOT}/cac:ContractingParty/cac:Party/cac:PartyName/cbc:Name" in (
             shape.valued_paths
         )
+
+
+class TestDoctypeIsRefused:
+    """ADR-0003: refusing a DTD closes internal entity expansion.
+
+    The only attack the standard library's parser is still open to, and none of
+    the 3,190 real notices in OJ S 157/2026 carries a document type declaration.
+    """
+
+    BOMB = b"""<?xml version="1.0"?><!DOCTYPE lolz [
+      <!ENTITY a "AAAAAAAAAA">
+      <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+      <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+    ]><ContractNotice><cbc:ID xmlns:cbc="x">&c;</cbc:ID></ContractNotice>"""
+
+    def test_an_amplifying_notice_is_refused_before_it_expands(self):
+        with pytest.raises(NoticeRejected, match="document type declaration"):
+            read_notice(io.BytesIO(self.BOMB))
+
+    def test_a_plain_doctype_is_refused_too(self):
+        xml = b'<?xml version="1.0"?><!DOCTYPE r><r>ok</r>'
+        with pytest.raises(NoticeRejected, match="ADR-0003"):
+            read_notice(io.BytesIO(xml))
+
+    def test_an_ordinary_notice_is_not_refused(self):
+        assert read_notice(io.BytesIO(notice_xml())).root_type == "ContractNotice"
+
+    def test_a_refused_notice_is_counted_not_fatal(self, tmp_path):
+        # One bad document must not abort a 3,000-notice run.
+        package = write_package(
+            tmp_path,
+            {
+                "d/00000001_2026.xml": notice_xml(),
+                "d/00000002_2026.xml": self.BOMB,
+            },
+        )
+        survey = survey_package(package)
+
+        assert survey.notices == 1
+        assert survey.unreadable == 1
+        assert "1 members could not be read" in render(survey)
+
+    def test_malformed_xml_is_counted_not_fatal(self, tmp_path):
+        package = write_package(
+            tmp_path,
+            {
+                "d/00000001_2026.xml": notice_xml(),
+                "d/00000002_2026.xml": b"<unclosed>",
+            },
+        )
+        survey = survey_package(package)
+
+        assert survey.notices == 1
+        assert survey.unreadable == 1
+
+
+class TestStreaming:
+    def test_a_notice_larger_than_one_chunk_parses_correctly(self):
+        # The real archive holds a 40 MB notice; correctness must not depend on
+        # a document fitting in a single read.
+        filler = "".join(
+            f"<cac:AdditionalDocumentReference><cbc:ID>D{i}</cbc:ID>"
+            "</cac:AdditionalDocumentReference>"
+            for i in range(4000)
+        )
+        xml = notice_xml().replace(
+            b"</cac:TenderingProcess>",
+            f"</cac:TenderingProcess>{filler}".encode(),
+        )
+        assert len(xml) > CHUNK_BYTES, "fixture must span more than one chunk"
+
+        shape = read_notice(io.BytesIO(xml))
+
+        assert f"{ROOT}/cbc:ID" in shape.valued_paths
+        assert f"{ROOT}/cac:AdditionalDocumentReference/cbc:ID" in shape.valued_paths
+
+    def test_a_document_with_no_root_is_a_parse_error(self):
+        with pytest.raises(ParseError):
+            read_notice(io.BytesIO(b""))
 
 
 class TestIsEforms:

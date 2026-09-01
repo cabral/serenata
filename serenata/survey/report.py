@@ -12,8 +12,9 @@ import tarfile
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+from xml.etree.ElementTree import ParseError
 
-from serenata.survey.paths import NoticeShape, read_notice
+from serenata.survey.paths import NoticeRejected, NoticeShape, read_notice
 
 #: eForms notice filenames carry eight digits and a year; legacy TED schema
 #: notices carry six. This survey covers eForms only, and counts the rest rather
@@ -82,7 +83,13 @@ def survey_package(package: Path, into: Survey | None = None) -> Survey:
             if handle is None:  # pragma: no cover - a directory entry named .xml
                 survey.unreadable += 1
                 continue
-            survey.add(read_notice(handle.read()))
+            try:
+                # Streamed, not read whole: one notice in this package is 40 MB.
+                survey.add(read_notice(handle))
+            except (ParseError, NoticeRejected):
+                # Counted and reported rather than aborting a 3,000-notice run
+                # on one bad document. render() surfaces the count.
+                survey.unreadable += 1
     return survey
 
 

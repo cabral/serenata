@@ -13,11 +13,17 @@ constraint 2 does not bend for a report.
     python -m serenata.survey data/raw/ted/daily/2026/*.tar.gz -o docs/field-usage.md
 """
 
-from serenata.survey.paths import EFORMS_PREFIXES, NoticeShape, read_notice
+from serenata.survey.paths import (
+    EFORMS_PREFIXES,
+    NoticeRejected,
+    NoticeShape,
+    read_notice,
+)
 from serenata.survey.report import Survey, is_eforms, render, survey_package
 
 __all__ = [
     "EFORMS_PREFIXES",
+    "NoticeRejected",
     "NoticeShape",
     "Survey",
     "is_eforms",
