@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import socket
 from collections.abc import Callable
 
 import httpx
@@ -10,6 +11,25 @@ import pytest
 from serenata.fetch.client import RetryPolicy, TedClient
 
 from .support import FakeClock, make_package, search_body
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail any test that tries to open a socket.
+
+    The README promises the suite runs offline. That promise is worth
+    enforcing rather than trusting: a stubbed-out client is easy to wire up
+    wrongly, and a test that quietly reaches TED would be both slow and rude.
+    """
+
+    def refuse(*args: object, **kwargs: object) -> None:
+        raise AssertionError(
+            "this test tried to open a network connection; "
+            "fetch is the only networked stage and its tests use a stand-in TED"
+        )
+
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket, "create_connection", refuse)
 
 
 @pytest.fixture

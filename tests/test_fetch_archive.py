@@ -86,6 +86,15 @@ class TestManifest:
     def test_it_records_the_manifest_version(self, tmp_path):
         assert manifest_for(make_package()).manifest_version == 1
 
+    def test_a_manifest_that_is_not_an_object_is_a_conflict(self, tmp_path):
+        archive = RawArchive(tmp_path)
+        path = archive.manifest_path(ISSUE)
+        path.parent.mkdir(parents=True)
+        path.write_text('["not", "an", "object"]', encoding="utf-8")
+
+        with pytest.raises(ArchiveConflict, match="not a JSON object"):
+            archive.read_manifest(ISSUE)
+
 
 class TestChecksums:
     def test_it_hashes_a_file_the_same_way_hashlib_does(self, tmp_path):

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
 from datetime import date, datetime
 from pathlib import Path
 
@@ -99,7 +100,19 @@ def _add_fetch_arguments(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _run_fetch(args: argparse.Namespace) -> int:
+def _open_client(min_interval: float) -> TedClient:
+    """Build the client the fetch stage talks to TED through.
+
+    Kept as a seam so the tests can drive the command against a stand-in TED;
+    nothing else has a reason to substitute it.
+    """
+    return TedClient(min_interval=min_interval, retry=RetryPolicy())
+
+
+def _run_fetch(
+    args: argparse.Namespace,
+    open_client: Callable[[float], TedClient] = _open_client,
+) -> int:
     start: date = args.start
     end: date = args.end or start
     if end < start:
@@ -116,7 +129,7 @@ def _run_fetch(args: argparse.Namespace) -> int:
     def report(result: DayResult) -> None:
         print(result.describe())
 
-    with TedClient(min_interval=args.min_interval, retry=RetryPolicy()) as client:
+    with open_client(args.min_interval) as client:
         try:
             results = fetch_range(
                 client=client,
@@ -143,11 +156,15 @@ def _run_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    open_client: Callable[[float], TedClient] = _open_client,
+) -> int:
     args = build_parser().parse_args(argv)
 
     if args.command in IMPLEMENTED:
-        return _run_fetch(args)
+        return _run_fetch(args, open_client)
 
     print(
         f"serenata {args.command}: not implemented yet; "

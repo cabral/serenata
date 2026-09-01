@@ -192,6 +192,22 @@ class TestIntegrityNotes:
         assert archive.package_path(ISSUE).is_file(), "the served bytes are still truth"
         assert archive.read_manifest(ISSUE).member_prefix == "20260101_001"
 
+    def test_a_package_that_is_not_readable_as_a_tar_is_flagged(
+        self, client_factory, tmp_path
+    ):
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/notices/search"):
+                return httpx.Response(200, json=search_body())
+            return httpx.Response(200, content=b"not a gzipped tar at all")
+
+        archive = RawArchive(tmp_path)
+        with client_factory(handler) as client:
+            results = run(client, archive, date(2026, 8, 17))
+
+        assert results[0].outcome == Outcome.FETCHED
+        assert results[0].note == "package listing unreadable"
+        assert archive.read_manifest(ISSUE).member_prefix is None
+
 
 class TestDayResultDescription:
     def test_it_names_the_date_and_the_issue(
@@ -203,6 +219,23 @@ class TestDayResultDescription:
         line = results[0].describe()
         assert "2026-08-17" in line
         assert "OJ S 157/2026" in line
+
+    def test_a_note_is_shown_alongside_the_issue(self, client_factory, tmp_path):
+        package = make_package(prefix="20260101_001")
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/notices/search"):
+                return httpx.Response(200, json=search_body())
+            return httpx.Response(200, content=package)
+
+        with client_factory(handler) as client:
+            results = run(client, RawArchive(tmp_path), date(2026, 8, 17))
+
+        assert (
+            results[0]
+            .describe()
+            .endswith("(contains 20260101_001, expected 20260817_157)")
+        )
 
     def test_a_quiet_day_describes_itself_without_an_issue(
         self, client_factory, tmp_path

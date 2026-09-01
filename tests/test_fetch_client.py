@@ -10,6 +10,7 @@ from serenata.fetch.client import (
     USER_AGENT,
     FetchError,
     RetryPolicy,
+    TedClient,
 )
 
 from .support import search_body
@@ -195,6 +196,43 @@ def test_search_sends_iteration_mode_only_when_given_a_token(client_factory):
     assert payloads[1]["iterationNextToken"] == "abc"
 
 
+def test_a_search_body_that_is_not_an_object_is_a_fetch_error(client_factory):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=["not", "an", "object"])
+
+    with (
+        client_factory(handler) as client,
+        pytest.raises(FetchError, match="not an object"),
+    ):
+        client.search(query="x", fields=["ojs-number"], limit=1)
+
+
+def test_backoff_is_capped_at_the_maximum_delay():
+    policy = RetryPolicy(attempts=10, base_delay=1.0, factor=2.0, max_delay=5.0)
+    delays = [policy.delay_for(attempt) for attempt in range(6)]
+
+    assert delays == [1.0, 2.0, 4.0, 5.0, 5.0, 5.0]
+
+
+def test_a_client_it_opened_itself_is_closed_on_exit():
+    client = TedClient(min_interval=0.0)
+    with client:
+        pass
+
+    assert client._http.is_closed
+
+
+def test_an_injected_client_is_left_open_for_its_owner_to_close(client_factory):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=search_body())
+
+    client = client_factory(handler)
+    with client:
+        pass
+
+    assert not client._http.is_closed
+
+
 class TestDownload:
     def test_it_writes_the_bytes_and_reports_their_checksum(
         self, client_factory, tmp_path
@@ -240,3 +278,25 @@ class TestDownload:
             client.download("https://example.invalid/pkg", tmp_path / "p.tar.gz")
 
         assert calls == 1
+
+    def test_a_dropped_connection_is_retried_then_succeeds(
+        self, client_factory, tmp_path
+    ):
+        calls = 0
+        payload = b"recovered bytes"
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise httpx.ReadError("connection dropped mid-transfer")
+            return httpx.Response(200, content=payload)
+
+        destination = tmp_path / "202600157.tar.gz"
+        with client_factory(handler) as client:
+            result = client.download("https://example.invalid/pkg", destination)
+
+        assert calls == 2
+        assert destination.read_bytes() == payload
+        assert result.size_bytes == len(payload)
+        assert list(tmp_path.glob("*.part")) == [], "the failed attempt left nothing"
