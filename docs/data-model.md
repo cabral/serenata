@@ -643,8 +643,9 @@ Parquet, queried with DuckDB ([ADR-0001](adr/0001-parquet-duckdb-storage.md)).
   companion column nearly free, which is what allows the uniform rule above.
 
 One daily package of 3,190 notices produces 98,629 rows across the twelve
-tables, 4.2 MB on disk, in about 12 seconds and 360 MB of peak memory. Rerunning
-it writes byte-identical files, which
+tables, 4.2 MB on disk, in about 12 seconds and 339 MB of peak resident memory
+(see [`known-issues.md`](known-issues.md) for how the stages were measured).
+Rerunning it writes byte-identical files, which
 [#9](open-work.md#9-add-the-rerun-identity-determinism-test) asserts in CI.
 
 ## What this does not settle

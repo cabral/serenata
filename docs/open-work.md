@@ -301,10 +301,12 @@ measured on the same package:
   one exception documented: an element that becomes a record has no field of its
   own to hold stray text.
 
-Parse peaks at **89 MB** against the survey's 4.3 MB on the same package, because
+Parse allocates **94 MB** against the survey's 9 MB on the same package, because
 it keeps every value it extracts while the survey keeps counts. ADR-0003's memory
 consequence was clarified to say the bound it promises is on the XML tree, which
-is what that decision governs, not on what a stage chooses to keep.
+is what that decision governs, not on what a stage chooses to keep. Both figures
+are Python allocations under `tracemalloc`; [`known-issues.md`](known-issues.md)
+carries the full table and why the method has to be stated with the number.
 
 The last three findings closed the package layer:
 
@@ -684,7 +686,7 @@ this blocks milestone 2, not milestone 1.
 `serenata normalise` runs it over the archive.
 
 Against OJ S 157/2026: all 3,190 notices become **98,629 rows across twelve
-tables**, 4.2 MB on disk, in 12 seconds and 360 MB peak. Every table's key is
+tables**, 4.2 MB on disk, in 12 seconds and 339 MB peak resident memory. Every table's key is
 unique across those rows, reruns are byte-identical, and DuckDB queries the
 result directly.
 
@@ -713,7 +715,7 @@ correction is in `data-model.md` with the measurement that forced it:
 
 One thing the stage does not do is stream. It holds a package's rows in memory
 to sort them, because sorting is what makes the bytes stable, and peaks at
-360 MB per package. Packages are normalised one at a time, so a year does not
+339 MB per package. Packages are normalised one at a time, so a year does not
 accumulate.
 
 The original statement of the problem follows.

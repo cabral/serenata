@@ -170,40 +170,75 @@ Ingestion cannot resolve this. Whether a flag may be *published* about such an
 entity is [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status),
 and issue [#14](https://github.com/cabral/serenata/issues/14); it blocks the first finding rather than the pipeline.
 
-## Normalise holds a whole package in memory
+## What each stage costs, and how that was measured
 
-The stage accumulates one package's rows as Python dictionaries and sorts them
-before writing, because sorting is what makes the output byte-stable and a
-stable sort is what keeps ties in document order. One daily package peaks at
-**360 MB** for 98,629 rows, against parse's 89 MB, and takes 12 seconds.
+One daily package, 3,190 notices, on one laptop. The method matters more than
+the numbers: `tracemalloc` reports what Python allocated and **triples the
+runtime while it is on**, so a figure measured under it is not comparable to one
+that was not. Earlier versions of this file quoted times measured with it
+running beside memory figures that needed it, which made the pipeline look four
+times slower than it is.
 
-A year of notices is ~250 packages, and they are normalised one at a time, so
-the peak is per package rather than cumulative. If a package ever arrives that
-does not fit, the fix is to accumulate Arrow batches rather than dictionaries;
-the sort has to stay.
+| Stage | Wall clock | Peak RSS | Python allocations (under `tracemalloc`) |
+|---|---:|---:|---:|
+| survey | 6.0s | 41 MB | 9 MB |
+| parse | 7.9s | 111 MB | 94 MB |
+| normalise | 11.5s | 339 MB | 222 MB |
 
-## Parse is slower and heavier than the survey
+Each stage does strictly more than the one above it. The survey keeps counts;
+parse keeps every value it extracts, plus the sibling indices that let repeated
+blocks pair; normalise holds a package's rows as dictionaries so it can sort
+them, and sorting is what makes the output byte-stable.
 
-Per daily package of 3,190 notices: parse takes about 54s and peaks at 89 MB,
-against the survey's 21s and 4.3 MB. Both stream; neither holds the document.
-The difference is that parse keeps every value it extracts while the survey keeps
-counts, and that it maintains sibling indices for repeat pairing — `child_counts`
-allocates a dictionary per element, roughly 1.7 million per package, which is the
-likeliest remaining win if this ever matters.
+Two things worth knowing if this ever matters:
 
-At this cost a year of notices is a few hours, so it is recorded rather than
-worked on.
+- Parse's `child_counts` allocates a dictionary per element, roughly 1.7 million
+  per package. That is the likeliest remaining win.
+- Normalise's peak is per package, not cumulative — packages are normalised one
+  at a time — so a year of notices costs the same peak and about an hour of wall
+  clock, not more memory. If a package ever arrives that does not fit,
+  accumulating Arrow batches rather than dictionaries is the fix; the sort has to
+  stay.
 
-## No committed sample package
+At this cost a year of notices is an hour or two, so this is recorded rather
+than worked on.
+
+## No committed sample package, so CI never reads a real notice
 
 `tests/fixtures/` and `data/sample/` are empty: the parse and normalise tests
 build their notices in memory, which keeps a fixture and the test that reads it
-in one file but means **no test reads a real archived package**. The rerun
-identity test proves determinism over synthetic notices, and the figures quoted
-here for the real package were measured by hand rather than in CI.
+in one file but means **no test reads a package TED actually published**. The
+rerun-identity test proves determinism over synthetic notices.
 
 Tracked as [open-work #7](open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests)
 and issue [#16](https://github.com/cabral/serenata/issues/16).
+
+## Some figures in these documents are measured by hand, and can rot
+
+A claim about the data is only as good as the last time someone checked it, and
+this repository makes many. They fall in two groups, and only one of them is
+safe.
+
+**Generated, and checked on every run.** Everything in
+[`field-usage.md`](field-usage.md) — presence, countries, and how many times a
+path repeats inside a record. `serenata.survey` produces that file from the
+archive, regenerating it against the same packages reproduces it byte for byte,
+and `tests/test_data_model.py` and `tests/test_normalise_model.py` fail if the
+model stops agreeing with it.
+
+**Measured by hand, and not checked by anything.** The normalise stage's
+figures: 98,629 rows from one package, 4.2 MB, 46
+email-shaped values in 7 columns, 72 payable amounts published as `-1`, two
+notice UUIDs appearing twice. Each was measured against the local archive with a
+throwaway script that is not in the repository. **They were true when written
+and nothing will tell you when they stop being.** A second publication day would
+move most of them.
+
+The fix is the same one as above — a committed sample package makes a smaller
+version of each measurement a test — plus promoting the useful ones into
+generated output the way `field-usage.md` already is. Until then, treat an
+unsourced number in these documents as a measurement with a date on it, not as a
+property of the pipeline.
 
 ## A published dataset would carry the writer's version
 
@@ -218,8 +253,13 @@ code, and it will show up as one.
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) requires a Developer Certificate of
 Origin sign-off on every commit, which is how contributions are licensed. There
 is **no CI check for it**: a pull request without one passes the build and gets
-asked in review. Fine at this size, and worth automating before the project has
-more contributors than reviewers.
+asked in review.
+
+Fine at this size, and the reason to fix it is provenance rather than process —
+an unsigned commit in the history is a contribution whose licensing nobody
+recorded, and it is far easier to ask at the time than to chase later. The check
+is a few lines in the existing workflow and costs nothing to run (GitHub Actions
+is free for public repositories), so this is unstarted rather than blocked.
 
 ## CI runs on deprecated action runtimes
 
