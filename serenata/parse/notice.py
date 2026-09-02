@@ -5,6 +5,13 @@ Streamed, and refusing document type declarations, per ADR-0003:
 One real notice in OJ S 157/2026 is 40 MB, so reading a whole tree is not an
 option; each element is discarded once its value has been taken.
 
+The *element* is discarded, not the value. A notice's records are returned
+together, because every record carries the notice identifier and that is not
+known until `notice/cbc:ID` has been read — so the records cannot be emitted as
+they close. Memory is therefore bounded by one notice's extracted values rather
+than by its XML: 89 MB peak across the 3,190-notice package, against the
+survey's 4.3 MB for keeping only counts.
+
 Constraint 2 is enforced here, because here is where the values first exist.
 A path the drop list rejects is never read into a record, and an organisation
 flagged as a natural person loses the values that identify it. What the parser
@@ -34,7 +41,7 @@ from serenata.eforms import (
 )
 from serenata.parse.personal_data import (
     NATURAL_PERSON_INDICATOR,
-    is_dropped,
+    is_dropped_path,
     suppressed_for_natural_person,
 )
 from serenata.parse.records import CONTAINERS, NOTICE, Field, ParsedNotice, Record
@@ -51,6 +58,7 @@ class _Open:
     kind: str
     path: str
     ordinal: int
+    depth: int
     fields: list[Field] = field(default_factory=list)
 
 
@@ -130,6 +138,15 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
     root_element: str | None = None
     notice_id: str | None = None
     path: list[str] = []
+    #: ``path`` joined, one entry per depth, so the element path is not rebuilt
+    #: on every start and end event. This loop runs about 1.7 million times per
+    #: package; joining there is the difference between a minute and less.
+    joined: list[str] = []
+    #: Sibling index of each element on ``path``, so a repeated block's fields
+    #: can be told apart. See ``Field.occurrence``.
+    indices: list[int] = []
+    #: Per open element, how many children of each name it has seen.
+    child_counts: list[dict[str, int]] = []
     has_children: list[bool] = []
     open_elements: list[Element[str]] = []
     notice_fields: list[Field] = []
@@ -149,39 +166,72 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
                 if root_element is None:
                     root_element = _accept_root(element.tag, name)
                     guard.root_started()
-                path.append(ROOT if not path else name)
+                step = ROOT if not path else name
+                if child_counts:
+                    counts = child_counts[-1]
+                    index = counts.get(step, 0)
+                    counts[step] = index + 1
+                else:
+                    index = 0
+                path.append(step)
+                here = f"{joined[-1]}/{step}" if joined else step
+                joined.append(here)
+                indices.append(index)
+                child_counts.append({})
                 has_children.append(False)
                 if len(has_children) > 1:
                     has_children[-2] = True
                 open_elements.append(element)
-                here = "/".join(path)
                 kind = CONTAINERS.get(here)
                 if kind is not None:
                     open_containers.append(
-                        _Open(kind=kind, path=here, ordinal=seen[here])
+                        _Open(
+                            kind=kind,
+                            path=here,
+                            ordinal=seen[here],
+                            depth=len(path),
+                        )
                     )
                     seen[here] += 1
                 continue
 
-            here = "/".join(path)
+            here = joined[-1]
             had_children = has_children.pop()
 
             if open_containers and open_containers[-1].path == here:
                 finished.append(open_containers.pop())
-            elif not had_children and not is_dropped(here):
+            elif not is_dropped_path(here, path):
                 # Checked before the value is read, not after: a dropped field
                 # must never be constructed, only to be removed downstream.
                 text = (element.text or "").strip()
-                inner = open_containers[-1] if open_containers else None
-                base = inner.path if inner else ROOT
-                target = inner.fields if inner else notice_fields
-                target.append(
-                    Field(path=here[len(base) + 1 :], value=text, empty=not text)
-                )
-                if here == NOTICE_ID_PATH and text and notice_id is None:
-                    notice_id = text
+                # A leaf always becomes a field, blank or not. An element with
+                # children does not — it is structure — unless it also carries
+                # text of its own, which no notice in the surveyed package does
+                # and which would otherwise be dropped without a trace.
+                if not had_children or text:
+                    inner = open_containers[-1] if open_containers else None
+                    base = inner.path if inner else ROOT
+                    depth = inner.depth if inner else 1
+                    target = inner.fields if inner else notice_fields
+                    target.append(
+                        Field(
+                            path=here[len(base) + 1 :],
+                            value=text,
+                            empty=not text,
+                            attributes=tuple(
+                                (qualified_name(key), value)
+                                for key, value in element.attrib.items()
+                            ),
+                            occurrence=tuple(indices[depth:]),
+                        )
+                    )
+                    if here == NOTICE_ID_PATH and text and notice_id is None:
+                        notice_id = text
 
             path.pop()
+            joined.pop()
+            indices.pop()
+            child_counts.pop()
             open_elements.pop()
             # Release the element and unhook it from its parent, so a finished
             # subtree is not held for the length of the document.

@@ -25,6 +25,7 @@ from serenata.parse import (
     parse_package,
     read_notice,
 )
+from serenata.parse.records import AmbiguousField
 
 CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -448,6 +449,135 @@ class TestPackages:
             {"README.txt": b"not a notice", "00000001_2026.xml": eforms_notice()},
         )
         assert len(list(parse_package(package))) == 1
+
+
+class TestAttributes:
+    """An amount without its currency is a number, not a sum of money."""
+
+    def test_the_currency_of_an_amount_is_kept(self) -> None:
+        notice = parse(
+            eforms_notice(
+                results="<efac:LotTender><cac:LegalMonetaryTotal>"
+                '<cbc:PayableAmount currencyID="HUF">1000</cbc:PayableAmount>'
+                "</cac:LegalMonetaryTotal></efac:LotTender>"
+            )
+        )
+        tender = notice.of_kind("lot_tender")[0]
+        amount = tender.fields_at("cac:LegalMonetaryTotal/cbc:PayableAmount")[0]
+        assert amount.value == "1000"
+        assert amount.attribute("currencyID") == "HUF"
+        # docs/data-model.md promises amounts "as published, with their
+        # currency"; without the attribute normalise cannot honour that.
+
+    def test_a_coded_value_keeps_the_list_it_came_from(self) -> None:
+        notice = parse(
+            eforms_notice(
+                lots='<cac:ProcurementProjectLot><cbc:ID schemeName="Lot">'
+                "LOT-0001</cbc:ID></cac:ProcurementProjectLot>"
+            )
+        )
+        assert notice.of_kind("lot")[0].fields[0].attribute("schemeName") == "Lot"
+
+    def test_an_absent_attribute_reads_as_none(self) -> None:
+        notice = parse(eforms_notice())
+        assert notice.of_kind("lot")[0].fields[0].attribute("currencyID") is None
+
+    def test_dropped_elements_contribute_no_attributes(self) -> None:
+        notice = parse(eforms_notice())
+        for record in notice.records:
+            for item in record.fields:
+                assert "cac:Contact" not in item.path
+
+
+class TestRepeatedPaths:
+    """Repetition is ordinary in eForms, and pairing must survive it."""
+
+    STATS = "efac:ReceivedSubmissionsStatistics"
+
+    def _two_blocks(self) -> ParsedNotice:
+        return parse(
+            eforms_notice(
+                results=f"""
+                <efac:LotResult>
+                  <cbc:ID>RES-0001</cbc:ID>
+                  <{self.STATS}>
+                    <efbc:StatisticsCode>tenders</efbc:StatisticsCode>
+                    <efbc:StatisticsNumeric>1</efbc:StatisticsNumeric>
+                  </{self.STATS}>
+                  <{self.STATS}>
+                    <efbc:StatisticsCode>t-sme</efbc:StatisticsCode>
+                    <efbc:StatisticsNumeric>7</efbc:StatisticsNumeric>
+                  </{self.STATS}>
+                </efac:LotResult>"""
+            )
+        )
+
+    def test_a_repeated_path_is_not_collapsed(self) -> None:
+        result = self._two_blocks().of_kind("lot_result")[0]
+        assert result.values(f"{self.STATS}/efbc:StatisticsNumeric") == ("1", "7")
+
+    def test_asking_for_one_value_of_many_raises(self) -> None:
+        # Returning the first of several silently would hand a classifier one
+        # arbitrary bid count out of a set.
+        result = self._two_blocks().of_kind("lot_result")[0]
+        with pytest.raises(AmbiguousField, match="occurs 2 times"):
+            result.value(f"{self.STATS}/efbc:StatisticsNumeric")
+
+    def test_occurrence_pairs_a_code_with_its_number(self) -> None:
+        # The single-bid classifier reads exactly this pair. 2,866 lot results
+        # in OJ S 157/2026 carry several of these blocks.
+        result = self._two_blocks().of_kind("lot_result")[0]
+        codes = result.fields_at(f"{self.STATS}/efbc:StatisticsCode")
+        numbers = result.fields_at(f"{self.STATS}/efbc:StatisticsNumeric")
+        paired = {
+            code.occurrence[0]: (code.value, number.value)
+            for code in codes
+            for number in numbers
+            if code.occurrence[0] == number.occurrence[0]
+        }
+        assert paired == {0: ("tenders", "1"), 1: ("t-sme", "7")}
+
+    def test_a_single_value_is_still_returned_plainly(self) -> None:
+        notice = parse(eforms_notice())
+        assert notice.of_kind("lot")[0].value("cbc:ID") == "LOT-0001"
+
+    def test_a_missing_path_is_still_none(self) -> None:
+        notice = parse(eforms_notice())
+        assert notice.of_kind("lot")[0].value("cbc:Nonexistent") is None
+
+
+class TestMixedContent:
+    """Text on an element that also has children must not vanish."""
+
+    def test_it_is_recorded_rather_than_dropped(self) -> None:
+        # No notice in the surveyed package does this — zero occurrences in
+        # 897,471 leaves — but losing a value silently is the wrong failure.
+        notice = parse(
+            eforms_notice(
+                lots="<cac:ProcurementProjectLot><cbc:ID>LOT-0001</cbc:ID>"
+                "<cac:ProcurementProject>KEEP-ME<cbc:Name>N</cbc:Name>"
+                "</cac:ProcurementProject></cac:ProcurementProjectLot>"
+            )
+        )
+        lot = notice.of_kind("lot")[0]
+        assert lot.value("cbc:ID") == "LOT-0001"
+        assert lot.value("cac:ProcurementProject") == "KEEP-ME"
+        assert lot.value("cac:ProcurementProject/cbc:Name") == "N"
+
+    def test_text_on_a_container_element_is_the_documented_exception(self) -> None:
+        # A container becomes a Record, and a Record has no field of its own to
+        # hold stray text. The case is enumerable — the six paths in CONTAINERS
+        # — structurally meaningless in eForms, and measured at zero. Asserted
+        # here so the limit is known rather than discovered.
+        notice = parse(
+            eforms_notice(
+                lots="<cac:ProcurementProjectLot>STRAY"
+                "<cbc:ID>LOT-0001</cbc:ID></cac:ProcurementProjectLot>"
+            )
+        )
+        lot = notice.of_kind("lot")[0]
+        assert lot.value("cbc:ID") == "LOT-0001"
+        assert "STRAY" not in [item.value for item in lot.fields]
 
 
 def _paths(notice: ParsedNotice) -> set[str]:

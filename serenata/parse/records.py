@@ -42,6 +42,10 @@ CONTAINERS: dict[str, str] = {
 NOTICE = "notice"
 
 
+class AmbiguousField(LookupError):
+    """A path asked for as a single value occurs more than once."""
+
+
 @dataclass(frozen=True)
 class Field:
     """One element's value, and whether it carried one.
@@ -52,22 +56,55 @@ class Field:
 
     ``empty`` distinguishes an element that was present and blank from one that
     carried a value, which ADR-0006 needs and a plain empty string cannot say.
-    Only leaf elements become fields; a container that holds other elements is
-    structure, not a blank value.
+    A container that holds other elements is structure, not a blank value, and
+    produces no field — unless it also carries text of its own, which nothing
+    in the surveyed package does but which would otherwise vanish silently.
+    The exception is an element that becomes a `Record`: it has no field of its
+    own to hold stray text, so text there is not represented. That case is the
+    six paths in `CONTAINERS`, is structurally meaningless in eForms, and was
+    measured at zero occurrences.
+
+    ``attributes`` keeps the element's own attributes in document order. They
+    are not decoration: ``currencyID`` is what makes an amount a sum of money
+    rather than a number, and `docs/data-model.md` promises amounts are stored
+    "as published, with their currency". ``listName`` says which code list a
+    coded value belongs to, and without it the value is ambiguous across lists.
+
+    ``occurrence`` is the sibling index of every element along ``path``, from
+    the record's container down. It is what keeps repeated blocks apart: a lot
+    result carries several ``efac:ReceivedSubmissionsStatistics``, each with a
+    code and a number, and two fields belong to the same block exactly when
+    their occurrence agrees up to that block's depth. Without it the bid count
+    and the statistic it counts cannot be paired, which would leave the
+    single-bid classifier reading an unknown quantity.
     """
 
     path: str
     value: str
     empty: bool
+    attributes: tuple[tuple[str, str], ...] = ()
+    occurrence: tuple[int, ...] = ()
+
+    def attribute(self, name: str) -> str | None:
+        """The value of one attribute, or ``None`` if the element lacks it."""
+        for key, value in self.attributes:
+            if key == name:
+                return value
+        return None
 
 
 @dataclass(frozen=True)
 class Record:
     """One instance of a repeatable container, or the notice itself.
 
-    ``ordinal`` is the container's position among its siblings, counted in
-    document order, so two organisations in one notice stay distinguishable
-    without inventing an identifier for them.
+    ``ordinal`` is the container's position among all containers of its kind in
+    the notice, counted in document order — not its position among its
+    immediate siblings. The distinction matters when a notice carries more than
+    one ``ext:UBLExtension``: organisations in the second continue the
+    numbering rather than restarting. Document order within the notice is what
+    makes ``(notice_id, kind, ordinal)`` a stable key; it deliberately says
+    nothing about which parent a record hung from, because the model does not
+    yet carry that either.
     """
 
     kind: str
@@ -76,16 +113,37 @@ class Record:
     fields: tuple[Field, ...]
 
     def value(self, path: str) -> str | None:
-        """The value at ``path``, or ``None`` if this record has no such field.
+        """The single value at ``path``, or ``None`` if there is no such field.
+
+        Raises `AmbiguousField` when ``path`` occurs more than once — which is
+        ordinary in eForms, not exotic: 97% of lot records and 73% of lot
+        results in OJ S 157/2026 repeat at least one path. Returning the first
+        of several silently would hand a caller one arbitrary value out of a
+        set, and a classifier reading an arbitrary award criterion or bid count
+        is the failure this project cannot afford. Use `values` where repeats
+        are expected.
 
         ``None`` means the field is not here at all. A field that was present
         and blank is a `Field` with ``empty`` set and an empty ``value``, which
         is a different fact — see ADR-0006.
         """
-        for field in self.fields:
-            if field.path == path:
-                return field.value
-        return None
+        found = self.values(path)
+        if not found:
+            return None
+        if len(found) > 1:
+            raise AmbiguousField(
+                f"{path!r} occurs {len(found)} times in this {self.kind} "
+                f"record; use values() and pair them on Field.occurrence"
+            )
+        return found[0]
+
+    def values(self, path: str) -> tuple[str, ...]:
+        """Every value at ``path``, in document order."""
+        return tuple(field.value for field in self.fields if field.path == path)
+
+    def fields_at(self, path: str) -> tuple[Field, ...]:
+        """Every field at ``path``, in document order, with their occurrences."""
+        return tuple(field for field in self.fields if field.path == path)
 
 
 @dataclass(frozen=True)

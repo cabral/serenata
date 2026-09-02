@@ -255,6 +255,33 @@ Three things that measurement settled:
 - **Format dispatch is on the root element, not the filename.** A name is a
   claim; the root namespace is the document saying what it is.
 
+A review then found three ways the records lost information, all fixed and all
+measured on the same package:
+
+- **Repetition is ordinary, not exotic.** 97.3% of lot records and 73.3% of lot
+  results repeat at least one path. Returning the first of several would have
+  handed a classifier one arbitrary value: 2,866 lot results carry repeated
+  `efac:ReceivedSubmissionsStatistics` code/value pairs, which is the single-bid
+  classifier's own input. Fields now carry the sibling index of every element on
+  their path, so blocks pair; `value()` raises rather than guessing, and
+  `values()` returns them all. Every one of the package's statistics blocks
+  pairs, with none left over.
+- **Attributes were discarded**, so `currencyID` went with them — six currencies
+  appear on `PayableAmount` in one publication day, and `data-model.md` promises
+  amounts "as published, with their currency". Kept now, and reviewed against
+  constraint 2: the seven attribute names form closed vocabularies (`listName`
+  is the widest at 114 distinct values across 285,176 occurrences, all eForms
+  code-list identifiers), and none carries anything email- or phone-shaped.
+- **An element with both text and children lost its text.** Zero occurrences in
+  the package, but a silent loss is the wrong failure. Recorded now, with the
+  one exception documented: an element that becomes a record has no field of its
+  own to hold stray text.
+
+Parse peaks at **89 MB** against the survey's 4.3 MB on the same package, because
+it keeps every value it extracts while the survey keeps counts. ADR-0003's memory
+consequence was clarified to say the bound it promises is on the XML tree, which
+is what that decision governs, not on what a stage chooses to keep.
+
 The eForms vocabulary moved to `serenata/eforms.py`, shared with the survey. Not
 tidying: `personal_data.py`'s drop list is written in those prefixes, and a
 second copy that drifted would silently stop rejecting the paths it exists to
