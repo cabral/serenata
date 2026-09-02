@@ -95,6 +95,12 @@ notices. The notice is counted as `unnormalised` and named; the run continues.
 - The measurements above are one publication day. A repeat appearing in a
   column this ADR left scalar shows up as a `RepeatedValue` rather than as a
   wrong number, which is the failure mode this design is chosen for.
+- **The measurement is generated, not remembered.** `serenata.survey` reports
+  the maximum occurrences per record for every path, in
+  [`field-usage.md`](../field-usage.md), and a test checks every column's shape
+  against it. Surveying more packages regenerates the numbers; a column whose
+  claim stops being true fails the build rather than waiting to be noticed by
+  whoever writes the classifier that reads it.
 
 ## What would change this
 

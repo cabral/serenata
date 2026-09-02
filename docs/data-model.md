@@ -26,6 +26,14 @@ and the presence figures are that package's, from
 figure says so rather than the model pretending otherwise. `tests/test_data_model.py`
 fails if a path cited here is not one the survey actually measured.
 
+Presence is not the only thing measured, and it was not enough. This document
+originally gave one column to each path, which is a claim that the path occurs
+once per record — false for nine of them, and not visible in a presence figure.
+`field-usage.md` now reports **how many times each path occurs inside a single
+record**, and `tests/test_normalise_model.py` fails if a column that holds one
+value reads a path measured occurring more than once. The claim is checked
+rather than assumed.
+
 The shorthand `<ext>` stands for
 `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension`,
 and `<org>` for `<ext>/efac:Organizations/efac:Organization`.

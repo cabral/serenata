@@ -139,6 +139,13 @@ from OJ S 157/2026: **456 element paths carry a value, 296 appear only as
 containers or blank elements.** `serenata/survey/` produces it, and rerunning it
 against the same archive reproduces the file byte for byte.
 
+It reports one thing it did not originally: **how many times each path occurs
+inside a single record**. Presence alone let [#1](#1-write-the-data-model-contract)
+give a scalar column to a path that repeats — nine of them — and that error
+survived review because nothing had measured the property the column claimed.
+The report carries a `Max/record` column now, and
+`tests/test_normalise_model.py` checks every column's shape against it.
+
 One finding shapes [#1](#1-write-the-data-model-contract): the report gives
 element paths, not eForms BT codes. Mapping a path to its BT code needs the
 eForms SDK, which the offline survey does not carry, so the data model has to

@@ -37,12 +37,14 @@ from serenata.eforms import (
     qualified_name,
     stream_elements,
 )
+from serenata.parse.records import CONTAINERS
 
 #: Re-exported so this module stays the survey's single entry point for the
 #: vocabulary. The definitions live in ``serenata.eforms`` because the parse
 #: stage needs the identical prefix map — see that module.
 __all__ = [
     "CHUNK_BYTES",
+    "CONTAINERS",
     "EFORMS_PREFIXES",
     "HEADER_BYTES",
     "ROOT",
@@ -67,6 +69,10 @@ class NoticeShape:
     countries: frozenset[str] = field(default_factory=frozenset)
     valued_paths: frozenset[str] = field(default_factory=frozenset)
     empty_paths: frozenset[str] = field(default_factory=frozenset)
+    #: ``(path, times)`` — the most times a path occurred inside a single
+    #: record of this notice. Sorted, so the shape is comparable and the
+    #: report it feeds is deterministic.
+    max_per_record: tuple[tuple[str, int], ...] = ()
 
 
 def read_notice(source: IO[bytes]) -> NoticeShape:
@@ -76,22 +82,46 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
     been recorded, so cost tracks the deepest element rather than the whole
     document. The walk itself is `serenata.eforms.stream_elements`, shared with
     the parse stage; what is counted here is this module's own.
+
+    Two things are counted. **Presence** — which paths carry a value — is what
+    the data model was first written against. **Cardinality** is what it turned
+    out to need as well: how many times a path occurs inside a single record,
+    which is the difference between a column that can hold one value and one
+    that has to hold a set. A model written against presence alone will give a
+    scalar column to a path that repeats, and then quietly store one arbitrary
+    value of several.
     """
     root_type: str | None = None
     subtype: str | None = None
     countries: set[str] = set()
     valued: set[str] = set()
     empty: set[str] = set()
-    path: list[str] = []
+    #: Each open element's full path, so the path is not rejoined per event.
+    joined: list[str] = []
+    #: ``(container path, depth, counts)`` per open record. Counting within the
+    #: record rather than the notice is the whole point: a notice carries eight
+    #: lots, and it is what a *lot* repeats that decides the lot table's columns.
+    open_records: list[tuple[str, int, dict[str, int]]] = []
+    notice_counts: dict[str, int] = {}
+    maxima: dict[str, int] = {}
+
+    def fold(counts: dict[str, int]) -> None:
+        for path, count in counts.items():
+            if count > maxima.get(path, 0):
+                maxima[path] = count
 
     for event, name, element in stream_elements(source):
         if event == "start":
             if root_type is None:
                 root_type = name
-            path.append(ROOT if not path else name)
+            step = ROOT if not joined else name
+            here = f"{joined[-1]}/{step}" if joined else step
+            joined.append(here)
+            if here in CONTAINERS:
+                open_records.append((here, len(joined), {}))
             continue
 
-        here = "/".join(path)
+        here = joined[-1]
         text = (element.text or "").strip()
         (valued if text else empty).add(here)
 
@@ -100,7 +130,16 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
         if text and here.endswith(_COUNTRY_CODE_SUFFIX):
             countries.add(text)
 
-        path.pop()
+        if open_records and open_records[-1][1] == len(joined):
+            # The record this element opened is closing: fold its counts before
+            # counting the element itself, which belongs to the enclosing one.
+            fold(open_records.pop()[2])
+        counts = open_records[-1][2] if open_records else notice_counts
+        counts[here] = counts.get(here, 0) + 1
+
+        joined.pop()
+
+    fold(notice_counts)
 
     if root_type is None:  # pragma: no cover - stream_elements raises first
         raise ParseError("no root element")
@@ -113,4 +152,5 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
         # A path that holds a value somewhere is not "empty"; containers and
         # genuinely blank elements are what remain.
         empty_paths=frozenset(empty - valued),
+        max_per_record=tuple(sorted(maxima.items())),
     )

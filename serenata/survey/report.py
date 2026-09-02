@@ -61,6 +61,10 @@ class Survey:
     countries: Counter[str] = field(default_factory=Counter)
     #: path -> notices carrying a value for it
     valued: Counter[str] = field(default_factory=Counter)
+    #: path -> the most times it occurred inside one record, anywhere surveyed.
+    #: 1 means the path never repeats within the record that owns it, which is
+    #: what a scalar column in the data model requires.
+    max_per_record: Counter[str] = field(default_factory=Counter)
     #: path -> notices where it appears only as a container or blank element
     empty: Counter[str] = field(default_factory=Counter)
     #: path -> the country codes of notices that populate it
@@ -78,6 +82,9 @@ class Survey:
             self.path_countries.setdefault(path, set()).update(shape.countries)
         for path in shape.empty_paths:
             self.empty[path] += 1
+        for path, times in shape.max_per_record:
+            if times > self.max_per_record[path]:
+                self.max_per_record[path] = times
 
     def presence(self, path: str) -> float:
         return self.valued[path] / self.notices if self.notices else 0.0
@@ -204,12 +211,24 @@ def render(survey: Survey) -> str:
         "field is concentrated in a few member states."
     )
     add("")
-    add("| Present | Countries | Path |")
-    add("|---:|---:|---|")
+    add(
+        "**Max/record** is the most times the path was seen inside a single "
+        "record — a lot, an organisation, a lot result, or the notice itself "
+        "for paths outside those. **1 means the path never repeats**, which is "
+        "what a scalar column in [`data-model.md`](data-model.md) requires; "
+        "anything higher is a set, and a column that stored one of those values "
+        "would be storing an arbitrary one. `tests/test_normalise_model.py` "
+        "checks the model against this column."
+    )
+    add("")
+    add("| Present | Countries | Max/record | Path |")
+    add("|---:|---:|---:|---|")
     for path, count in sorted(survey.valued.items(), key=lambda kv: (-kv[1], kv[0])):
         share = 100 * count / survey.notices if survey.notices else 0
         countries = len(survey.path_countries.get(path, set()))
-        add(f"| {share:.1f}% | {countries} | `{path}` |")
+        add(
+            f"| {share:.1f}% | {countries} | {survey.max_per_record[path]} | `{path}` |"
+        )
     add("")
 
     container_only = sorted(set(survey.empty) - set(survey.valued))

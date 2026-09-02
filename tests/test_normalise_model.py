@@ -31,6 +31,7 @@ from serenata.normalise.model import (
 from serenata.parse.personal_data import is_dropped
 
 MODEL_DOC = Path(__file__).resolve().parent.parent / "docs" / "data-model.md"
+USAGE_DOC = Path(__file__).resolve().parent.parent / "docs" / "field-usage.md"
 
 EXT = (
     "notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/"
@@ -39,6 +40,11 @@ EXT = (
 
 #: A table row citing a column and the element path it reads.
 _ROW = re.compile(r"^\|\s*`([\w_]+)`\s*\|\s*`([^`]+)`\s*\|", re.M)
+
+#: A field-usage row: presence, countries, max occurrences per record, path.
+_USAGE_ROW = re.compile(
+    r"^\|\s*[\d.]+%\s*\|\s*\d+\s*\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|", re.M
+)
 
 
 def expand(path: str) -> str:
@@ -54,6 +60,12 @@ def documented() -> dict[str, str]:
         section.split("`", 1)[0]: section.split("`", 1)[1].split("\n### ")[0]
         for section in sections[1:]
     }
+
+
+def measured_cardinality() -> dict[str, int]:
+    """path -> the most times it occurred inside one record, as measured."""
+    text = USAGE_DOC.read_text(encoding="utf-8")
+    return {path: int(times) for times, path in _USAGE_ROW.findall(text)}
 
 
 def absolute(table: Table, path: str) -> str:
@@ -256,3 +268,64 @@ class TestKeys:
         names = table.field_names()
         missing = [name for name in table.key if name not in names]
         assert not missing, f"{table.name} is keyed on columns it lacks: {missing}"
+
+
+class TestColumnsMatchMeasuredCardinality:
+    """A column's shape is a claim about the data, and the data was measured.
+
+    This is the gate that did not exist when the model was written, and its
+    absence is why the model shipped saying a lot carries one contracting-system
+    code when 8,028 of 8,624 lots carry two. `docs/field-usage.md` now reports
+    how many times each path occurs inside a single record, so the claim is
+    checkable rather than assumed.
+
+    Only paths this project has actually seen are checked. A column whose path
+    appears in no surveyed notice is a different problem, and
+    `tests/test_data_model.py` is where it is caught.
+    """
+
+    def columns_with_measurements(self, kind: Kind) -> list[tuple[str, str, int]]:
+        measured = measured_cardinality()
+        return [
+            (f"{table.name}.{column.name}", absolute(table, column.path), times)
+            for table in TABLES
+            for column in table.columns
+            if column.kind is kind
+            and column.path
+            and (times := measured.get(absolute(table, column.path))) is not None
+        ]
+
+    def test_scalar_columns_read_paths_that_never_repeat(self) -> None:
+        repeating = [
+            f"{name} reads {path} (seen {times} times in one record)"
+            for name, path, times in self.columns_with_measurements(Kind.SCALAR)
+            if times > 1
+        ]
+        assert not repeating, (
+            f"columns holding one value whose path repeats: {repeating}. The "
+            "model has to carry the set, name which occurrence it means, or "
+            "become a table of its own (ADR-0007). Storing one of several is "
+            "storing an arbitrary one."
+        )
+
+    def test_set_columns_read_paths_that_do_repeat(self) -> None:
+        singular = [
+            f"{name} reads {path} (never seen more than {times} in one record)"
+            for name, path, times in self.columns_with_measurements(Kind.SET)
+            if times <= 1
+        ]
+        assert not singular, (
+            f"set columns whose path never repeats: {singular}. A list column "
+            "for a path that holds one value costs every reader an unnest for "
+            "nothing; either the measurement moved or the column should be "
+            "scalar."
+        )
+
+    def test_enough_columns_were_measured(self) -> None:
+        # The gate is worthless if the report stopped carrying the column and
+        # every lookup started returning nothing.
+        scalars = self.columns_with_measurements(Kind.SCALAR)
+        sets = self.columns_with_measurements(Kind.SET)
+        assert len(scalars) > 40, f"only matched {len(scalars)} scalar columns"
+        assert len(sets) >= 5, f"only matched {len(sets)} set columns"
+        assert len(measured_cardinality()) > 400
