@@ -29,6 +29,8 @@ open-work #11 — a publication question, not an ingestion one.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 #: A path passing through any of these carries personal data regardless of
 #: which leaf it ends at. Contact blocks name a human to telephone; a UBO *is*
 #: a natural person; a technical committee person is a named evaluator.
@@ -70,7 +72,17 @@ def is_dropped(path: str) -> bool:
     produces them. Consulted *before* a value is read: dropping means never
     constructing, not constructing and then removing.
     """
-    if DROPPED_SEGMENTS.intersection(path.split("/")):
+    return is_dropped_path(path, path.split("/"))
+
+
+def is_dropped_path(path: str, segments: Sequence[str]) -> bool:
+    """`is_dropped` for a caller that already holds the path's segments.
+
+    The parse stage walks a segment stack and asks this on every element it
+    keeps — several hundred thousand times per package — so re-splitting a
+    string it just built is worth avoiding. Same rule, same answer.
+    """
+    if DROPPED_SEGMENTS.intersection(segments):
         return True
     return path.endswith(DROPPED_SUFFIXES)
 

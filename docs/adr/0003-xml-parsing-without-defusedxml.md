@@ -63,7 +63,11 @@ a second line rather than the only one.
   and reported rather than aborting a run, so the survey and the pipeline stay
   usable and the refusal is visible.
 - Memory tracks the deepest element rather than the document, so a notice larger
-  than the 40 MB one already seen does not threaten the run.
+  than the 40 MB one already seen does not threaten the run. That bound is on
+  the XML tree, which is what this decision governs; a stage is additionally
+  bounded by whatever it keeps. The survey keeps counts and peaks at 4.3 MB,
+  while parse keeps every value it extracts and peaks at 89 MB on the same
+  package. Both are streaming; neither holds the document.
 - Streaming code is harder to read than `fromstring`. The comments earn that
   back by saying why; the measurements above are the justification.
 - We inherit expat's behaviour. If a future Python changed ElementTree's

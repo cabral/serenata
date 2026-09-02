@@ -61,6 +61,25 @@ validating that is entity resolution — milestone 3. Until then the model carri
 `company_id` as an attribute, **not** as a key, and joins across notices on it
 are the classifier author's risk to argue, not the model's promise.
 
+## What parse hands over
+
+The normalise stage does not read XML; it reads the records
+`serenata.parse` produces, and two properties of those records decide whether
+the columns below can be filled at all.
+
+**Repeats are preserved and paired.** A path may occur several times in one
+record — 97% of lot records and 73% of lot results in OJ S 157/2026 do this —
+so each field carries the sibling index of every element on its path.
+Two fields belong to the same repeated block exactly when those indices agree
+down to that block's depth. This is what makes
+`submissions_statistic_code` and `submissions_statistic_value` a pair rather
+than two unrelated lists, and a lot result may carry a dozen such blocks.
+
+**Attributes are kept.** `currencyID` is what makes an amount a sum of money,
+`listName` says which code list a coded value belongs to, and `languageID`
+distinguishes a buyer's name in one language from the same buyer's name in
+another. Six currencies appear on `PayableAmount` in a single publication day.
+
 ## Entities
 
 Nine tables. Each row carries `source_notice_id` and `source_publication_id`;

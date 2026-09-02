@@ -140,8 +140,15 @@ from serenata.parse import parse_package
 
 for notice in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
     for organisation in notice.of_kind("organisation"):
-        print(notice.notice_id, organisation.value("efac:Company/cac:PartyName/cbc:Name"))
+        names = organisation.values("efac:Company/cac:PartyName/cbc:Name")
+        print(notice.notice_id, names)
 ```
+
+`values` rather than `value` because a buyer may publish its name in several
+languages, and a field carries the attributes that tell them apart. Asking for
+one value where the notice holds several raises rather than returning an
+arbitrary one — 97% of lot records repeat at least one path, so this is the
+normal case, not an edge.
 
 Fields that can name a natural person are never read into a record — not
 recorded and filtered later, which is [a legal constraint](CLAUDE.md) rather
