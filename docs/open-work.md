@@ -14,9 +14,11 @@ false-positive profile. Those are cheaper to prevent than to review.
 Most of them no longer depend on you noticing.
 [`tests/test_constraints.py`](../tests/test_constraints.py) enforces constraints
 1, 3, 4, 5 and 6 in CI, so a change that violates one fails with a message
-naming it. **Constraint 2 — no personal data — is the exception**, and it is the
-one with legal weight: mechanizing it needs the field list in item 3 below,
-which is part of why that item is marked blocking.
+naming it. **Constraint 2 — no personal data — is the one with legal weight.**
+It is now mechanized for eForms: [`personal-data.md`](personal-data.md) is the
+field list, `serenata/parse/personal_data.py` is that document in executable
+form, and a test fails if the two disagree. The legacy TED half of the list does
+not exist yet, which is why item 3 stays open.
 
 If you pick something up, say so on the tracker so two people don't start the
 same thing. Questions are welcome before code, especially on the blocking items.
@@ -25,7 +27,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 |---|------|--------|
 | 1 | [Write the data model contract](#1-write-the-data-model-contract) | blocking |
 | 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** |
-| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | blocking |
+| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | milestone 1 |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open |
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later |
@@ -33,6 +35,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** |
+| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings |
 
 **Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
 6 is filed so it is not discovered late, not because it should be done now. 9
@@ -127,6 +130,40 @@ field list. Start from one package rather than a year.
 
 ## 3. Document and drop the fields that can name a natural person
 
+**Done for eForms; the legacy TED half is still open.**
+[`docs/personal-data.md`](personal-data.md) is the list, measured against the
+same 3,190 notices `field-usage.md` reports on rather than read off the
+specification. `serenata/parse/personal_data.py` is that document in executable
+form and `tests/test_personal_data.py` fails if the two disagree.
+
+What it settles: four subtrees are dropped outright wherever they appear
+(`cac:Contact`, `efac:UltimateBeneficialOwner`, `cac:TechnicalCommitteePerson`,
+and the free-text `efac:FieldsPrivacy/efbc:ReasonDescription`), matched on path
+segments so a field TED adds inside one of them is dropped on arrival. And the
+sole-trader case is handled: where `efbc:NaturalPersonIndicator` is true the
+organisation's identifying values are suppressed — including its registration
+identifier, which in Sweden is the owner's personnummer — while its opaque
+intra-notice key is kept, so the record is anonymised rather than deleted.
+
+Three findings from the measurement are worth carrying forward:
+
+- A contact e-mail and telephone number are present in **99.9%** of notices.
+  This was never a rare edge case to handle later.
+- A beneficial owner's identifier appears in **8.1%** of notices while their
+  surname appears in 0.8%, so a list built by looking for name-shaped elements
+  would have missed most of that subtree.
+- `efbc:NaturalPersonIndicator` is **absent from about 90% of notices**, and
+  absent is "not provided", not "false". What to do about that gap is
+  [#11](#11-decide-the-publication-rule-for-unknown-natural-person-status).
+
+**Still open: legacy TED.** OJ S 157/2026 contains zero legacy-schema notices,
+so there is no measured basis for that half and this project does not publish
+spec-read lists as though they were measured. Until it exists, parse must refuse
+a legacy notice rather than guess. Fetching a pre-2024 package is one command
+against an already-built stage; `personal-data.md` says which.
+
+The original statement of the problem follows.
+
 Constraint 2 says person-carrying fields are dropped **at ingestion**, not
 stored and filtered later. The parse stage is where that happens, so it needs a
 written list of which fields those are before it is built — otherwise the rule
@@ -160,9 +197,11 @@ against it without further judgement calls about individual fields.
 
 `serenata/parse/` is a docstring. It turns archived notices into typed
 intermediate records, running offline against the packages `fetch` produces.
-Depends on [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person);
-easier once #1 lands, though the intermediate record shape need not wait for the
-full relational model.
+The eForms drop list it must implement is now written and executable —
+[`personal-data.md`](personal-data.md) and `serenata/parse/personal_data.py` —
+so this no longer waits on [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person)
+for eForms notices. It still does for legacy ones. Easier once #1 lands, though
+the intermediate record shape need not wait for the full relational model.
 
 **What to do.**
 
@@ -171,8 +210,14 @@ full relational model.
 - Dispatch on notice format. Packages mix both: eForms filenames carry eight
   digits and the year (`00566631_2026.xml`), legacy TED six. Confirm against the
   XML root element rather than trusting the filename alone.
-- Drop person-carrying fields here, per #3 — they must not reach an intermediate
-  record, not even to be filtered out downstream.
+- Drop person-carrying fields here by calling
+  `personal_data.is_dropped()` **before** a value is read — they must not reach
+  an intermediate record, not even to be filtered out downstream. Apply
+  `suppressed_for_natural_person()` to an organisation flagged with
+  `efbc:NaturalPersonIndicator`. Note that this one needs an `efac:Organization`
+  subtree buffered before it can be decided, since the indicator can be read
+  after the name it governs; `personal-data.md` explains why that does not
+  conflict with ADR-0003's streaming requirement.
 - Carry the source notice ID on every record.
 
 **XML handling is decided — follow it.**
@@ -398,3 +443,48 @@ choosing it now.
 states it rather than marking it open, and published datasets carry it.
 
 **Not blocking the pipeline**, but it does gate the first public data release.
+
+---
+
+## 11. Decide the publication rule for unknown natural-person status
+
+`efbc:NaturalPersonIndicator` tells us an organisation is a sole trader, and
+[#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) suppresses
+that organisation's identifying values when it is true. The problem is what the
+indicator does *not* say: it is **absent from about 90% of notices**, and under
+this project's own absence semantics absent is "not provided", never "false".
+
+So for most organisations in the dataset, whether the record describes a company
+or a private individual trading under their own name is unknown, and no amount
+of reading the XML resolves it. Parse handles what it can; this is what is left.
+
+**Why it is not an ingestion question.** Dropping every organisation name would
+end the project — naming buyers and suppliers is the dataset. The names are kept
+because an organisation in an official procurement notice is institutional by
+default. The residual risk is not in storing them, it is in *publishing a flag*
+about one that turns out to be a person.
+
+**What to decide.**
+
+- Whether a flag may be published about an entity whose natural-person status is
+  unknown, or only about one positively corroborated as an organisation.
+- What corroboration counts. `cac:PartyLegalEntity/cbc:CompanyID` is present in
+  99.9% of notices, but a registration number does not by itself prove the
+  registrant is not a natural person — in Sweden a sole trader's is their
+  personnummer. Milestone 3's entity resolution against national company
+  registers is the obvious source of a better answer, and is a long way off.
+- Whether the answer differs for a buyer and for a supplier. Contracting
+  authorities are institutions by definition; suppliers are where sole traders
+  actually appear.
+
+**Constraints.** The legal guardrails route anything identifying a natural
+person away from project channels entirely, so the conservative answer is
+available and cheap: publish only where the entity is corroborated, and count
+the rest without naming them. Constraint 3 also binds — whatever is published is
+an anomaly, never an accusation.
+
+**Done when** an ADR records the rule and the verification interface can state,
+for any published flag, why the entity it names is an organisation.
+
+**Before the first finding, not before parse.** Nothing is published yet, so
+this blocks milestone 2, not milestone 1.
