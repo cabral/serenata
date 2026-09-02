@@ -78,9 +78,10 @@ serenata/
     archive.py  #   the raw archive and the manifests vouching for it
     packages.py #   fetch a date range into the archive
   eforms.py     # the eForms vocabulary and safe reading, shared by parse+survey
+  packages.py   # streaming notices out of an archived package, shared likewise
   parse/        # archived notices -> typed intermediate records (eForms only)
-    notice.py   #   stream one notice, dropping personal data as it reads
-    packages.py #   walk an archived package, failing loudly on a bad notice
+    notice.py   #   read one notice, dropping personal data as it reads
+    packages.py #   an outcome per notice: records, or why there are none
     records.py  #   the intermediate records, keyed by element path
     personal_data.py # the fields dropped at ingestion, executable
   normalise/    # intermediate records -> the documented model -> Parquet
@@ -136,12 +137,15 @@ results, contracts — become records of their own.
 
 ```python
 from pathlib import Path
-from serenata.parse import parse_package
+from serenata.parse import Unparsed, parse_package
 
-for notice in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
-    for organisation in notice.of_kind("organisation"):
+for outcome in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
+    if isinstance(outcome, Unparsed):
+        print("could not read", outcome.member, outcome.reason)
+        continue
+    for organisation in outcome.of_kind("organisation"):
         names = organisation.values("efac:Company/cac:PartyName/cbc:Name")
-        print(notice.notice_id, names)
+        print(outcome.notice_id, names)
 ```
 
 `values` rather than `value` because a buyer may publish its name in several
@@ -157,9 +161,10 @@ values identifying it are suppressed and its notice-scoped key is kept, so the
 record is anonymous but still joins. The list, with the measured frequency of
 every field on it, is [`docs/personal-data.md`](docs/personal-data.md).
 
-A notice that cannot be parsed fails loudly, naming itself. Nothing is skipped
-quietly: a stage that dropped what it could not read would leave gaps nobody
-could see.
+A notice that cannot be parsed is handed back as an `Unparsed`, naming itself
+and why. Nothing is skipped quietly: a stage that dropped what it could not read
+would leave gaps nobody could see, and one that raised would end the run at the
+first bad notice — losing the rest just as silently.
 
 ## Running the tests
 

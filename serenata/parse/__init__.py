@@ -18,12 +18,15 @@ repeatable container they belong to. Building the relational model out of those
 records is normalise's job, against `docs/data-model.md`.
 
     from serenata.parse import parse_package
-    for notice in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
-        ...
+    for outcome in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
+        if isinstance(outcome, Unparsed):
+            ...  # a notice that could not be read, named and counted
+        else:
+            ...  # its records
 """
 
 from serenata.parse.notice import read_notice
-from serenata.parse.packages import NoticeParseError, parse_package
+from serenata.parse.packages import Outcome, Unparsed, parse_package
 from serenata.parse.personal_data import (
     is_dropped,
     suppressed_for_natural_person,
@@ -40,9 +43,10 @@ __all__ = [
     "CONTAINERS",
     "NOTICE",
     "Field",
-    "NoticeParseError",
+    "Outcome",
     "ParsedNotice",
     "Record",
+    "Unparsed",
     "is_dropped",
     "parse_package",
     "read_notice",

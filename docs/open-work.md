@@ -282,6 +282,28 @@ it keeps every value it extracts while the survey keeps counts. ADR-0003's memor
 consequence was clarified to say the bound it promises is on the XML tree, which
 is what that decision governs, not on what a stage chooses to keep.
 
+The last three findings closed the package layer:
+
+- **Raising from inside a generator ended the run.** `parse_package` promised
+  callers they could catch a bad notice and continue, which a generator cannot
+  do — it closes, and every notice after the first failure was lost while
+  iteration appeared to end normally. It now yields `ParsedNotice | Unparsed`,
+  so a caller cannot mistake a truncated run for a complete one.
+- **The tarball walk was duplicated** and had already drifted on which members
+  count as notices. `serenata/packages.py` owns it now.
+- **The streaming walk was duplicated.** `serenata.eforms.stream_elements` owns
+  the parser, the prolog guard, the element release and the no-root check;
+  each reader keeps only what it accumulates. Measured cost: the survey +2% and
+  unchanged memory, parse +12% (48.6s to 54.4s per package). Recorded because it
+  is a real trade — about forty lines of duplication, including the release
+  pattern and the DTD refusal's plumbing, against 12% on the only stage that
+  touches every byte. If that ratio ever stops being worth it, the measurement
+  is here to argue from.
+
+Still open from the same review: `child_counts` allocates a dict per element,
+about 1.7 million per package, which is the likeliest remaining win if parse's
+runtime ever matters.
+
 The eForms vocabulary moved to `serenata/eforms.py`, shared with the survey. Not
 tidying: `personal_data.py`'s drop list is written in those prefixes, and a
 second copy that drifted would silently stop rejecting the paths it exists to
