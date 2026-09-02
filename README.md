@@ -194,11 +194,16 @@ arrives later rather than being argued about afterwards.
 
 ## Contributing
 
-Early days. What is open, and what each piece requires, is in
+Early days. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the page to read: setup,
+the constraints and why they exist, when a decision needs an ADR, and how a
+change is expected to arrive.
+
+What is open, and what each piece requires, is in
 [`docs/open-work.md`](docs/open-work.md) — a few items there are marked as good
-places to start. The constraints that govern all code in this repository are in
-[`CLAUDE.md`](CLAUDE.md) (they apply to humans too), and design decisions are
-recorded in [`docs/adr/`](docs/adr/). Issues and questions welcome.
+places to start, and each open one has an issue mirroring it. The constraints
+themselves live in [`CLAUDE.md`](CLAUDE.md) (they apply to humans too), design
+decisions in [`docs/adr/`](docs/adr/), and the limits of what exists in
+[`docs/known-issues.md`](docs/known-issues.md). Issues and questions welcome.
 
 ## Data source and attribution
 
