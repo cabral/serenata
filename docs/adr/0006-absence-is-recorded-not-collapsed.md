@@ -67,7 +67,8 @@ honestly, and a join that can be forgotten is a safeguard that will be. Putting
 the status beside the value makes the honest read the easy one.
 
 `withheld` is populated from the `field_privacy` table, which is parsed from
-`efac:FieldsPrivacy` and keyed to the record it qualifies. `not_applicable`
+`efac:FieldsPrivacy` and keyed to the record it qualifies — only partly, as it
+turned out; see the consequence below. `not_applicable`
 needs the eForms notice-subtype rules, which live in the SDK the pipeline does
 not carry; until it does, an inapplicable field is recorded `absent`. That is
 imprecise in the conservative direction — it understates knowledge rather than
