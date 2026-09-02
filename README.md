@@ -241,7 +241,7 @@ The constraints this project runs on are executable, not just documented.
 run: fetch is the only stage that may import a network library, no stage
 downstream of it may read a clock or an unseeded random source, no module may
 import an NLP or LLM library, no user-facing string may call a flagged record
-corrupt or fraudulent, every classifier must have a complete hypothesis file,
+`corrupt` or `fraudulent`, every classifier must have a complete hypothesis file,
 and every dependency's licence must be AGPL-3.0 compatible. Some of those gates
 have nothing to check yet; they are written now so they bind the code that
 arrives later rather than being argued about afterwards.

@@ -11,7 +11,7 @@ The six constraints, restated so they're in front of you, numbered as CLAUDE.md 
 
 1. AGPL-3.0. Everything that runs in production is published.
 2. No personal data at ingestion. Fields that can contain names, emails, or phone numbers of natural persons are dropped before storage.
-3. Flags are statistical anomalies, not accusations. No user-facing string, doc, or example output calls a flagged record corrupt, fraudulent, or guilty.
+3. Flags are statistical anomalies, not accusations. No user-facing string, doc, or example output calls a flagged record `corrupt`, `fraudulent`, or `guilty`.
 4. Deterministic outputs. Same input produces byte-identical output.
 5. Core classifiers read structured fields only. No free text, no NLP, no LLM calls, no fuzzy logic inside a classifier.
 6. No classifier merges without a written falsifiable hypothesis and a measured base rate.

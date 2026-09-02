@@ -55,7 +55,7 @@ law), not a style preference, and it is the one place to err on the side of
 dropping too much.
 
 **3. Flags are anomalies, never accusations.** No user-facing string, document
-or example calls a flagged record corrupt, fraudulent or guilty. Most flags have
+or example calls a flagged record `corrupt`, `fraudulent` or `guilty`. Most flags have
 innocent explanations, and the project publishes about institutions whose
 lawyers can read.
 

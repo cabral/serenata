@@ -15,9 +15,9 @@ Before finalizing any draft longer than a paragraph, re-read the rules above and
 
 ## Framing
 
-The project is open data infrastructure. It is never described as an anti-corruption campaign, a watchdog, a crusade, or a fight. This isn't spin: NGI funds internet commons, the design genuinely is infrastructure (reproducible pipelines, open data, open code), and the campaign framing creates legal exposure the infrastructure framing doesn't. The word "corruption" appears only when citing literature, quoting others, or describing the original Serenata's press coverage as historical fact.
+The project is open data infrastructure. It is never described as an "anti-corruption campaign", a watchdog, a crusade, or a fight. This isn't spin: NGI funds internet commons, the design genuinely is infrastructure (reproducible pipelines, open data, open code), and the campaign framing creates legal exposure the infrastructure framing doesn't. The word "corruption" appears only when citing literature, quoting others, or describing the original Serenata's press coverage as historical fact.
 
-Flags are anomalies, not accusations. The working vocabulary is anomaly, flag, pattern, outlier, deviation. Words that don't appear in project output about current findings: fraud, suspect, scandal, corrupt, guilty, rigged.
+Flags are anomalies, not accusations. The working vocabulary is anomaly, flag, pattern, outlier, deviation. Words that don't appear in project output about current findings: `fraud`, `suspect`, `scandal`, `corrupt`, `guilty`, `rigged`.
 
 Every published claim links to its source. A claim that can't point at a notice URL doesn't get published, it gets cut.
 
