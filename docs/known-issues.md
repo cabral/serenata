@@ -35,8 +35,10 @@ Nothing is published yet, so this is not yet an exposure; it is one before the
 first dataset release. It also cannot be fixed by adding paths to the list,
 because the problem is the value rather than the field. The options — reject the
 value, redact the match, or flag the row for review — differ in what they lose,
-and choosing needs a decision recorded rather than a regex added quietly. Not
-yet tracked as an issue.
+and choosing changes what "dropped at ingestion" means, which is a decision for
+counsel rather than a regex added quietly. Tracked as
+[open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields)
+and issue [#22](https://github.com/cabral/serenata/issues/22).
 
 ## The notice UUID is not unique, and looks like it should be
 
@@ -97,7 +99,9 @@ columns needs the eForms SDK this pipeline does not carry.
 Until it does, a withheld amount reads `present` with the value `-1`. Amounts
 are stored as published strings rather than numbers, so nothing silently turns
 the sentinel into a price, but **a classifier reading an amount must exclude
-`-1` explicitly**. This is the first thing to build after the normalise stage.
+`-1` explicitly**. This is the first thing to build after the normalise stage:
+[open-work #13](open-work.md#13-derive-the-withheld-status-from-the-eforms-field-identifiers)
+and issue [#21](https://github.com/cabral/serenata/issues/21).
 
 ## `not_applicable` is never derived
 

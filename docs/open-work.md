@@ -37,8 +37,8 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
 | 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings | [#14](https://github.com/cabral/serenata/issues/14) |
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
-| 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | not filed |
-| 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs a decision | not filed |
+| 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | [#21](https://github.com/cabral/serenata/issues/21) |
+| 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 
 **Order matters.** 2 fed 1; 1, 3, 4 and 12 are all done for eForms, and 12
 turned records into a dataset, which closed 9 with it. What comes next is 13:
@@ -47,10 +47,8 @@ the dataset now stores a withheld amount as the number `-1` with the status
 other thing 12 turned up and is a decision rather than a task. 6 is filed so it
 is not discovered late, not because it should be done now.
 
-Every open item below has a GitHub issue mirroring it, except 13 and 14, which
-building the normalise stage turned up and which are not filed yet. Say on the
-tracker that you are taking something, so two people do not start the same
-thing.
+Every open item below has a GitHub issue mirroring it. Say there that you are
+taking something, so two people do not start the same thing.
 
 ---
 
