@@ -16,13 +16,18 @@ In 2016, three of us in Brazil built
 an open-source system, crowdfunded by 1,296 people, that read 3 million
 parliamentary expense claims and flagged the ones that didn't add up. Volunteer
 verification of its findings led to 629 formal complaints against sitting
-congresspeople. The project is now stewarded by Open Knowledge Brasil.
+congresspeople. Those figures are the original project's own, from the years its
+founders ran it; it is now stewarded by Open Knowledge Brasil.
 
 Serenata Europa is a successor by one of its co-founders,
 [Felipe Cabral](https://github.com/cabral), redesigned for EU data:
 same method (a written, falsifiable hypothesis behind every classifier; human
 verification before publication; everything traceable to the source record),
 new territory.
+
+**This is an independent project.** It is not affiliated with, endorsed by, or
+run by Open Knowledge Brasil, and OKBr carries no responsibility for anything
+published here. The lineage above is shared history, not a partnership.
 
 ## What a flag means
 
@@ -147,13 +152,18 @@ source is acknowledged, under Commission Decision
 [2011/833/EU](https://eur-lex.europa.eu/eli/dec/2011/833/oj/eng).
 
 [`docs/data-reuse.md`](docs/data-reuse.md) records the specific terms, what this
-project does not do under them, and the still-open question of which licence
-this project's own published datasets carry.
+project does not do under them, and the licence this project's own published
+datasets carry.
 
 ## License
 
 [AGPL-3.0](LICENSE) for the code. The original Serenata used MIT; this project
 uses AGPL so that hosted forks of the pipeline stay open, which matters for a
-project whose entire value is that you can check its work. The licence for
-published datasets is a separate decision and is not yet settled — see
+project whose entire value is that you can check its work.
+
+Published datasets and findings are
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse them, including
+commercially, with credit. That is a separate grant from the code licence and
+neither implies the other — the reasoning is in
+[ADR-0004](docs/adr/0004-dataset-licence.md), the terms in
 [`docs/data-reuse.md`](docs/data-reuse.md).
