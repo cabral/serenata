@@ -48,13 +48,23 @@ report cannot quietly lose it. A test asserts it is present.
 
 ## Licence of this project's own outputs
 
-**Undecided, and deliberately so.** The intended default for published findings
-and datasets is CC BY 4.0 — the same licence TED applies to its own editorial
-content, which keeps a derived dataset's terms legible next to its source. It is
-not declared yet because that decision is meant to be confirmed once, before the
-first public release, and then recorded in an ADR so it stops being a question.
+**CC BY 4.0**, decided in [ADR-0004](adr/0004-dataset-licence.md). Published
+datasets and findings may be reused, including commercially, provided credit is
+given, the licence is linked, and changes are indicated.
 
-Until that ADR exists, `docs/field-usage.md` is published as part of this
-repository and carries no separate licence grant. The code is
-[AGPL-3.0](../LICENSE); a data licence is a distinct decision and is not implied
-by it.
+Version 4.0 specifically: it licenses the EU **sui generis database right**
+(Directive 96/9/EC) alongside copyright, and that right — arising from the
+investment in compiling a collection rather than from authorship — is what
+actually attaches to a table of measurements. It is also the licence TED applies
+to its own editorial content, so a derived dataset's terms sit legibly next to
+its source.
+
+The grant covers what this project produces. It does not relicense TED's
+underlying material, which stays under Commission Decision 2011/833/EU with the
+acknowledgement condition above; both notices travel together on every published
+dataset. The code is [AGPL-3.0](../LICENSE) — a separate grant, and neither one
+implies the other.
+
+Like the attribution line, the licence is generated into every report by
+`serenata.survey` rather than pasted in, and a test asserts it, so a regenerated
+dataset cannot quietly lose the terms it is published under.

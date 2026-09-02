@@ -32,7 +32,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise |
-| 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | needs a decision, not code |
+| 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** |
 
 **Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
 6 is filed so it is not discovered late, not because it should be done now. 9
@@ -362,6 +362,19 @@ byte for byte, and the claim in the `coding` skill is true rather than aspiratio
 ---
 
 ## 10. Settle the licence for published datasets
+
+**Done.** Published datasets and findings are **CC BY 4.0**, decided in
+[ADR-0004](adr/0004-dataset-licence.md) and stated in
+[`data-reuse.md`](data-reuse.md). `serenata.survey` generates the grant into
+every report beside the TED attribution line, and `tests/test_survey.py` asserts
+it, so a regenerated dataset cannot lose the terms it is published under.
+
+Version 4.0 specifically, because it licenses the EU sui generis database right
+alongside copyright — that right, not authorship, is what attaches to a table of
+measurements — and because it is the licence TED applies to its own editorial
+content. The code stays [AGPL-3.0](../LICENSE); neither grant implies the other.
+
+The original statement of the problem follows.
 
 `docs/field-usage.md` is the first dataset this project has published, and it
 carries no licence of its own. The code is [AGPL-3.0](../LICENSE); a data licence

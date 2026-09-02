@@ -35,6 +35,18 @@ ATTRIBUTION = (
     "carries element paths and frequencies, never field values."
 )
 
+#: The licence this project grants over its own measurements (ADR-0004).
+#: Distinct from the AGPL-3.0 covering the code: neither grant implies the
+#: other, and a dataset with no stated terms is unclear rather than free.
+#: Generated for the same reason as ATTRIBUTION above.
+LICENCE = (
+    "Licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by "
+    "the Serenata Europa project. This grant covers the measurements in this "
+    "report; the underlying TED material stays under the terms above, and the "
+    "project's code is separately licensed AGPL-3.0-only. See "
+    "[ADR-0004](adr/0004-dataset-licence.md)."
+)
+
 
 @dataclass
 class Survey:
@@ -130,6 +142,8 @@ def render(survey: Survey) -> str:
     )
     add("")
     add(f"> {ATTRIBUTION}")
+    add(">")
+    add(f"> {LICENCE}")
     add("")
 
     add("## What was surveyed")

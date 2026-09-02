@@ -345,6 +345,18 @@ class TestRender:
         assert "2011/833/EU" in document
         assert "ted.europa.eu" in document
 
+    def test_it_carries_the_dataset_licence(self, tmp_path):
+        # The AGPL-3.0 on the code does not licence the data; that is a
+        # separate grant (ADR-0004). It is generated for the same reason the
+        # attribution above is — a regenerated dataset must not lose the terms
+        # it is published under.
+        package = write_package(tmp_path, {"d/00000001_2026.xml": notice_xml()})
+        document = render(survey_package(package))
+
+        assert "CC BY 4.0" in document
+        assert "creativecommons.org/licenses/by/4.0" in document
+        assert "AGPL-3.0-only" in document
+
     def test_it_reports_what_was_surveyed(self, tmp_path):
         package = write_package(
             tmp_path,
