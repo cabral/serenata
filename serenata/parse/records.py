@@ -64,7 +64,9 @@ class Field:
     six paths in `CONTAINERS`, is structurally meaningless in eForms, and was
     measured at zero occurrences.
 
-    ``attributes`` keeps the element's own attributes in document order. They
+    ``attributes`` keeps the element's own attributes in document order, which
+    expat reports and ElementTree preserves — the order is stable across runs,
+    which constraint 4 needs and this relies on. They
     are not decoration: ``currencyID`` is what makes an amount a sum of money
     rather than a number, and `docs/data-model.md` promises amounts are stored
     "as published, with their currency". ``listName`` says which code list a

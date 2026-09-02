@@ -263,7 +263,8 @@ One row per bid. **This is where most classifier inputs live.**
 | `is_variant` | `<ext>/efac:NoticeResult/efac:LotTender/efbc:TenderVariantIndicator` | 16.7% |
 | `subcontracting_term_code` | `<ext>/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermCode` | 41.0% |
 
-`payable_amount` carries a currency attribute in the source. Currency
+`payable_amount` carries a currency attribute in the source, and so has a
+`payable_amount_currency` companion — see [Amounts](#amounts) below. Currency
 normalisation is a **normalise-stage** job, deterministic and documented, and it
 is not done yet: the model stores amount and currency as published, and a
 classifier comparing across currencies has to say how it converted.
@@ -338,6 +339,12 @@ produces a row scoped to the record it qualifies.
 This table is what turns a withheld field into the status
 `withheld` on the field it names, rather than into an unexplained NULL.
 
+**How its rows are built.** `efac:FieldsPrivacy` is not a parse container, so
+its values arrive as fields of whichever record encloses them, under a relative
+path ending in `efac:FieldsPrivacy/…`. Normalise reads those, and their
+`Field.occurrence` says which block each belongs to when a record carries
+several. The enclosing record is what the row is scoped to.
+
 ## Absence
 
 Full reasoning in [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md).
@@ -358,7 +365,7 @@ one.
 `present` and `empty` are directly observable. `empty` is also, measurably,
 rare: a pass over OJ S 157/2026 finds **zero** blank leaf elements among all
 897,471 — dropped paths included, since that count applies no filter — so
-the 295 paths `field-usage.md` reports as "containers or blank elements" are all
+the 296 paths `field-usage.md` reports as "containers or blank elements" are all
 containers. The status is kept because conflating a blank element with an absent
 one would be silently wrong and costs nothing to avoid, not because this package
 shows it happening. `absent` is the complement. `withheld` comes from
@@ -370,6 +377,48 @@ and honest rather than silently wrong.
 A classifier that reads a value without reading its status is a bug, and one
 that treats `withheld` as a low count is the specific bug this design exists to
 prevent.
+
+## Amounts
+
+**Every amount column has a `<column>_currency` companion**, taking the
+`currencyID` attribute of the element the amount came from. Six currencies
+appear on `PayableAmount` in a single publication day — RON, EUR, PLN, CZK, HUF
+and SEK — so an amount column on its own is a number, not a sum of money, and
+two of them cannot be compared or summed.
+
+The columns this applies to are `lot_tender.payable_amount`,
+`lot_result.highest_tender_amount` and `lot_result.lowest_tender_amount`. Any
+amount added later takes a companion in the same commit.
+
+Currency is recorded, never converted. Conversion needs a rate and a date, both
+of which are choices, and a classifier that compares across currencies has to
+state which it made.
+
+## Keys and ordinals
+
+Records of the same kind are told apart by `ordinal`: **the container's
+position among all containers of its kind in the notice, in document order**,
+not its position among its immediate siblings. The distinction shows when a
+notice carries more than one `ext:UBLExtension` — organisations in the second
+continue the numbering rather than restarting.
+
+`(source_notice_id, kind, ordinal)` is therefore a stable key, and it
+deliberately says nothing about which parent a record hung from. The model does
+not carry parentage either, so nothing downstream should infer it from the
+ordinal.
+
+## Repeated values
+
+A path may occur several times in one record — 97% of lot records and 73% of
+lot results do — so **asking a record for a single value at a repeated path is
+an error, not a coin toss**: `Record.value()` raises rather than returning an
+arbitrary one of several, and `Record.values()` returns them all in document
+order.
+
+Normalise fills a scalar column from a repeated path only where the model says
+which one it means. Where the model carries the whole set, it says so. Pairing
+across a repeated block — the statistic code with its number — is done on
+`Field.occurrence`, described in [What parse hands over](#what-parse-hands-over).
 
 ## Excluded by design
 

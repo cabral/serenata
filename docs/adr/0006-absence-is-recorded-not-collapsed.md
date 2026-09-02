@@ -19,11 +19,11 @@ A fifth, **not applicable**, follows from the notice subtype: an award field has
 no meaning in a prior information notice.
 
 The first three are directly observable. Two of them are also common; the
-second turns out not to be. [`field-usage.md`](../field-usage.md) reports 295
+second turns out not to be. [`field-usage.md`](../field-usage.md) reports 296
 paths appearing "only as containers or blank elements", which reads as though
 blank elements occur — but the survey does not separate the two, and the parse
 stage does. Across the 897,471 leaf elements in OJ S 157/2026 there are **zero**
-blank leaves: all 295 are containers. That denominator is every leaf in the
+blank leaves: all 296 are containers. That denominator is every leaf in the
 package, the 32,135 the drop list removes included — it was measured by a
 standalone pass applying no filter, not by the parser, which stops at a dropped
 path before reading its text.
