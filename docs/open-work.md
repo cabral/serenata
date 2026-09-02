@@ -23,24 +23,28 @@ not exist yet, which is why item 3 stays open.
 If you pick something up, say so on the tracker so two people don't start the
 same thing. Questions are welcome before code, especially on the blocking items.
 
-| # | Item | Status |
-|---|------|--------|
-| 1 | [Write the data model contract](#1-write-the-data-model-contract) | **done** |
-| 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** |
-| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open |
-| 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused |
-| 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open |
-| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later |
-| 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
-| 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | start here |
-| 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise |
-| 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** |
-| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings |
+| # | Item | Status | Issue |
+|---|------|--------|-------|
+| 1 | [Write the data model contract](#1-write-the-data-model-contract) | **done** | — |
+| 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** | — |
+| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
+| 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
+| 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open | [#17](https://github.com/cabral/serenata/issues/17) |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later | [#15](https://github.com/cabral/serenata/issues/15) |
+| 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here | [#16](https://github.com/cabral/serenata/issues/16) |
+| 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
+| 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise | [#12](https://github.com/cabral/serenata/issues/12) |
+| 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
+| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings | [#14](https://github.com/cabral/serenata/issues/14) |
+| 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **next** | [#11](https://github.com/cabral/serenata/issues/11) |
 
-**Order matters.** 2 fed 1; 1, 3 and 4 are all done for eForms, so the stage
-boundary has moved to normalise. 6 is filed so it is not discovered late, not
-because it should be done now. 9 cannot start until there is pipeline output to
-compare — which is now one stage away rather than two.
+**Order matters.** 2 fed 1; 1, 3 and 4 are all done for eForms, so
+[#12](#12-build-the-normalise-stage) is where the work goes next and is what
+turns records into a dataset. 9 unblocks the moment 12 writes anything. 6 is
+filed so it is not discovered late, not because it should be done now.
+
+Every open item below has a GitHub issue mirroring it. Say there that you are
+taking something, so two people do not start the same thing.
 
 ---
 
@@ -470,6 +474,15 @@ test reads it through the archive layer without special-casing.
 
 ## 8. Write CONTRIBUTING.md
 
+**Done.** [`CONTRIBUTING.md`](../CONTRIBUTING.md) covers setup and the four
+commands CI runs, the six constraints restated with their reasoning and which
+tests enforce them, when a decision needs an ADR rather than a comment, commit
+and pull request expectations, the fixture rules, and DCO sign-off — which the
+project's legal guardrails chose over a CLA, and which is asked for in review
+rather than checked mechanically.
+
+The original statement of the problem follows.
+
 The README points contributors at `CLAUDE.md` for the constraints and
 `docs/adr/` for decisions, which is accurate but assumes a reader knows to look
 and knows what an ADR is for. There is no single page telling someone how to
@@ -613,3 +626,44 @@ for any published flag, why the entity it names is an organisation.
 
 **Before the first finding, not before parse.** Nothing is published yet, so
 this blocks milestone 2, not milestone 1.
+
+---
+
+## 12. Build the normalise stage
+
+`serenata/normalise/` is a docstring. It is the last stage between the pipeline
+and a dataset: it takes the intermediate records `parse` produces and writes the
+model in [`data-model.md`](data-model.md) as Parquet.
+
+Everything upstream of it is done for eForms. Everything downstream of it —
+classifiers, the public API, the verification interface — is waiting on it.
+
+**What to do.**
+
+- Map records to the nine tables. `parse` hands over values keyed by element
+  path with their attributes and sibling indices; `data-model.md` says which
+  path fills which column.
+- Populate the **status column** beside every nullable column, per
+  [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md): `present`, `empty`,
+  `absent`, `withheld` from the `field_privacy` rows, and `absent` standing in
+  for `not_applicable` until the notice-subtype rules are available.
+- Populate the **currency companion** beside every amount, from the source
+  element's `currencyID`. An amount without it is a number, not a sum of money.
+- Handle repeated paths deliberately. `Record.value()` raises on them rather
+  than picking one, so every scalar column has to say which occurrence it means,
+  and anything pairing across a repeated block does it on `Field.occurrence`.
+- Write Parquet partitioned by `publication_year`, taken from the notice's
+  publication date and never from the run clock.
+
+**Constraints.** [ADR-0001](adr/0001-parquet-duckdb-storage.md) fixes Parquet
+queried with DuckDB, and puts byte-stability on this stage: fixed row ordering,
+fixed schema, pinned writer options and writer version. Constraint 4 is the
+whole point — sort explicitly before every write and never rely on scan order.
+Constraint 2 needs nothing new here if the model is followed, because a dropped
+field has no column to land in, but a new column is a personal-data decision and
+[`personal-data.md`](personal-data.md) is where it gets argued.
+
+**Done when** a real archived package becomes Parquet that DuckDB can query, the
+status and currency columns are populated rather than declared, and
+[#9](#9-add-the-rerun-identity-determinism-test) — running the pipeline twice
+and comparing checksums — passes in CI. That test is the proof, not a review.

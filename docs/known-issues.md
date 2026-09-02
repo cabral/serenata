@@ -5,8 +5,9 @@ surprise. Each entry says whether it is planned work, a deliberate limit, or an
 open question, and links to where it is tracked.
 
 This is the list a reader should check before trusting an output or building on
-the code. [`open-work.md`](open-work.md) is the companion: it says what is being
-built and what each piece needs.
+the code. [`open-work.md`](open-work.md) is the companion — what is being built
+and what each piece needs — and every open item there has an issue mirroring it.
+[`CONTRIBUTING.md`](../CONTRIBUTING.md) is how to work on any of it.
 
 ## The pipeline stops after parse
 
@@ -15,8 +16,8 @@ packages, `parse` turns them into typed records, and nothing yet writes Parquet
 or evaluates anything. Statements in this repository about what the data shows
 are measurements of the archive, not findings.
 
-Tracked as milestone 1 in the [README](../README.md); normalise is the next
-stage.
+Tracked as milestone 1 in the [README](../README.md) and issue [#11](https://github.com/cabral/serenata/issues/11);
+normalise is the next stage.
 
 ## Legacy TED notices are refused, not parsed
 
@@ -30,7 +31,8 @@ Nothing is blocked by this today. It bounds the pipeline to notices from roughly
 late 2024 onward, which is most of what matters for current procurement and none
 of the historical record.
 
-Tracked as [open-work #3](open-work.md#3-document-and-drop-the-fields-that-can-name-a-natural-person).
+Tracked as [open-work #3](open-work.md#3-document-and-drop-the-fields-that-can-name-a-natural-person)
+and issue [#13](https://github.com/cabral/serenata/issues/13).
 
 ## The survey and the parse stage disagree on what a notice is
 
@@ -43,7 +45,7 @@ In the surveyed package this changes nothing: it contains 3,190 eForms notices
 and zero legacy ones, and every filename matches its content. But
 [`field-usage.md`](field-usage.md)'s counts rest on the filename heuristic, so
 the figure to quote is "eForms-named notices", not "eForms notices". Parse's
-test is the better one and the survey should adopt it.
+test is the better one and the survey should adopt it — issue [#18](https://github.com/cabral/serenata/issues/18).
 
 ## `not_applicable` is never derived
 
@@ -97,7 +99,7 @@ current state.
 
 This has to be settled before any finding is published, because a flag against a
 superseded notice is a flag against something that no longer stands. Tracked as
-[open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
+[open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices) and issue [#15](https://github.com/cabral/serenata/issues/15).
 
 ## Whether an organisation is a person is often unknown
 
@@ -109,7 +111,7 @@ own name is not known from the notice.
 
 Ingestion cannot resolve this. Whether a flag may be *published* about such an
 entity is [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status),
-and it blocks the first finding rather than the pipeline.
+and issue [#14](https://github.com/cabral/serenata/issues/14); it blocks the first finding rather than the pipeline.
 
 ## Parse is slower and heavier than the survey
 
@@ -131,14 +133,16 @@ build their notices in memory, which keeps a fixture and the test that reads it
 in one file but means there is no end-to-end run against a real archived package
 in CI.
 
-Tracked as [open-work #7](open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests);
-the CLI command is noted in [#4](open-work.md#4-build-the-parse-stage).
+Tracked as [open-work #7](open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests)
+and issue [#16](https://github.com/cabral/serenata/issues/16); the CLI command is noted in [#4](open-work.md#4-build-the-parse-stage).
 
-## No contribution terms
+## Sign-off is asked for, not enforced
 
-The repository is public with no `CONTRIBUTING.md` and no DCO sign-off, so a
-pull request arriving today has unclear provenance. Tracked as
-[open-work #8](open-work.md#8-write-contributingmd).
+[`CONTRIBUTING.md`](../CONTRIBUTING.md) requires a Developer Certificate of
+Origin sign-off on every commit, which is how contributions are licensed. There
+is **no CI check for it**: a pull request without one passes the build and gets
+asked in review. Fine at this size, and worth automating before the project has
+more contributors than reviewers.
 
 ## CI runs on deprecated action runtimes
 

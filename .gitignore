@@ -225,5 +225,5 @@ data/*
 # Working notes and agent skills. These carry stakeholder relationships, brand
 # and funding status, and the project's own assessment of its legal exposure —
 # none of which belongs in a public repository. The standards that contributors
-# actually need are restated in CONTRIBUTING.md instead (docs/open-work.md #8).
+# actually need are restated in CONTRIBUTING.md instead.
 .claude/
