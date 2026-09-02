@@ -336,10 +336,13 @@ one.
 | `withheld` | the publisher marked it non-public via `efac:FieldsPrivacy` |
 | `not_applicable` | the notice subtype makes the field inapplicable |
 
-`present` and `empty` are directly observable, and the survey already
-distinguishes them: 456 paths carry a value in this package and 295 appear only
-as containers or blank elements. `absent` is the complement. `withheld` comes
-from `field_privacy`. `not_applicable` is derived from the eForms notice-subtype
+`present` and `empty` are directly observable. `empty` is also, measurably,
+rare: parsing OJ S 157/2026 finds **zero** blank leaf elements among 897,471, so
+the 295 paths `field-usage.md` reports as "containers or blank elements" are all
+containers. The status is kept because conflating a blank element with an absent
+one would be silently wrong and costs nothing to avoid, not because this package
+shows it happening. `absent` is the complement. `withheld` comes from
+`field_privacy`, and is observed. `not_applicable` is derived from the eForms notice-subtype
 rules and is the only one requiring a lookup the parse stage does not yet have —
 until it does, an inapplicable field is recorded `absent`, which is conservative
 and honest rather than silently wrong.

@@ -18,10 +18,19 @@ because a missing value in a notice has at least four distinguishable causes:
 A fifth, **not applicable**, follows from the notice subtype: an award field has
 no meaning in a prior information notice.
 
-The first three are directly observable and already measured.
-[`field-usage.md`](../field-usage.md) reports 456 paths carrying a value and 295
-appearing only as containers or blank elements across the same 3,190 notices, so
-present-and-blank is not a hypothetical.
+The first three are directly observable. Two of them are also common; the
+second turns out not to be. [`field-usage.md`](../field-usage.md) reports 295
+paths appearing "only as containers or blank elements", which reads as though
+blank elements occur — but the survey does not separate the two, and the parse
+stage does. Across the 897,471 leaf elements in OJ S 157/2026 there are **zero**
+blank leaves: all 295 are containers.
+
+So `empty` is permitted by the schema and produced by the parser, and was not
+observed in this package. It is kept as a distinct status because a state that
+costs nothing to carry and would be silently wrong to conflate is worth
+carrying — but it is **not** the case that justifies this decision, and saying
+otherwise would be inventing evidence. The case is `withheld`, below, which is
+observed.
 
 The fourth is the dangerous one. `efac:FieldsPrivacy` is how a publisher records
 that a field is deliberately non-public, sometimes with a date when it will be

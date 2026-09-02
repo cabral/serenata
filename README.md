@@ -39,14 +39,24 @@ and flags concern institutions and companies, never private individuals.
 
 ## Status
 
-**Milestone 1, fetch stage landed** (September 2026): `serenata fetch` archives
-TED's daily notice packages, with provenance and checksums, and
-[`serenata.survey`](serenata/survey/) has measured which eForms fields notices
-actually populate so the data model can be designed against evidence — the
-result is in [`docs/field-usage.md`](docs/field-usage.md).
+**Milestone 1, fetch and parse landed** (September 2026). `serenata fetch`
+archives TED's daily notice packages with provenance and checksums.
+[`serenata.survey`](serenata/survey/) measured which eForms fields notices
+actually populate, so the data model could be designed against evidence rather
+than against the specification — the result is
+[`docs/field-usage.md`](docs/field-usage.md), and the model it produced is
+[`docs/data-model.md`](docs/data-model.md).
+[`serenata.parse`](serenata/parse/) reads archived notices into typed records,
+dropping the fields that can name a person as it reads.
 
-Nothing parses or classifies anything yet: the archive is raw XML, the data
-model is unwritten, and the normalised dataset does not exist. The milestone
+Against a real publication day, all 3,190 notices parse, and 3.6% of every leaf
+element in the package — the contact details, beneficial owners and named
+evaluators listed in [`docs/personal-data.md`](docs/personal-data.md) — is
+dropped before it reaches a record.
+
+Nothing normalises or classifies yet: there is no Parquet dataset, no
+classifier, and no flag. Legacy pre-2024 TED notices are refused rather than
+parsed, because the mapping for them has never been measured. The milestone
 plan:
 
 | # | Milestone | Status |
@@ -67,7 +77,11 @@ serenata/
     ojs.py      #   calendar date -> Official Journal S issue
     archive.py  #   the raw archive and the manifests vouching for it
     packages.py #   fetch a date range into the archive
-  parse/        # eForms and legacy-TED XML -> typed intermediate records
+  eforms.py     # the eForms vocabulary and safe reading, shared by parse+survey
+  parse/        # archived notices -> typed intermediate records (eForms only)
+    notice.py   #   stream one notice, dropping personal data as it reads
+    packages.py #   walk an archived package, failing loudly on a bad notice
+    records.py  #   the intermediate records, keyed by element path
     personal_data.py # the fields dropped at ingestion, executable
   normalise/    # intermediate records -> the documented model -> Parquet
   classify/     # hypothesis classifiers, one module each
@@ -112,6 +126,33 @@ The stage requests one package per publication day rather than one file per
 notice, spaces its requests, backs off when asked to, and identifies itself in
 its User-Agent. [ADR-0002](docs/adr/0002-fetch-daily-bulk-packages.md) records
 why, and the verified facts about TED's interfaces behind it.
+
+## Parsing notices
+
+`parse` turns an archived package into typed records, offline. Values are keyed
+by the element path they came from, so every one of them says where it came
+from, and the containers the data model names — organisations, lots, tenders,
+results, contracts — become records of their own.
+
+```python
+from pathlib import Path
+from serenata.parse import parse_package
+
+for notice in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
+    for organisation in notice.of_kind("organisation"):
+        print(notice.notice_id, organisation.value("efac:Company/cac:PartyName/cbc:Name"))
+```
+
+Fields that can name a natural person are never read into a record — not
+recorded and filtered later, which is [a legal constraint](CLAUDE.md) rather
+than a preference. Where a notice flags an organisation as a sole trader, the
+values identifying it are suppressed and its notice-scoped key is kept, so the
+record is anonymous but still joins. The list, with the measured frequency of
+every field on it, is [`docs/personal-data.md`](docs/personal-data.md).
+
+A notice that cannot be parsed fails loudly, naming itself. Nothing is skipped
+quietly: a stage that dropped what it could not read would leave gaps nobody
+could see.
 
 ## Running the tests
 

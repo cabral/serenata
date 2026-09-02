@@ -7,4 +7,8 @@ Two kinds of fixture are allowed:
 - real public notices reproduced byte-for-byte, named after their notice ID.
 
 Never plausible-looking fabrications, and never anything containing a natural
-person's name. Empty until the parse stage lands.
+person's name.
+
+Still empty: the parse tests build their notices in memory, which keeps a
+fixture and the test that reads it in one file. Committing a real sample package
+is [open-work #7](../../docs/open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests).
