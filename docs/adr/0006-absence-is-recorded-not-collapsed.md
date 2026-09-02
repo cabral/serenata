@@ -89,6 +89,20 @@ overstating it — and it is written down rather than left as a surprise.
   a rate for no reason but absence.
 - `not_applicable` is under-reported until the SDK question is settled. Nothing
   downstream may treat `absent` as proof a field was applicable.
+- **`withheld` turned out to need the same SDK**, which this decision assumed it
+  would not. Building the normalise stage showed that `efac:FieldsPrivacy` names
+  its target with an eForms field identifier — `win-ten-val`, `ten-val-low` —
+  rather than by sitting beside it, so the status can only be derived where
+  containment proves the target: a privacy block inside an
+  `efac:ReceivedSubmissionsStatistics` block marks that block, and the bid count
+  is therefore covered. Elsewhere the fact is in the `field_privacy` table and
+  the marked column reads `present`. Worse, the withheld value is *published*
+  rather than omitted — as `-1`, on 72 payable amounts in one publication day —
+  so the collapse this decision set out to prevent is currently a sentinel a
+  classifier has to exclude by hand. Closing that is
+  [open-work #13](../open-work.md#13-derive-the-withheld-status-from-the-eforms-field-identifiers),
+  and it does not change the decision: the column is there, and filling it
+  correctly is the work.
 - Parse has to distinguish absent from blank, which means recording which
   elements it saw and not only which values it read. `serenata.survey` already
   does exactly this, so the mechanism is proven before parse needs it.

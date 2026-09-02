@@ -191,8 +191,8 @@ def _computed(column: Column, value: Any, status: Status) -> dict[str, Any]:
     return {column.name: value, f"{column.name}_status": status.value}
 
 
-def _identity_of(notice: ParsedNotice, record: Record) -> dict[str, Any]:
-    del record  # every row's identity is the notice's, whatever record it is in
+def _identity_of(notice: ParsedNotice) -> dict[str, Any]:
+    """What every row carries, whichever record it was built from."""
     return {
         "source_notice_id": notice.notice_id,
         "source_publication_id": _publication_id(notice),
@@ -233,10 +233,10 @@ def _record_rows(
                     row |= _computed(column, notice.root_element, Status.PRESENT)
                 continue
             row |= _read(record, column, language)
-        yield _identity_of(notice, record) | {"ordinal": record.ordinal} | row
+        yield _identity_of(notice) | {"ordinal": record.ordinal} | row
 
 
-def _role_rows(notice: ParsedNotice, language: str | None) -> list[dict[str, Any]]:
+def _role_rows(notice: ParsedNotice) -> list[dict[str, Any]]:
     """One row per organisation reference: which organisation played which role.
 
     A role is an edge because an organisation is a buyer in one notice and a
@@ -250,7 +250,6 @@ def _role_rows(notice: ParsedNotice, language: str | None) -> list[dict[str, Any
     one of the two descriptions, so both are kept and ``block_ordinal`` tells
     them apart.
     """
-    del language  # roles carry references and codes, never free text
     rows: list[dict[str, Any]] = []
     columns = {column.name: column for column in ORGANISATION_ROLE_TABLE.columns}
 
@@ -258,7 +257,7 @@ def _role_rows(notice: ParsedNotice, language: str | None) -> list[dict[str, Any
         qualifiers = ROLE_QUALIFIERS.get(role, ())
         for record in notice.of_kind(kind):
             for block_ordinal, reference in enumerate(record.fields_at(path)):
-                row = _identity_of(notice, record) | {
+                row = _identity_of(notice) | {
                     "role": role,
                     "scope_table": SCOPE_TABLE[kind],
                     "scope_ordinal": record.ordinal,
@@ -310,7 +309,7 @@ def _location_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
         for record in notice.of_kind(kind):
             for ordinal, fields in _blocks(record, LOCATION_BLOCK):
                 inside = _relative(fields, LOCATION_BLOCK)
-                row = _identity_of(notice, record) | {
+                row = _identity_of(notice) | {
                     "scope_table": scope_table,
                     "scope_ordinal": record.ordinal,
                     "block_ordinal": ordinal,
@@ -344,7 +343,7 @@ def _statistic_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                 # question this pipeline cannot answer, so both are marked
                 # withheld — the conservative direction.
                 withheld = any(path.startswith(f"{PRIVACY_BLOCK}/") for path in inside)
-                row = _identity_of(notice, record) | {
+                row = _identity_of(notice) | {
                     "lot_result_ordinal": record.ordinal,
                     "statistic_kind": kind,
                     "block_ordinal": ordinal,
@@ -384,7 +383,7 @@ def _privacy_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
             prefix = f"{scope_path}/{PRIVACY_BLOCK}" if scope_path else PRIVACY_BLOCK
             for ordinal, fields in _blocks(record, prefix):
                 inside = _relative(fields, prefix)
-                row = _identity_of(notice, record) | {
+                row = _identity_of(notice) | {
                     "scope_table": SCOPE_TABLE[record.kind],
                     "scope_ordinal": record.ordinal,
                     "scope_path": scope_path,
@@ -404,6 +403,18 @@ def _privacy_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                 yield row
 
 
+#: Tables whose rows are a block inside a record rather than a record, and so
+#: are built by the functions above rather than column by column.
+_BUILT_FROM_BLOCKS = frozenset(
+    {
+        ORGANISATION_ROLE_TABLE.name,
+        REALIZED_LOCATION_TABLE.name,
+        LOT_RESULT_STATISTIC_TABLE.name,
+        FIELD_PRIVACY_TABLE.name,
+    }
+)
+
+
 def empty_rows() -> Rows:
     """One empty list per table, so every table is written even with no rows."""
     return {table.name: [] for table in TABLES}
@@ -418,9 +429,9 @@ def notice_rows(notice: ParsedNotice) -> Rows:
     language = _notice_language(notice)
     rows = empty_rows()
     for table in TABLES:
-        if table.record and table.name != LOT_RESULT_STATISTIC_TABLE.name:
+        if table.record and table.name not in _BUILT_FROM_BLOCKS:
             rows[table.name] = list(_record_rows(table, notice, language))
-    rows[ORGANISATION_ROLE_TABLE.name] = _role_rows(notice, language)
+    rows[ORGANISATION_ROLE_TABLE.name] = _role_rows(notice)
     rows[REALIZED_LOCATION_TABLE.name] = list(_location_rows(notice))
     rows[LOT_RESULT_STATISTIC_TABLE.name] = list(_statistic_rows(notice))
     rows[FIELD_PRIVACY_TABLE.name] = list(_privacy_rows(notice))
