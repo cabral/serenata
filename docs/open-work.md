@@ -33,30 +33,45 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
-| 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | blocked on normalise | [#12](https://github.com/cabral/serenata/issues/12) |
+| 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
 | 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings | [#14](https://github.com/cabral/serenata/issues/14) |
-| 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **next** | [#11](https://github.com/cabral/serenata/issues/11) |
+| 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
+| 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | not filed |
+| 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs a decision | not filed |
 
-**Order matters.** 2 fed 1; 1, 3 and 4 are all done for eForms, so
-[#12](#12-build-the-normalise-stage) is where the work goes next and is what
-turns records into a dataset. 9 unblocks the moment 12 writes anything. 6 is
-filed so it is not discovered late, not because it should be done now.
+**Order matters.** 2 fed 1; 1, 3, 4 and 12 are all done for eForms, and 12
+turned records into a dataset, which closed 9 with it. What comes next is 13:
+the dataset now stores a withheld amount as the number `-1` with the status
+`present`, and the first classifier will read exactly those columns. 14 is the
+other thing 12 turned up and is a decision rather than a task. 6 is filed so it
+is not discovered late, not because it should be done now.
 
-Every open item below has a GitHub issue mirroring it. Say there that you are
-taking something, so two people do not start the same thing.
+Every open item below has a GitHub issue mirroring it, except 13 and 14, which
+building the normalise stage turned up and which are not filed yet. Say on the
+tracker that you are taking something, so two people do not start the same
+thing.
 
 ---
 
 ## 1. Write the data model contract
 
-**Done.** [`docs/data-model.md`](data-model.md) is the contract: nine tables —
+**Done.** [`docs/data-model.md`](data-model.md) is the contract: twelve tables —
 `notice`, `procedure`, `lot`, `organisation`, `organisation_role`,
-`tendering_party`, `lot_tender`, `lot_result`, `settled_contract`,
-`field_privacy` — with a measured source path and presence figure for every
-column. `tests/test_data_model.py` checks all 85 cited paths against the 751 the
-survey measured, and separately that no column maps to a path
-`personal_data.is_dropped()` rejects.
+`tendering_party`, `lot_tender`, `lot_result`, `lot_result_statistic`,
+`settled_contract`, `realized_location`, `field_privacy` — with a measured
+source path and presence figure for every column. `tests/test_data_model.py`
+checks every cited path against the 751 the survey measured, and separately that
+no column maps to a path `personal_data.is_dropped()` rejects;
+`tests/test_normalise_model.py` checks the document against the code that builds
+it.
+
+It was written as nine tables against the survey's counts, and building
+[#12](#12-build-the-normalise-stage) against real records corrected it three
+times — the key, the repeated columns, and what a withheld value looks like.
+Those corrections are in the document with their measurements, and
+[ADR-0007](adr/0007-repeated-values-are-carried-not-resolved.md) records the
+decision the second one forced.
 
 Two decisions it rests on got their own records:
 
@@ -77,7 +92,7 @@ lawful deferral as a low bid count and flag a buyer for the project's own data
 handling.
 
 Two things it deliberately does not settle: cross-notice organisation identity
-(`company_id` is an attribute, not a key — that is milestone 3), and the legacy
+(`company_ids` is an attribute, not a key — that is milestone 3), and the legacy
 TED mappings, for the same reason as [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person)
 — no legacy notice has been measured, and spec-read mappings are not published
 as though they were.
@@ -317,8 +332,9 @@ reject. The survey's report regenerates byte-identically after the move.
 package of them fails loudly rather than yielding nothing, because a stage that
 quietly produced zero notices would look exactly like an empty package.
 
-Still open: wiring `serenata parse` into the CLI, which is its own commit as
-`fetch` was.
+Parse has no command of its own and does not need one: `serenata normalise`
+runs it over the archive, which is the only thing anyone wants a package parsed
+*for*. Parse stays a library.
 
 The original statement of the problem follows.
 
@@ -470,6 +486,13 @@ person's name; if reproducing a real notice, check it against #3 first.
 comfortably, its README says what each notice is and which case it covers, and a
 test reads it through the archive layer without special-casing.
 
+**What it would upgrade.** The rerun-identity test
+([#9](#9-add-the-rerun-identity-determinism-test)) and the normalise tests build
+their notices in memory, so nothing in CI reads a package TED actually
+published. The figures this repository quotes for OJ S 157/2026 were measured by
+hand against the local archive; a committed sample makes a smaller version of
+that measurement a test.
+
 ---
 
 ## 8. Write CONTRIBUTING.md
@@ -513,6 +536,27 @@ first.
 
 ## 9. Add the rerun-identity determinism test
 
+**Done.** `tests/test_normalise_dataset.py::TestRerunIdentity` normalises a
+package twice and compares SHA-256 checksums of every file written. It runs in
+CI on every push, offline, against a package built in memory.
+
+Three cases, because one of them is the one that would rot: two runs into
+separate directories, a rerun into an existing dataset, and — the guard against
+a test that passes by comparing nothing — two different packages, which must
+produce *different* bytes.
+
+What makes it hold, all in `serenata/normalise/dataset.py`: rows sorted by their
+table's key with Python's stable sort before every write, a schema taken from
+the model rather than inferred from the values present, writer options pinned in
+one named constant, and no clock anywhere — the partition is the notice's own
+publication year. `uv.lock` pins pyarrow, and the Parquet metadata records which
+version wrote a file, so a pyarrow bump changes the bytes and this test says so.
+
+Verified on the real archive too: normalising OJ S 157/2026 twice produces
+byte-identical files across all twelve tables.
+
+The original statement of the problem follows.
+
 Constraint 4 says the same input data and the same code produce the same bytes.
 `tests/test_constraints.py` enforces the static half of that — no clock, no
 unseeded randomness in the stages downstream of fetch — but a static check
@@ -539,8 +583,6 @@ timestamp that is not itself derived from the source data — the fetch manifest
 
 **Done when** the pipeline runs twice in CI on every push and the outputs match
 byte for byte, and the claim in the `coding` skill is true rather than aspirational.
-
-**Blocked** until [#4](#4-build-the-parse-stage) and the normalise stage exist.
 
 ---
 
@@ -631,6 +673,46 @@ this blocks milestone 2, not milestone 1.
 
 ## 12. Build the normalise stage
 
+**Done.** `serenata/normalise/` reads the records `parse` produces and writes
+`docs/data-model.md` as Parquet: `model.py` is the model in executable form,
+`rows.py` builds one notice's rows, `dataset.py` sorts and writes them.
+`serenata normalise` runs it over the archive.
+
+Against OJ S 157/2026: all 3,190 notices become **98,629 rows across twelve
+tables**, 4.2 MB on disk, in 12 seconds and 360 MB peak. Every table's key is
+unique across those rows, reruns are byte-identical, and DuckDB queries the
+result directly.
+
+**Building it corrected the contract three times.** That is the value of writing
+a stage against real notices rather than against a specification, and each
+correction is in `data-model.md` with the measurement that forced it:
+
+- **The notice UUID is not a key.** Two UUIDs appear twice in the package,
+  published the same day under different notice numbers with the same contract
+  folder and issue date. Every table is keyed on `source_publication_id`
+  instead, which is unique across all 3,190.
+- **Most columns repeat.** 8,028 of 8,624 lots carry two contracting-system
+  codes; one lot result names 683 winning tenders; 402 organisations carry
+  several registration numbers; a title is published once per language. The
+  model as written implied one value per column, and
+  [ADR-0007](adr/0007-repeated-values-are-carried-not-resolved.md) settles what
+  each shape becomes — a set column, a table of its own, or the notice's own
+  language with a companion saying which. Four tables exist that the original
+  nine did not describe, and a scalar column that meets several values raises
+  rather than picking one. It did not happen once across the package.
+- **A withheld value is published, not omitted.** A withheld bid count is the
+  code `unpublished` with the number `-1`; 72 payable amounts are `-1`. Where
+  the privacy block sits inside the block it governs, the status is derived as
+  `withheld`. Where it names its target with an eForms field identifier, it is
+  not — that is [#13](#13-derive-the-withheld-status-from-the-eforms-field-identifiers).
+
+One thing the stage does not do is stream. It holds a package's rows in memory
+to sort them, because sorting is what makes the bytes stable, and peaks at
+360 MB per package. Packages are normalised one at a time, so a year does not
+accumulate.
+
+The original statement of the problem follows.
+
 `serenata/normalise/` is a docstring. It is the last stage between the pipeline
 and a dataset: it takes the intermediate records `parse` produces and writes the
 model in [`data-model.md`](data-model.md) as Parquet.
@@ -667,3 +749,88 @@ field has no column to land in, but a new column is a personal-data decision and
 status and currency columns are populated rather than declared, and
 [#9](#9-add-the-rerun-identity-determinism-test) — running the pipeline twice
 and comparing checksums — passes in CI. That test is the proof, not a review.
+
+---
+
+## 13. Derive the withheld status from the eForms field identifiers
+
+A publisher may mark a field non-public through `efac:FieldsPrivacy`, and eForms
+**publishes the withheld value rather than omitting it**. Measured in OJ S
+157/2026: 72 tender payable amounts, 42 notice total amounts, 10 highest and 10
+lowest tender amounts carry `-1`, and a withheld bid count carries the code
+`unpublished` with the number `-1`.
+
+The dataset records every privacy block in `field_privacy`, scoped to the
+element it sits inside, and derives `withheld` **only** where containment proves
+the target — a privacy block inside a statistics block marks that block. That
+covers the bid count and nothing else. Everywhere else the block names its
+target with an eForms field identifier (`win-ten-val`, `ten-val-low`, `max-val`,
+`not-val`, `rec-sub-cou`), and nothing here maps those to columns.
+
+So a withheld amount currently reads `present` with the value `-1`. Amounts are
+stored as published strings, so nothing turns it into a number silently, but a
+classifier reading an amount has to exclude `-1` by hand — which is exactly the
+kind of thing a classifier author forgets, and
+[ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md) exists to make
+forgetting impossible.
+
+**What to do.** Map each observed `efbc:FieldIdentifierCode` to the column it
+names, from the eForms SDK's field definitions rather than from inference, and
+set that column's status to `withheld` on the record the block is scoped to.
+Fourteen distinct codes appear in one publication day; the mapping is small and
+its source has to be cited, because a wrong mapping marks the wrong column
+non-public.
+
+**Constraints.** The SDK is a data source, not a runtime dependency: whatever is
+used has to be vendored or generated into the repository so the stage stays
+offline and deterministic (constraint 4), and its licence checked (constraint
+1). A code the mapping does not cover leaves the status alone rather than
+guessing.
+
+**Done when** a withheld amount reads `withheld` rather than `present`, the
+mapping cites where each entry came from, and a test asserts the bid-count case
+that already works has not regressed.
+
+**This is the next piece of work**, and it blocks the first classifier rather
+than the pipeline.
+
+---
+
+## 14. Decide what to do about personal data in fields that are not contact fields
+
+Constraint 2's drop list is structural: it rejects any path through
+`cac:Contact`, `efac:UltimateBeneficialOwner` or `cac:TechnicalCommitteePerson`.
+That is the right shape for the rule, and it cannot catch a publisher who types
+a contact address into a field that is not a contact field.
+
+They do. Scanning the normalised package finds **46 email-shaped values in 7
+columns** — city, registration number, street, website, title, description —
+and **13 of them are shaped like a person's own address**
+(`firstname.lastname@`). The drop list is not wrong; the data arrived in a field
+it has no reason to reject.
+
+**What to decide.** A value-level rule is a different kind of rule from a
+path-level one, and the options lose different things:
+
+- **Reject the value**, recording the field as withheld or absent. Loses a city
+  name when a publisher put an address in it, which is the honest trade.
+- **Redact the match**, keeping the rest of the value. Keeps more, and means the
+  dataset contains partially rewritten source values, which the project has so
+  far never done.
+- **Flag the row for review** and publish nothing until a human looks. Does not
+  scale, but the counts are small — 46 values in 98,629 rows.
+
+Whichever is chosen, [`personal-data.md`](personal-data.md) gains a section, the
+rule becomes executable beside `is_dropped()`, and the decision needs an ADR
+because it changes what "dropped at ingestion" means.
+
+**Constraints.** Constraint 2 is legal, not stylistic, and the guardrails say to
+err toward dropping. Constraint 5 bears on the mechanism: a regex over values is
+not NLP and not a classifier reading free text, but it is the first content-based
+rule in the pipeline and should be argued rather than slipped in. Nothing is
+published yet, so this blocks the first dataset release rather than the
+pipeline.
+
+**Done when** the rule is decided in an ADR, executable, tested against the
+measured cases, and `personal-data.md` says which fields it applies to and why a
+path-based list could not have caught them.

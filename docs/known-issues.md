@@ -9,15 +9,46 @@ the code. [`open-work.md`](open-work.md) is the companion — what is being buil
 and what each piece needs — and every open item there has an issue mirroring it.
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) is how to work on any of it.
 
-## The pipeline stops after parse
+## The pipeline stops after normalise
 
-There is **no normalised dataset, no classifier and no flag**. `fetch` archives
-packages, `parse` turns them into typed records, and nothing yet writes Parquet
-or evaluates anything. Statements in this repository about what the data shows
-are measurements of the archive, not findings.
+There is **no classifier and no flag**. `fetch` archives packages, `parse` turns
+them into typed records, `normalise` writes those as Parquet, and nothing yet
+evaluates anything. Statements in this repository about what the data shows are
+measurements of the archive, not findings.
 
-Tracked as milestone 1 in the [README](../README.md) and issue [#11](https://github.com/cabral/serenata/issues/11);
-normalise is the next stage.
+Tracked as milestone 2 in the [README](../README.md).
+
+## Personal data can arrive in a field that is not a contact field
+
+Constraint 2's drop list is **structural**: it rejects paths through
+`cac:Contact`, `efac:UltimateBeneficialOwner` and `cac:TechnicalCommitteePerson`
+wherever they appear. That is the right shape for the rule and it cannot catch a
+publisher who types a contact address into a field that is not one.
+
+They do. Scanning the normalised package for email-shaped values finds **46 of
+them in 7 columns** that should hold a city, a registration number, a street, a
+website or a description — and **13 are shaped like a person's own address**
+(`firstname.lastname@`), which is personal data landing in the dataset through a
+field the drop list has no reason to reject.
+
+Nothing is published yet, so this is not yet an exposure; it is one before the
+first dataset release. It also cannot be fixed by adding paths to the list,
+because the problem is the value rather than the field. The options — reject the
+value, redact the match, or flag the row for review — differ in what they lose,
+and choosing needs a decision recorded rather than a regex added quietly. Not
+yet tracked as an issue.
+
+## The notice UUID is not unique, and looks like it should be
+
+`notice/cbc:ID` is a UUID and reads like a primary key. It is not one: **two
+UUIDs each appear twice in OJ S 157/2026**, published the same day under
+different notice numbers, with the same contract folder, issue date and
+subtype — one notice published twice.
+
+Every table is therefore keyed on `source_publication_id`, which is unique
+across all 3,190. `source_notice_id` is kept on every row because it is what
+links a corrigendum to what it corrects, and **anything joining on it may match
+more rows than it means to**.
 
 ## Legacy TED notices are refused, not parsed
 
@@ -46,6 +77,27 @@ and zero legacy ones, and every filename matches its content. But
 [`field-usage.md`](field-usage.md)'s counts rest on the filename heuristic, so
 the figure to quote is "eForms-named notices", not "eForms notices". Parse's
 test is the better one and the survey should adopt it — issue [#18](https://github.com/cabral/serenata/issues/18).
+
+## A withheld value is published as `-1`, and only sometimes marked
+
+A publisher may withhold a field through `efac:FieldsPrivacy`, and eForms
+publishes the withheld value rather than omitting it: **72 tender payable
+amounts, 42 notice total amounts, 10 highest and 10 lowest tender amounts in
+OJ S 157/2026 carry `-1`**, and a withheld bid count carries the code
+`unpublished` with the number `-1`. A classifier reading those as numbers reads a
+lawful deferral as a negative price or a negative bid count.
+
+The `field_privacy` table records every such block with the element it sits
+inside. The **status** is derived only where containment proves the target — a
+privacy block inside a statistics block marks that block, so those rows read
+`withheld`. Everywhere else the block names its target with an eForms field
+identifier (`win-ten-val`, `ten-val-low`, `max-val`), and mapping those to
+columns needs the eForms SDK this pipeline does not carry.
+
+Until it does, a withheld amount reads `present` with the value `-1`. Amounts
+are stored as published strings rather than numbers, so nothing silently turns
+the sentinel into a price, but **a classifier reading an amount must exclude
+`-1` explicitly**. This is the first thing to build after the normalise stage.
 
 ## `not_applicable` is never derived
 
@@ -82,9 +134,10 @@ occurrences**. Text on any other element with children is recorded.
 
 `ORG-0001` identifies an organisation **within one notice**. The same buyer is a
 different local id in the next day's notice, and this project does not yet join
-them. `company_id` — the national registration number, present in 99.9% of
+them. `company_ids` — the national registration numbers, present in 99.9% of
 notices — is the obvious candidate and is carried as an attribute, **not as a
-key**: national schemes differ and the same body appears under variant numbers.
+key**: national schemes differ, the same body appears under variant numbers, and
+402 organisations in one package carry more than one number.
 
 Any count of "contracts awarded to X across notices" is therefore an argument
 the caller has to make, not something the model provides. Entity resolution is
@@ -113,6 +166,18 @@ Ingestion cannot resolve this. Whether a flag may be *published* about such an
 entity is [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status),
 and issue [#14](https://github.com/cabral/serenata/issues/14); it blocks the first finding rather than the pipeline.
 
+## Normalise holds a whole package in memory
+
+The stage accumulates one package's rows as Python dictionaries and sorts them
+before writing, because sorting is what makes the output byte-stable and a
+stable sort is what keeps ties in document order. One daily package peaks at
+**360 MB** for 98,629 rows, against parse's 89 MB, and takes 12 seconds.
+
+A year of notices is ~250 packages, and they are normalised one at a time, so
+the peak is per package rather than cumulative. If a package ever arrives that
+does not fit, the fix is to accumulate Arrow batches rather than dictionaries;
+the sort has to stay.
+
 ## Parse is slower and heavier than the survey
 
 Per daily package of 3,190 notices: parse takes about 54s and peaks at 89 MB,
@@ -125,16 +190,24 @@ likeliest remaining win if this ever matters.
 At this cost a year of notices is a few hours, so it is recorded rather than
 worked on.
 
-## No command line for parse, and no committed sample
+## No committed sample package
 
-`serenata fetch` exists; parse is a library only, so exercising it means writing
-Python. And `tests/fixtures/` and `data/sample/` are empty — the parse tests
+`tests/fixtures/` and `data/sample/` are empty: the parse and normalise tests
 build their notices in memory, which keeps a fixture and the test that reads it
-in one file but means there is no end-to-end run against a real archived package
-in CI.
+in one file but means **no test reads a real archived package**. The rerun
+identity test proves determinism over synthetic notices, and the figures quoted
+here for the real package were measured by hand rather than in CI.
 
 Tracked as [open-work #7](open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests)
-and issue [#16](https://github.com/cabral/serenata/issues/16); the CLI command is noted in [#4](open-work.md#4-build-the-parse-stage).
+and issue [#16](https://github.com/cabral/serenata/issues/16).
+
+## A published dataset would carry the writer's version
+
+Parquet files record which library wrote them, so upgrading pyarrow changes the
+bytes without changing a row. `uv.lock` pins it and the rerun test compares
+outputs written by one version, which is what determinism means here: the same
+code and the same data produce the same bytes. A dependency bump is a change of
+code, and it will show up as one.
 
 ## Sign-off is asked for, not enforced
 

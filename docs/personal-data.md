@@ -269,3 +269,25 @@ matching `cac:Contact`, `efac:UltimateBeneficialOwner`, `Person`, `FamilyName`,
 `FirstName` or `Contact` that do not appear above. A new one is not
 automatically a gap in the rule: the structural matches in §§1–3 already cover
 anything inside those subtrees. It is a gap only if it sits somewhere new.
+
+## What this list cannot catch
+
+Every rule above is **structural**: it matches a path, and it drops everything
+inside a subtree whether or not anyone has read the leaf. That is the right
+shape for the rule, and it has a limit worth stating plainly, because a reader
+who assumes the list is exhaustive would be wrong about a legal constraint.
+
+A publisher can type a contact address into a field that is not a contact field.
+Scanning the normalised OJ S 157/2026 dataset finds **46 email-shaped values in
+7 columns** — a city, a registration number, a street, a website, a title, a
+description — and **13 of them are shaped like a person's own address**
+(`firstname.lastname@`). None of those paths is on this list, and none should
+be: the field is not a contact field, the data simply arrived in it.
+
+Fixing this needs a value-level rule, which is a different kind of rule from
+everything above, and the options — reject the value, redact the match, flag the
+row — lose different things. That decision is
+[open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields)
+and it gates the first published dataset. Until it is taken, **this list is the
+rule and the gap is known**, which is the honest position rather than a quiet
+regex.

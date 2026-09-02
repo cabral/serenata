@@ -39,7 +39,7 @@ and flags concern institutions and companies, never private individuals.
 
 ## Status
 
-**Milestone 1, fetch and parse landed** (September 2026). `serenata fetch`
+**Milestone 1, the pipeline reaches a dataset** (September 2026). `serenata fetch`
 archives TED's daily notice packages with provenance and checksums.
 [`serenata.survey`](serenata/survey/) measured which eForms fields notices
 actually populate, so the data model could be designed against evidence rather
@@ -47,18 +47,29 @@ than against the specification — the result is
 [`docs/field-usage.md`](docs/field-usage.md), and the model it produced is
 [`docs/data-model.md`](docs/data-model.md).
 [`serenata.parse`](serenata/parse/) reads archived notices into typed records,
-dropping the fields that can name a person as it reads.
+dropping the fields that can name a person as it reads, and
+[`serenata.normalise`](serenata/normalise/) writes those records as the
+documented model in Parquet.
 
-Against a real publication day, all 3,190 notices parse, and 3.6% of every leaf
-element in the package — the contact details, beneficial owners and named
-evaluators listed in [`docs/personal-data.md`](docs/personal-data.md) — is
-dropped before it reaches a record.
+Against a real publication day, all 3,190 notices parse and become **98,629
+rows across twelve tables** — 4.2 MB, twelve seconds, and byte-identical when
+the run is repeated, which is the determinism the project's whole credibility
+rests on and is now a test rather than an intention. 3.6% of every leaf element
+in the package — the contact details, beneficial owners and named evaluators
+listed in [`docs/personal-data.md`](docs/personal-data.md) — is dropped before
+it reaches a record.
 
-Nothing normalises or classifies yet: there is no Parquet dataset, no
-classifier, and no flag. Legacy pre-2024 TED notices are refused rather than
-parsed, because the mapping for them has never been measured.
-[`docs/known-issues.md`](docs/known-issues.md) is the full list of what the
-pipeline does not do, or does incompletely. The milestone plan:
+Building the stage against real notices corrected the data model three times,
+which is the point of measuring rather than reading a specification: the notice
+UUID turned out not to be unique, most columns turned out to repeat, and a
+withheld value turned out to be published as `-1` rather than omitted. Each
+correction is in [`docs/data-model.md`](docs/data-model.md) with the
+measurement behind it.
+
+**There is still no classifier and no flag.** Legacy pre-2024 TED notices are
+refused rather than parsed, because the mapping for them has never been
+measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
+what the pipeline does not do, or does incompletely. The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
@@ -86,6 +97,9 @@ serenata/
     records.py  #   the intermediate records, keyed by element path
     personal_data.py # the fields dropped at ingestion, executable
   normalise/    # intermediate records -> the documented model -> Parquet
+    model.py    #   the twelve tables and their sources, executable
+    rows.py     #   one notice's records -> the model's rows
+    dataset.py  #   sorted, pinned, partitioned Parquet writing
   classify/     # hypothesis classifiers, one module each
   survey/       # measures which eForms fields notices populate (analysis, not a stage)
   cli.py        # entry point: serenata fetch|normalise|classify
@@ -167,6 +181,45 @@ A notice that cannot be parsed is handed back as an `Unparsed`, naming itself
 and why. Nothing is skipped quietly: a stage that dropped what it could not read
 would leave gaps nobody could see, and one that raised would end the run at the
 first bad notice — losing the rest just as silently.
+
+## Normalising notices
+
+`normalise` reads archived packages and writes the model in
+[`docs/data-model.md`](docs/data-model.md) as Parquet, partitioned by the
+notice's publication year:
+
+```
+uv run serenata normalise                        # every package in the archive
+uv run serenata normalise data/raw/ted/daily/2026/202600157.tar.gz --out data/normalised
+```
+
+```
+data/normalised/notice/publication_year=2026/202600157.parquet
+data/normalised/lot_result_statistic/publication_year=2026/202600157.parquet
+...
+```
+
+Then query it with DuckDB, which reads the files directly:
+
+```sql
+SELECT statistic_code, count(*)
+FROM read_parquet('data/normalised/lot_result_statistic/**/*.parquet',
+                  hive_partitioning = true)
+WHERE statistic_kind = 'received_submissions'
+  AND statistic_value_status = 'present'
+GROUP BY 1 ORDER BY 2 DESC;
+```
+
+Two habits that query shows. Every value column has a `_status` beside it, and
+reading the value without the status is a bug: a withheld bid count is
+published as the code `unpublished` and the number `-1`, and a classifier that
+missed that would flag a buyer for exercising a lawful deferral. And amounts
+carry a `_currency` companion, because nine currencies appear on tender amounts
+in a single publication day.
+
+Rerunning a package rewrites its own files, byte for byte identically. A notice
+that cannot be read, or that the model cannot map, is reported and counted
+rather than dropped, and the command exits non-zero when a run loses one.
 
 ## Running the tests
 
