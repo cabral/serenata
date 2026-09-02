@@ -24,14 +24,13 @@ from xml.etree.ElementTree import Element, ParseError, XMLPullParser
 
 from serenata.eforms import (
     CHUNK_BYTES,
-    EFORMS_ROOT_NAMESPACES,
     HEADER_BYTES,
     LEGACY_ROOT,
     ROOT,
     NoticeRejected,
-    namespace_of,
+    PrologGuard,
+    is_eforms_root,
     qualified_name,
-    reject_doctype,
 )
 from serenata.parse.personal_data import (
     NATURAL_PERSON_INDICATOR,
@@ -62,7 +61,7 @@ def _accept_root(tag: str, name: str) -> str:
     mixes formats and a name is a claim, while the root namespace is the
     document saying what it is.
     """
-    if namespace_of(tag).startswith(EFORMS_ROOT_NAMESPACES):
+    if is_eforms_root(tag):
         return name
     if name == LEGACY_ROOT:
         raise NoticeRejected(
@@ -75,17 +74,27 @@ def _accept_root(tag: str, name: str) -> str:
     raise NoticeRejected(f"unrecognised notice root element {name!r}")
 
 
+#: ``efbc:NaturalPersonIndicator`` is an ``xs:boolean``, whose lexical space is
+#: {true, false, 1, 0} — so a publisher writing ``1`` is saying the same thing
+#: as one writing ``true``. Only these two forms are read as a denial.
+_NOT_A_NATURAL_PERSON = frozenset({"false", "0"})
+
+
 def _is_natural_person(fields: list[Field]) -> bool:
     """Whether this organisation is a sole trader, per its own indicator.
 
-    Only an explicit ``true`` counts. An absent indicator is "not provided",
-    never "false" (ADR-0006), and it is not this function's job to guess —
-    open-work #11 is where that gap is answered.
+    An **absent** indicator is "not provided", never "false" (ADR-0006), and it
+    is not this function's job to guess — open-work #11 is where that gap is
+    answered. A **present** one is read the other way about: anything that is
+    not an explicit denial suppresses. Matching only ``true`` would have let a
+    notice written with ``1`` keep a sole trader's name, national registration
+    number and address, and docs/personal-data.md's instruction is to err
+    toward dropping — a value we cannot read is not a denial.
     """
-    return any(
-        item.path == NATURAL_PERSON_INDICATOR and item.value.lower() == "true"
-        for item in fields
-    )
+    for item in fields:
+        if item.path == NATURAL_PERSON_INDICATOR:
+            return item.value.strip().lower() not in _NOT_A_NATURAL_PERSON
+    return False
 
 
 def _finish(pending: _Open, notice_id: str) -> Record:
@@ -116,8 +125,7 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
     """
     parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
 
-    header = source.read(HEADER_BYTES)
-    reject_doctype(header)
+    guard = PrologGuard()
 
     root_element: str | None = None
     notice_id: str | None = None
@@ -140,6 +148,7 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
             if event == "start":
                 if root_element is None:
                     root_element = _accept_root(element.tag, name)
+                    guard.root_started()
                 path.append(ROOT if not path else name)
                 has_children.append(False)
                 if len(has_children) > 1:
@@ -180,8 +189,9 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
             if open_elements:
                 open_elements[-1].remove(element)
 
-    chunk = header
+    chunk = source.read(HEADER_BYTES)
     while chunk:
+        guard.check(chunk)
         parser.feed(chunk)
         drain()
         chunk = source.read(CHUNK_BYTES)

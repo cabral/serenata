@@ -34,8 +34,8 @@ from serenata.eforms import (
     HEADER_BYTES,
     ROOT,
     NoticeRejected,
+    PrologGuard,
     qualified_name,
-    reject_doctype,
 )
 
 #: Re-exported so this module stays the survey's single entry point for the
@@ -48,9 +48,9 @@ __all__ = [
     "ROOT",
     "NoticeRejected",
     "NoticeShape",
+    "PrologGuard",
     "qualified_name",
     "read_notice",
-    "reject_doctype",
 ]
 
 _COUNTRY_CODE_SUFFIX = "/cac:Country/cbc:IdentificationCode"
@@ -77,8 +77,7 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
     """
     parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
 
-    header = source.read(HEADER_BYTES)
-    reject_doctype(header)
+    guard = PrologGuard()
 
     root_type: str | None = None
     subtype: str | None = None
@@ -98,6 +97,7 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
             if event == "start":
                 if root_type is None:
                     root_type = name
+                    guard.root_started()
                 path.append(ROOT if not path else name)
                 open_elements.append(element)
                 continue
@@ -119,8 +119,9 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
             if open_elements:
                 open_elements[-1].remove(element)
 
-    chunk = header
+    chunk = source.read(HEADER_BYTES)
     while chunk:
+        guard.check(chunk)
         parser.feed(chunk)
         drain()
         chunk = source.read(CHUNK_BYTES)

@@ -155,6 +155,29 @@ class TestFormatDispatch:
         with pytest.raises(NoticeRejected, match="unrecognised"):
             parse(b"<?xml version='1.0'?><SomethingElse/>")
 
+    def test_another_ubl_document_is_not_a_notice(self) -> None:
+        # An Invoice shares the notice types' namespace family. Matching the
+        # prefix accepted it and parsed it into records that look like a notice
+        # and are not one.
+        invoice = (
+            b"<?xml version='1.0'?><Invoice "
+            b"xmlns='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2' "
+            b"xmlns:cbc='" + CBC.encode() + b"'>"
+            b"<cbc:ID>NOT-A-NOTICE</cbc:ID></Invoice>"
+        )
+        with pytest.raises(NoticeRejected, match="unrecognised"):
+            parse(invoice)
+
+    def test_a_notice_name_in_the_wrong_namespace_is_refused(self) -> None:
+        # UBL names a namespace after its document, so the two have to agree.
+        document = eforms_notice().replace(
+            b"urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2",
+            b"urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+            1,
+        )
+        with pytest.raises(NoticeRejected, match="unrecognised"):
+            parse(document)
+
     def test_the_root_decides_not_the_filename(self, tmp_path: Path) -> None:
         # A six-digit name is the legacy convention, but this document is
         # eForms and parses; open-work #4 asks for exactly this.
@@ -171,6 +194,41 @@ class TestRefusalsFromAdr0003:
         )
         with pytest.raises(NoticeRejected, match="document type declaration"):
             parse(document)
+
+    def test_a_declaration_past_the_first_chunk_is_still_refused(self) -> None:
+        # The hole a review found: scanning a fixed-size header let a notice
+        # push its declaration out of view behind a long comment and parse with
+        # entity expansion live. Measured at the time: a 3-byte reference
+        # expanded to 1,000 characters.
+        padding = b"<!-- " + b"P" * 9000 + b" -->"
+        document = eforms_notice().replace(
+            b"<ContractNotice",
+            padding + b'<!DOCTYPE ContractNotice [<!ENTITY a "AAAA">]><ContractNotice',
+            1,
+        )
+        with pytest.raises(NoticeRejected, match="document type declaration"):
+            parse(document)
+
+    def test_a_declaration_split_across_reads_is_still_refused(self) -> None:
+        # The scan keeps the tail of each chunk, so a declaration straddling a
+        # read boundary cannot slip between two windows.
+        from serenata.eforms import HEADER_BYTES
+
+        for offset in range(-4, 5):
+            pad = b"<!-- " + b"P" * (HEADER_BYTES + offset) + b" -->"
+            document = eforms_notice().replace(
+                b"<ContractNotice",
+                pad + b'<!DOCTYPE ContractNotice [<!ENTITY a "A">]><ContractNotice',
+                1,
+            )
+            with pytest.raises(NoticeRejected, match="document type declaration"):
+                parse(document)
+
+    def test_an_encoding_the_scan_cannot_read_is_refused(self) -> None:
+        # A UTF-16 document hides <!DOCTYPE from a byte comparison, so it is
+        # refused rather than scanned wrongly. Every surveyed notice is UTF-8.
+        with pytest.raises(NoticeRejected, match="UTF-8"):
+            parse(eforms_notice().decode().encode("utf-16"))
 
     def test_malformed_xml_raises(self) -> None:
         # Truncated mid-document, so the root is valid eForms and it is the
@@ -219,6 +277,39 @@ class TestNaturalPersonSuppression:
         notice = parse(eforms_notice(organisations=organisation(natural_person="true")))
         org = notice.of_kind("organisation")[0]
         assert org.value("efac:Company/cac:PartyIdentification/cbc:ID") == "ORG-0001"
+
+    @pytest.mark.parametrize("indicator", ["true", "1", "TRUE", " true "])
+    def test_every_xs_boolean_form_of_true_suppresses(self, indicator: str) -> None:
+        # xs:boolean permits 1 as well as true. Matching only "true" let a sole
+        # trader flagged with 1 keep their name, national registration number
+        # and address — constraint 2, and the reason to read the schema's
+        # lexical space rather than the value one publisher happened to write.
+        notice = parse(
+            eforms_notice(organisations=organisation(natural_person=indicator))
+        )
+        org = notice.of_kind("organisation")[0]
+        assert org.value("efac:Company/cac:PartyName/cbc:Name") is None
+        assert org.value("efac:Company/cac:PartyLegalEntity/cbc:CompanyID") is None
+
+    @pytest.mark.parametrize("indicator", ["unreadable", ""])
+    def test_an_indicator_that_cannot_be_read_suppresses(self, indicator: str) -> None:
+        # Err toward dropping: a claim about personhood we cannot read is not a
+        # denial of it. Distinct from an absent indicator, which is below.
+        notice = parse(
+            eforms_notice(organisations=organisation(natural_person=indicator))
+        )
+        org = notice.of_kind("organisation")[0]
+        assert org.value("efac:Company/cac:PartyName/cbc:Name") is None
+
+    @pytest.mark.parametrize("indicator", ["false", "0"])
+    def test_every_xs_boolean_form_of_false_does_not_suppress(
+        self, indicator: str
+    ) -> None:
+        notice = parse(
+            eforms_notice(organisations=organisation(natural_person=indicator))
+        )
+        org = notice.of_kind("organisation")[0]
+        assert org.value("efac:Company/cac:PartyName/cbc:Name") == "EXAMPLE BODY"
 
     def test_an_explicit_false_does_not_suppress(self) -> None:
         notice = parse(
