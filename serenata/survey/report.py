@@ -8,12 +8,12 @@ does, and keep the committed report diffable.
 
 from __future__ import annotations
 
-import tarfile
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from xml.etree.ElementTree import ParseError
 
+from serenata.packages import notice_members
 from serenata.survey.paths import NoticeRejected, NoticeShape, read_notice
 
 #: eForms notice filenames carry eight digits and a year; legacy TED schema
@@ -98,24 +98,17 @@ def survey_package(package: Path, into: Survey | None = None) -> Survey:
     survey = into if into is not None else Survey()
     survey.packages.append(package.name)
 
-    with tarfile.open(package, "r:gz") as archive:
-        for member in archive:
-            if not member.isfile() or not member.name.endswith(".xml"):
-                continue
-            if not is_eforms(member.name):
-                survey.skipped_legacy += 1
-                continue
-            handle = archive.extractfile(member)
-            if handle is None:  # pragma: no cover - a directory entry named .xml
-                survey.unreadable += 1
-                continue
-            try:
-                # Streamed, not read whole: one notice in this package is 40 MB.
-                survey.add(read_notice(handle))
-            except (ParseError, NoticeRejected):
-                # Counted and reported rather than aborting a 3,000-notice run
-                # on one bad document. render() surfaces the count.
-                survey.unreadable += 1
+    for name, handle in notice_members(package):
+        if not is_eforms(name):
+            survey.skipped_legacy += 1
+            continue
+        try:
+            # Streamed, not read whole: one notice in this package is 40 MB.
+            survey.add(read_notice(handle))
+        except (ParseError, NoticeRejected):
+            # Counted and reported rather than aborting a 3,000-notice run
+            # on one bad document. render() surfaces the count.
+            survey.unreadable += 1
     return survey
 
 

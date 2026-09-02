@@ -24,20 +24,17 @@ element is cleared.
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import IO, cast
-from xml.etree.ElementTree import Element, ParseError, XMLPullParser
+from typing import IO
+from xml.etree.ElementTree import ParseError
 
 from serenata.eforms import (
-    CHUNK_BYTES,
-    HEADER_BYTES,
     LEGACY_ROOT,
     ROOT,
     NoticeRejected,
-    PrologGuard,
     is_eforms_root,
     qualified_name,
+    stream_elements,
 )
 from serenata.parse.personal_data import (
     NATURAL_PERSON_INDICATOR,
@@ -126,15 +123,13 @@ def _finish(pending: _Open, notice_id: str) -> Record:
 def read_notice(source: IO[bytes]) -> ParsedNotice:
     """Read one eForms notice into its intermediate records.
 
-    Raises `NoticeRejected` for a notice this project will not parse — a
-    document type declaration, a legacy TED or unrecognised root, or a notice
-    with no identifier — and `ParseError` for malformed XML. Nothing is
-    skipped silently: a caller that cannot use a notice is told which and why.
+    The walk is `serenata.eforms.stream_elements`, shared with the survey;
+    what is built from the events is this stage's own. Raises `NoticeRejected`
+    for a notice this project will not parse — a document type declaration, a
+    legacy TED or unrecognised root, or a notice with no identifier — and
+    `ParseError` for malformed XML. Nothing is skipped silently: a caller that
+    cannot use a notice is told which and why.
     """
-    parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
-
-    guard = PrologGuard()
-
     root_element: str | None = None
     notice_id: str | None = None
     path: list[str] = []
@@ -148,108 +143,77 @@ def read_notice(source: IO[bytes]) -> ParsedNotice:
     #: Per open element, how many children of each name it has seen.
     child_counts: list[dict[str, int]] = []
     has_children: list[bool] = []
-    open_elements: list[Element[str]] = []
     notice_fields: list[Field] = []
     open_containers: list[_Open] = []
     finished: list[_Open] = []
     seen: Counter[str] = Counter()
 
-    def drain() -> None:
-        nonlocal root_element, notice_id
-        # read_events() is typed for every event kind it could be asked for;
-        # subscribing to start and end alone means the payload is an Element.
-        events = cast("Iterator[tuple[str, Element[str]]]", parser.read_events())
-        for event, element in events:
-            name = qualified_name(element.tag)
+    for event, name, element in stream_elements(source):
+        if event == "start":
+            if root_element is None:
+                root_element = _accept_root(element.tag, name)
+            step = ROOT if not path else name
+            if child_counts:
+                counts = child_counts[-1]
+                index = counts.get(step, 0)
+                counts[step] = index + 1
+            else:
+                index = 0
+            path.append(step)
+            here = f"{joined[-1]}/{step}" if joined else step
+            joined.append(here)
+            indices.append(index)
+            child_counts.append({})
+            has_children.append(False)
+            if len(has_children) > 1:
+                has_children[-2] = True
+            kind = CONTAINERS.get(here)
+            if kind is not None:
+                open_containers.append(
+                    _Open(kind=kind, path=here, ordinal=seen[here], depth=len(path))
+                )
+                seen[here] += 1
+            continue
 
-            if event == "start":
-                if root_element is None:
-                    root_element = _accept_root(element.tag, name)
-                    guard.root_started()
-                step = ROOT if not path else name
-                if child_counts:
-                    counts = child_counts[-1]
-                    index = counts.get(step, 0)
-                    counts[step] = index + 1
-                else:
-                    index = 0
-                path.append(step)
-                here = f"{joined[-1]}/{step}" if joined else step
-                joined.append(here)
-                indices.append(index)
-                child_counts.append({})
-                has_children.append(False)
-                if len(has_children) > 1:
-                    has_children[-2] = True
-                open_elements.append(element)
-                kind = CONTAINERS.get(here)
-                if kind is not None:
-                    open_containers.append(
-                        _Open(
-                            kind=kind,
-                            path=here,
-                            ordinal=seen[here],
-                            depth=len(path),
-                        )
+        here = joined[-1]
+        had_children = has_children.pop()
+
+        if open_containers and open_containers[-1].path == here:
+            finished.append(open_containers.pop())
+        elif not is_dropped_path(here, path):
+            # Checked before the value is read, not after: a dropped field
+            # must never be constructed, only to be removed downstream.
+            text = (element.text or "").strip()
+            # A leaf always becomes a field, blank or not. An element with
+            # children does not — it is structure — unless it also carries
+            # text of its own, which no notice in the surveyed package does
+            # and which would otherwise be dropped without a trace.
+            if not had_children or text:
+                inner = open_containers[-1] if open_containers else None
+                base = inner.path if inner else ROOT
+                depth = inner.depth if inner else 1
+                target = inner.fields if inner else notice_fields
+                target.append(
+                    Field(
+                        path=here[len(base) + 1 :],
+                        value=text,
+                        empty=not text,
+                        attributes=tuple(
+                            (qualified_name(key), value)
+                            for key, value in element.attrib.items()
+                        ),
+                        occurrence=tuple(indices[depth:]),
                     )
-                    seen[here] += 1
-                continue
+                )
+                if here == NOTICE_ID_PATH and text and notice_id is None:
+                    notice_id = text
 
-            here = joined[-1]
-            had_children = has_children.pop()
+        path.pop()
+        joined.pop()
+        indices.pop()
+        child_counts.pop()
 
-            if open_containers and open_containers[-1].path == here:
-                finished.append(open_containers.pop())
-            elif not is_dropped_path(here, path):
-                # Checked before the value is read, not after: a dropped field
-                # must never be constructed, only to be removed downstream.
-                text = (element.text or "").strip()
-                # A leaf always becomes a field, blank or not. An element with
-                # children does not — it is structure — unless it also carries
-                # text of its own, which no notice in the surveyed package does
-                # and which would otherwise be dropped without a trace.
-                if not had_children or text:
-                    inner = open_containers[-1] if open_containers else None
-                    base = inner.path if inner else ROOT
-                    depth = inner.depth if inner else 1
-                    target = inner.fields if inner else notice_fields
-                    target.append(
-                        Field(
-                            path=here[len(base) + 1 :],
-                            value=text,
-                            empty=not text,
-                            attributes=tuple(
-                                (qualified_name(key), value)
-                                for key, value in element.attrib.items()
-                            ),
-                            occurrence=tuple(indices[depth:]),
-                        )
-                    )
-                    if here == NOTICE_ID_PATH and text and notice_id is None:
-                        notice_id = text
-
-            path.pop()
-            joined.pop()
-            indices.pop()
-            child_counts.pop()
-            open_elements.pop()
-            # Release the element and unhook it from its parent, so a finished
-            # subtree is not held for the length of the document.
-            element.clear()
-            if open_elements:
-                open_elements[-1].remove(element)
-
-    chunk = source.read(HEADER_BYTES)
-    while chunk:
-        guard.check(chunk)
-        parser.feed(chunk)
-        drain()
-        chunk = source.read(CHUNK_BYTES)
-
-    parser.close()
-    drain()
-
-    if root_element is None:
+    if root_element is None:  # pragma: no cover - stream_elements raises first
         raise ParseError("no root element")
     if notice_id is None:
         raise NoticeRejected(

@@ -23,10 +23,9 @@ type declaration is refused outright — see ADR-0003.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import IO, cast
-from xml.etree.ElementTree import Element, ParseError, XMLPullParser
+from typing import IO
+from xml.etree.ElementTree import ParseError
 
 from serenata.eforms import (
     CHUNK_BYTES,
@@ -36,6 +35,7 @@ from serenata.eforms import (
     NoticeRejected,
     PrologGuard,
     qualified_name,
+    stream_elements,
 )
 
 #: Re-exported so this module stays the survey's single entry point for the
@@ -51,6 +51,7 @@ __all__ = [
     "PrologGuard",
     "qualified_name",
     "read_notice",
+    "stream_elements",
 ]
 
 _COUNTRY_CODE_SUFFIX = "/cac:Country/cbc:IdentificationCode"
@@ -73,63 +74,35 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
 
     Reads ``source`` as a stream, discarding each element once its path has
     been recorded, so cost tracks the deepest element rather than the whole
-    document.
+    document. The walk itself is `serenata.eforms.stream_elements`, shared with
+    the parse stage; what is counted here is this module's own.
     """
-    parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
-
-    guard = PrologGuard()
-
     root_type: str | None = None
     subtype: str | None = None
     countries: set[str] = set()
     valued: set[str] = set()
     empty: set[str] = set()
-    open_elements: list[Element[str]] = []
     path: list[str] = []
 
-    def drain() -> None:
-        nonlocal root_type, subtype
-        # read_events() is typed for every event kind it could be asked for;
-        # subscribing to start and end alone means the payload is an Element.
-        events = cast("Iterator[tuple[str, Element[str]]]", parser.read_events())
-        for event, element in events:
-            name = qualified_name(element.tag)
-            if event == "start":
-                if root_type is None:
-                    root_type = name
-                    guard.root_started()
-                path.append(ROOT if not path else name)
-                open_elements.append(element)
-                continue
+    for event, name, element in stream_elements(source):
+        if event == "start":
+            if root_type is None:
+                root_type = name
+            path.append(ROOT if not path else name)
+            continue
 
-            here = "/".join(path)
-            text = (element.text or "").strip()
-            (valued if text else empty).add(here)
+        here = "/".join(path)
+        text = (element.text or "").strip()
+        (valued if text else empty).add(here)
 
-            if text and name == _SUBTYPE and subtype is None:
-                subtype = text
-            if text and here.endswith(_COUNTRY_CODE_SUFFIX):
-                countries.add(text)
+        if text and name == _SUBTYPE and subtype is None:
+            subtype = text
+        if text and here.endswith(_COUNTRY_CODE_SUFFIX):
+            countries.add(text)
 
-            path.pop()
-            open_elements.pop()
-            # Release the element and unhook it from its parent, so a finished
-            # subtree is not held for the length of the document.
-            element.clear()
-            if open_elements:
-                open_elements[-1].remove(element)
+        path.pop()
 
-    chunk = source.read(HEADER_BYTES)
-    while chunk:
-        guard.check(chunk)
-        parser.feed(chunk)
-        drain()
-        chunk = source.read(CHUNK_BYTES)
-
-    parser.close()
-    drain()
-
-    if root_type is None:
+    if root_type is None:  # pragma: no cover - stream_elements raises first
         raise ParseError("no root element")
 
     return NoticeShape(

@@ -20,8 +20,8 @@ import pytest
 
 from serenata.eforms import NoticeRejected
 from serenata.parse import (
-    NoticeParseError,
     ParsedNotice,
+    Unparsed,
     parse_package,
     read_notice,
 )
@@ -183,7 +183,9 @@ class TestFormatDispatch:
         # A six-digit name is the legacy convention, but this document is
         # eForms and parses; open-work #4 asks for exactly this.
         package = write_package(tmp_path, {"123456_2022.xml": eforms_notice()})
-        assert len(list(parse_package(package))) == 1
+        outcomes = list(parse_package(package))
+        assert len(outcomes) == 1
+        assert not isinstance(outcomes[0], Unparsed)
 
 
 class TestRefusalsFromAdr0003:
@@ -412,7 +414,7 @@ class TestDeterminism:
 
 
 class TestPackages:
-    """Reading an archived package, and failing loudly when one cannot be read."""
+    """Reading an archived package, and never losing a notice quietly."""
 
     def test_it_reads_every_notice_in_a_package(self, tmp_path: Path) -> None:
         package = write_package(
@@ -422,26 +424,65 @@ class TestPackages:
                 "00000002_2026.xml": eforms_notice(notice_id="00000002-2026"),
             },
         )
-        assert [notice.notice_id for notice in parse_package(package)] == [
+        assert [outcome.notice_id for outcome in parse_package(package)] == [
             "00000001-2026",
             "00000002-2026",
         ]
 
-    def test_a_bad_notice_fails_loudly_naming_the_member(self, tmp_path: Path) -> None:
+    def test_a_bad_notice_is_reported_and_named(self, tmp_path: Path) -> None:
         package = write_package(
             tmp_path,
             {"00000003_2026.xml": eforms_notice()[:-40]},
         )
-        with pytest.raises(NoticeParseError) as raised:
-            list(parse_package(package))
-        assert raised.value.member.endswith("00000003_2026.xml")
+        outcomes = list(parse_package(package))
+        assert len(outcomes) == 1
+        assert isinstance(outcomes[0], Unparsed)
+        assert outcomes[0].member.endswith("00000003_2026.xml")
+
+    def test_a_bad_notice_does_not_end_the_run(self, tmp_path: Path) -> None:
+        # The defect this replaces: parse_package raised, and raising from
+        # inside a generator closes it. A caller catching the error saw
+        # iteration end normally and lost every notice after the bad one —
+        # silently, which is the failure this module exists to prevent.
+        package = write_package(
+            tmp_path,
+            {
+                "00000001_2026.xml": eforms_notice(notice_id="00000001-2026"),
+                "00000002_2026.xml": eforms_notice()[:-40],
+                "00000003_2026.xml": eforms_notice(notice_id="00000003-2026"),
+            },
+        )
+        outcomes = list(parse_package(package))
+        assert [
+            outcome.member.rsplit("/", 1)[-1]
+            if isinstance(outcome, Unparsed)
+            else outcome.notice_id
+            for outcome in outcomes
+        ] == ["00000001-2026", "00000002_2026.xml", "00000003-2026"]
 
     def test_a_legacy_package_is_not_silently_empty(self, tmp_path: Path) -> None:
         # The failure this guards: a 2023 package yielding zero notices and no
-        # error, which looks exactly like a package with nothing in it.
+        # signal, which looks exactly like a package with nothing in it.
         package = write_package(tmp_path, {"123456_2022.xml": b"<TED_EXPORT/>"})
-        with pytest.raises(NoticeParseError, match="legacy"):
-            list(parse_package(package))
+        outcomes = list(parse_package(package))
+        assert len(outcomes) == 1
+        assert isinstance(outcomes[0], Unparsed)
+        assert "legacy" in outcomes[0].reason
+
+    def test_a_caller_that_wants_to_stop_can(self, tmp_path: Path) -> None:
+        package = write_package(
+            tmp_path,
+            {
+                "00000001_2026.xml": eforms_notice(notice_id="00000001-2026"),
+                "00000002_2026.xml": eforms_notice()[:-40],
+            },
+        )
+        seen = []
+        for outcome in parse_package(package):
+            if isinstance(outcome, Unparsed):
+                break
+            seen.append(outcome.notice_id)
+        assert seen == ["00000001-2026"]
 
     def test_non_xml_members_are_skipped(self, tmp_path: Path) -> None:
         package = write_package(

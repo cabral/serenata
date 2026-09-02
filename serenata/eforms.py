@@ -12,6 +12,9 @@ Reading is streamed and refuses document type declarations, per ADR-0003.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
+from typing import IO, cast
+from xml.etree.ElementTree import Element, ParseError, XMLPullParser
 
 #: The namespaces eForms notices are written in, and the prefixes the
 #: specification uses for them. An element in an unlisted namespace keeps its
@@ -151,3 +154,57 @@ class PrologGuard:
         """Stop scanning: nothing after the root element can declare a DTD."""
         self._scanning = False
         self._tail = b""
+
+
+def stream_elements(source: IO[bytes]) -> Iterator[tuple[str, str, Element[str]]]:
+    """Yield ``(event, qualified name, element)`` for one notice, streaming.
+
+    The mechanics both readers need and neither should own: feeding the parser
+    in chunks, refusing a document type declaration across the whole prolog,
+    and releasing each element once the consumer has seen it close. What a
+    reader does with the events — count paths, build records — is its own.
+
+    **An element is not valid after its end event.** It is cleared and unhooked
+    from its parent as soon as the consumer resumes, which is what keeps cost
+    tracking the deepest element rather than the document. Read what you need
+    while you have it.
+    """
+    parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
+    guard = PrologGuard()
+    open_elements: list[Element[str]] = []
+    seen_root = False
+
+    def drain() -> Iterator[tuple[str, str, Element[str]]]:
+        nonlocal seen_root
+        # read_events() is typed for every event kind it could be asked for;
+        # subscribing to start and end alone means the payload is an Element.
+        events = cast("Iterator[tuple[str, Element[str]]]", parser.read_events())
+        for event, element in events:
+            name = qualified_name(element.tag)
+            if event == "start":
+                if not seen_root:
+                    seen_root = True
+                    guard.root_started()
+                open_elements.append(element)
+                yield event, name, element
+                continue
+            yield event, name, element
+            open_elements.pop()
+            # Release the element and unhook it from its parent, so a finished
+            # subtree is not held for the length of the document.
+            element.clear()
+            if open_elements:
+                open_elements[-1].remove(element)
+
+    chunk = source.read(HEADER_BYTES)
+    while chunk:
+        guard.check(chunk)
+        parser.feed(chunk)
+        yield from drain()
+        chunk = source.read(CHUNK_BYTES)
+
+    parser.close()
+    yield from drain()
+
+    if not seen_root:
+        raise ParseError("no root element")
