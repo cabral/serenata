@@ -25,7 +25,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | [Write the data model contract](#1-write-the-data-model-contract) | blocking |
+| 1 | [Write the data model contract](#1-write-the-data-model-contract) | **done** |
 | 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** |
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | milestone 1 |
@@ -37,7 +37,8 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** |
 | 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings |
 
-**Order matters.** 2 feeds 1; 3 gates 4; 1 gates everything downstream of parse.
+**Order matters.** 2 fed 1, and 1 and 3 are both done for eForms, so
+[#4](#4-build-the-parse-stage) is now unblocked and is where the work goes next.
 6 is filed so it is not discovered late, not because it should be done now. 9
 cannot start until there is pipeline output to compare.
 
@@ -45,7 +46,41 @@ cannot start until there is pipeline output to compare.
 
 ## 1. Write the data model contract
 
-`docs/data-model.md` is currently a table of contents, not a model. It is the
+**Done.** [`docs/data-model.md`](data-model.md) is the contract: nine tables —
+`notice`, `procedure`, `lot`, `organisation`, `organisation_role`,
+`tendering_party`, `lot_tender`, `lot_result`, `settled_contract`,
+`field_privacy` — with a measured source path and presence figure for every
+column. `tests/test_data_model.py` checks all 85 cited paths against the 751 the
+survey measured, and separately that no column maps to a path
+`personal_data.is_dropped()` rejects.
+
+Two decisions it rests on got their own records:
+
+- [ADR-0005](adr/0005-element-paths-as-provenance.md) — provenance is the
+  **element path**, not the eForms BT code, which answers the question #2 left
+  open. BT codes need the eForms SDK, and the mapping is an annotation that can
+  be added later without touching a column, a key or a classifier.
+- [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md) — every nullable
+  column carries a `<column>_status` of `present`, `empty`, `absent`,
+  `withheld` or `not_applicable`.
+
+The second is the one with teeth. `efac:ReceivedSubmissionsStatistics` — the bid
+count, and the input to the single-bid classifier this project will almost
+certainly write first — is a field publishers can withhold through
+`efac:FieldsPrivacy`, and it is observed withheld in this package. Collapsing
+"withheld" into the same NULL as "not provided" would let a classifier read a
+lawful deferral as a low bid count and flag a buyer for the project's own data
+handling.
+
+Two things it deliberately does not settle: cross-notice organisation identity
+(`company_id` is an attribute, not a key — that is milestone 3), and the legacy
+TED mappings, for the same reason as [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person)
+— no legacy notice has been measured, and spec-read mappings are not published
+as though they were.
+
+The original statement of the problem follows.
+
+`docs/data-model.md` was a table of contents, not a model. It is the
 contract the normalise stage is written against, so nothing downstream of parse
 can start until it exists. This is the gate for the rest of milestone 1.
 
@@ -197,11 +232,13 @@ against it without further judgement calls about individual fields.
 
 `serenata/parse/` is a docstring. It turns archived notices into typed
 intermediate records, running offline against the packages `fetch` produces.
-The eForms drop list it must implement is now written and executable —
+**Both of its blockers are now cleared for eForms.** The drop list it must
+implement is written and executable —
 [`personal-data.md`](personal-data.md) and `serenata/parse/personal_data.py` —
-so this no longer waits on [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person)
-for eForms notices. It still does for legacy ones. Easier once #1 lands, though
-the intermediate record shape need not wait for the full relational model.
+and [`data-model.md`](data-model.md) is the shape it produces records in, with a
+measured source path for every column. Legacy notices are still blocked on
+[#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) and must be
+refused rather than parsed. **This is the next piece of work.**
 
 **What to do.**
 
