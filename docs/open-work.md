@@ -831,6 +831,12 @@ rule in the pipeline and should be argued rather than slipped in. Nothing is
 published yet, so this blocks the first dataset release rather than the
 pipeline.
 
+**This one needs counsel before it is acted on.** Whichever option is chosen
+changes what "dropped at ingestion" means, and a change to the drop-at-ingestion
+rule is on the project's escalation list rather than being a judgement call to
+make in a pull request. Writing the options down is in scope; deciding between
+them is not.
+
 **Done when** the rule is decided in an ADR, executable, tested against the
 measured cases, and `personal-data.md` says which fields it applies to and why a
 path-based list could not have caught them.
