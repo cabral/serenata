@@ -28,7 +28,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 1 | [Write the data model contract](#1-write-the-data-model-contract) | **done** |
 | 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** |
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open |
-| 4 | [Build the parse stage](#4-build-the-parse-stage) | milestone 1 |
+| 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open |
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here |
@@ -37,10 +37,10 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** |
 | 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings |
 
-**Order matters.** 2 fed 1, and 1 and 3 are both done for eForms, so
-[#4](#4-build-the-parse-stage) is now unblocked and is where the work goes next.
-6 is filed so it is not discovered late, not because it should be done now. 9
-cannot start until there is pipeline output to compare.
+**Order matters.** 2 fed 1; 1, 3 and 4 are all done for eForms, so the stage
+boundary has moved to normalise. 6 is filed so it is not discovered late, not
+because it should be done now. 9 cannot start until there is pipeline output to
+compare — which is now one stage away rather than two.
 
 ---
 
@@ -230,7 +230,45 @@ against it without further judgement calls about individual fields.
 
 ## 4. Build the parse stage
 
-`serenata/parse/` is a docstring. It turns archived notices into typed
+**Done for eForms; legacy notices are refused rather than guessed at.**
+`serenata/parse/` reads archived notices into typed intermediate records:
+`notice.py` streams one notice, `packages.py` walks a package, `records.py`
+defines the records, and `personal_data.py` is the drop list from
+[#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person).
+
+Run against the real OJ S 157/2026 archive, all **3,190 notices parse** into
+46,223 records and 865,288 fields, with no failures and 82 MB peak memory.
+
+Three things that measurement settled:
+
+- **Constraint 2 holds on real data.** 32,135 leaf elements — **3.6% of every
+  leaf in the package** — are dropped before they reach a record, and a check
+  over all 46,223 records finds no field whose path the drop list rejects. The
+  7 organisations flagged as natural persons lose 48 identifying values between
+  them and keep their opaque keys, so those records are anonymised, not deleted.
+- **`empty` is real but not observed.** There are **zero** blank leaf elements
+  among 897,471, so the 295 paths `field-usage.md` reports as "containers or
+  blank elements" are all containers. [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md)
+  was corrected: the status is kept because conflating blank with absent would
+  be silently wrong, not because this package shows it happening.
+- **Format dispatch is on the root element, not the filename.** A name is a
+  claim; the root namespace is the document saying what it is.
+
+The eForms vocabulary moved to `serenata/eforms.py`, shared with the survey. Not
+tidying: `personal_data.py`'s drop list is written in those prefixes, and a
+second copy that drifted would silently stop rejecting the paths it exists to
+reject. The survey's report regenerates byte-identically after the move.
+
+**Legacy notices raise** with a message naming the docs and open-work #3. A
+package of them fails loudly rather than yielding nothing, because a stage that
+quietly produced zero notices would look exactly like an empty package.
+
+Still open: wiring `serenata parse` into the CLI, which is its own commit as
+`fetch` was.
+
+The original statement of the problem follows.
+
+`serenata/parse/` was a docstring. It turns archived notices into typed
 intermediate records, running offline against the packages `fetch` produces.
 **Both of its blockers are now cleared for eForms.** The drop list it must
 implement is written and executable —
