@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-01
+- Amended: 2026-09-02 — see [Amendment](#amendment-2026-09-02-the-refusal-had-to-cover-the-whole-prolog)
 
 ## Context
 
@@ -37,7 +38,8 @@ runtime dependency, runs `pip-audit` weekly, and trades on being auditable.
 ## Decision
 
 Parse with the standard library. Refuse any notice carrying a document type
-declaration, checked against the prolog before parsing begins. Do not add
+declaration, checked across the whole prolog before each chunk is parsed — see
+the amendment below for why the emphasis is on *whole*. Do not add
 `defusedxml`.
 
 Refusing DTDs closes entity amplification completely — no entity can be declared
@@ -79,3 +81,30 @@ a second line rather than the only one.
 - **TED publishing notices that legitimately carry DTDs.** Then the refusal
   costs real data and the trade has to be re-argued.
 - **`defusedxml` returning to active maintenance**, if the balance ever shifts.
+
+## Amendment, 2026-09-02: the refusal had to cover the whole prolog
+
+This ADR's central claim — that refusing DTDs "closes entity amplification
+completely" — was **false as first implemented**, and a code review caught it
+with a working probe.
+
+The refusal scanned the first 8,192 bytes. A notice whose prolog opens with a
+comment longer than that pushes its declaration past the window, and it was then
+parsed with entity expansion live: a 3-byte entity reference expanded to 1,000
+characters, trivially extendable. A UTF-16 document evaded the check too, since
+the scan compares ASCII bytes.
+
+The claim is worth keeping, so the implementation was made to earn it. The XML
+specification permits a document type declaration only before the root element,
+so `serenata.eforms.PrologGuard` scans **every byte read until the root opens**,
+carrying the tail of each chunk into the next so a declaration split across two
+reads is still seen, and stops scanning once the root element starts — which
+keeps the cost bounded on the 40 MB notice this ADR was written around.
+Encodings the scan cannot read are refused rather than scanned wrongly.
+
+Two things worth recording beyond the fix. The hole was in the *guarantee*, not
+the technique: streaming, no `defusedxml`, and refusing DTDs were all still the
+right calls, and the decision stands unchanged. And the survey shared the same
+weakness through the same helper, so both stages were fixed together and both
+have a regression test — a security control living in one place was what made
+that a single fix rather than two.

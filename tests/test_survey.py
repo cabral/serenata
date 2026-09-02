@@ -334,6 +334,18 @@ class TestRender:
             "202600157", ""
         ), "provenance is the package and its checksum, never a generation clock"
 
+    def test_a_declaration_past_the_first_chunk_is_refused(self, tmp_path):
+        # The survey shares the parse stage's prolog guard, and shared the same
+        # hole before it: a declaration behind a long comment was not seen.
+        padding = b"<!-- " + b"P" * 9000 + b" -->"
+        document = notice_xml().replace(
+            b"<ContractNotice",
+            padding + b'<!DOCTYPE ContractNotice [<!ENTITY a "A">]><ContractNotice',
+            1,
+        )
+        with pytest.raises(NoticeRejected, match="document type declaration"):
+            read_notice(io.BytesIO(document))
+
     def test_it_carries_the_ted_attribution(self, tmp_path):
         # Reuse of TED data is conditioned on acknowledging the source
         # (Commission Decision 2011/833/EU). Generated, not pasted, so that

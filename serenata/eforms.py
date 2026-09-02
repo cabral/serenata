@@ -37,14 +37,28 @@ HEADER_BYTES = 8192
 #: Bytes fed to the parser at a time once the header has been cleared.
 CHUNK_BYTES = 1 << 16
 
-#: Root namespaces that mark a document as eForms. The three UBL notice types
-#: sit under the OASIS prefix; the business registration notice under the
-#: Publications Office's own. Measured against OJ S 157/2026, where these cover
-#: all 3,190 notices.
-EFORMS_ROOT_NAMESPACES = (
-    "urn:oasis:names:specification:ubl:schema:xsd:",
-    "http://data.europa.eu/p27/",
+#: UBL names a document type's namespace after the document itself, so
+#: ``ContractNotice`` lives in ``…:xsd:ContractNotice-2``. Requiring that
+#: agreement is what keeps a UBL ``Invoice`` — same prefix, same schema family,
+#: not a notice — from being read as one.
+UBL_PREFIX = "urn:oasis:names:specification:ubl:schema:xsd:"
+
+#: eForms notice namespaces outside UBL. Measured against OJ S 157/2026; a new
+#: one is refused by name, which makes adding it a one-line change rather than
+#: a silent acceptance of whatever arrives.
+EFORMS_NOTICE_NAMESPACES = frozenset(
+    {"http://data.europa.eu/p27/eforms-business-registration-information-notice/1"}
 )
+
+#: Byte-order marks for encodings this project does not read. All 3,190 notices
+#: in OJ S 157/2026 are plain UTF-8. Refusing the rest keeps the prolog scan
+#: below a byte comparison against ASCII-compatible bytes, which is the only
+#: thing that makes it sound.
+_REJECTED_BOMS = (b"\xff\xfe", b"\xfe\xff", b"\x00\x00\xfe\xff")
+
+#: ``<!DOCTYPE`` minus one, so a declaration split across two reads is still
+#: seen: the tail of one chunk is prepended to the next before scanning.
+_DOCTYPE_OVERLAP = len("<!DOCTYPE") - 1
 
 #: The root element of a legacy TED notice, recognised so it can be refused
 #: with a message that says why rather than as an unknown document.
@@ -73,16 +87,67 @@ def namespace_of(tag: str) -> str:
     return tag[1:].partition("}")[0]
 
 
-def reject_doctype(header: bytes) -> None:
-    """Refuse a notice carrying a document type declaration (ADR-0003).
+def is_eforms_root(tag: str) -> bool:
+    """Whether this root element belongs to an eForms notice.
 
-    eForms is validated against an XSD and no notice needs a DTD; none of the
-    3,190 notices in OJ S 157/2026 carries one. Refusing them closes internal
-    entity expansion, the one attack the standard library's parser is still
-    open to, without taking on a dependency to do it.
+    Checked against the namespace the document declares rather than against a
+    prefix of it. A prefix match accepts every UBL document there is — an
+    ``Invoice`` and an ``Order`` share the notice types' namespace family — and
+    those parse into records that look like a notice and are not one.
     """
-    if _DOCTYPE.search(header):
-        raise NoticeRejected(
-            "notice carries a document type declaration; eForms notices are "
-            "schema-validated and do not need one (ADR-0003)"
-        )
+    namespace = namespace_of(tag)
+    local = tag.rpartition("}")[2]
+    if namespace.startswith(UBL_PREFIX):
+        return local.endswith("Notice") and namespace == f"{UBL_PREFIX}{local}-2"
+    return namespace in EFORMS_NOTICE_NAMESPACES
+
+
+class PrologGuard:
+    """Refuses a document type declaration anywhere it may legally appear.
+
+    ADR-0003 rests the whole case for using the standard library on refusing
+    DTDs, because refusing them is what closes internal entity expansion. That
+    claim is only true if the refusal cannot be walked around, and scanning a
+    fixed-size header can be: a notice whose prolog opens with a comment longer
+    than the header pushes its declaration out of view, and it is then parsed
+    with entity expansion live.
+
+    The XML specification allows a document type declaration only before the
+    root element, so scanning every byte read until the root opens covers every
+    position it can occupy. Past that point the scan stops and costs nothing,
+    which keeps this affordable on a 40 MB notice.
+
+    Encodings are handled by refusing them: a UTF-16 document would hide
+    ``<!DOCTYPE`` from any ASCII byte comparison, so it is rejected outright
+    rather than scanned wrongly.
+    """
+
+    def __init__(self) -> None:
+        self._tail = b""
+        self._scanning = True
+        self._started = False
+
+    def check(self, chunk: bytes) -> None:
+        """Refuse ``chunk`` if the prolog declares a DTD. Call before feeding."""
+        if not self._started:
+            self._started = True
+            if chunk.startswith(_REJECTED_BOMS):
+                raise NoticeRejected(
+                    "notice is not UTF-8; this project reads the UTF-8 that "
+                    "every surveyed notice uses, and refuses encodings it "
+                    "cannot scan for a document type declaration (ADR-0003)"
+                )
+        if not self._scanning:
+            return
+        window = self._tail + chunk
+        if _DOCTYPE.search(window):
+            raise NoticeRejected(
+                "notice carries a document type declaration; eForms notices are "
+                "schema-validated and do not need one (ADR-0003)"
+            )
+        self._tail = window[-_DOCTYPE_OVERLAP:]
+
+    def root_started(self) -> None:
+        """Stop scanning: nothing after the root element can declare a DTD."""
+        self._scanning = False
+        self._tail = b""

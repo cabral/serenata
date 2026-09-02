@@ -247,8 +247,9 @@ Three things that measurement settled:
   7 organisations flagged as natural persons lose 48 identifying values between
   them and keep their opaque keys, so those records are anonymised, not deleted.
 - **`empty` is real but not observed.** There are **zero** blank leaf elements
-  among 897,471, so the 295 paths `field-usage.md` reports as "containers or
-  blank elements" are all containers. [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md)
+  among all 897,471 — counted without the drop filter, so the dropped 32,135 are
+  in that denominator — and the 295 paths `field-usage.md` reports as
+  "containers or blank elements" are all containers. [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md)
   was corrected: the status is kept because conflating blank with absent would
   be silently wrong, not because this package shows it happening.
 - **Format dispatch is on the root element, not the filename.** A name is a

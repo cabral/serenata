@@ -337,7 +337,8 @@ one.
 | `not_applicable` | the notice subtype makes the field inapplicable |
 
 `present` and `empty` are directly observable. `empty` is also, measurably,
-rare: parsing OJ S 157/2026 finds **zero** blank leaf elements among 897,471, so
+rare: a pass over OJ S 157/2026 finds **zero** blank leaf elements among all
+897,471 — dropped paths included, since that count applies no filter — so
 the 295 paths `field-usage.md` reports as "containers or blank elements" are all
 containers. The status is kept because conflating a blank element with an absent
 one would be silently wrong and costs nothing to avoid, not because this package
