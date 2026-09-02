@@ -13,7 +13,9 @@ and the constraints below are not optional.
    companies, and contracts. If a source field could contain a natural person's
    name (contact persons, sole traders), it is dropped at ingestion, not stored
    and filtered later. This is a legal constraint (GDPR, Swedish defamation law),
-   not a style preference.
+   not a style preference. The field list is docs/personal-data.md, executable as
+   serenata/parse/personal_data.py; extend both in the same PR as any schema
+   change.
 3. Flags are statistical anomalies, not accusations. Any user-facing string, doc,
    or example output describes flags as anomalies with possible innocent
    explanations, linked to the source notice. Never the words "corrupt",
