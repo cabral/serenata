@@ -115,6 +115,7 @@ docs/
   data-reuse.md # TED's reuse terms and this project's attribution
   hypotheses/   # one file per classifier: hypothesis, sources, base rates
 data/           # gitignored workspace, except the committed sample/
+.claude/skills/ # the working rules this project is built to, in long form
 ```
 
 ## Fetching notices

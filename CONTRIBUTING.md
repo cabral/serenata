@@ -84,6 +84,26 @@ An ADR that turns out to be wrong gets an amendment with a date, not a quiet
 edit. [ADR-0003](docs/adr/0003-xml-parsing-without-defusedxml.md) is the worked
 example.
 
+## The working rules in `.claude/skills/`
+
+This project is largely built with an AI coding assistant, and the rules it
+works to are in [`.claude/skills/`](.claude/skills/) — the classifier workflow
+and merge checklist (`coding`), the intake gates a detection idea has to pass
+(`case-research`), the defamation and GDPR guardrails (`legal`), and how the
+project writes for people outside it (`communication`, `patreon`).
+
+They are in the repository rather than on one laptop for two reasons. A rule
+nobody can read is a rule nobody can follow, disagree with, or improve. And the
+standards an assistant is held to should be the standards a human contributor is
+held to; if they differ, one of them is wrong.
+
+**They are ordinary files: improve them with a pull request like anything else.**
+Where a skill and `CLAUDE.md` disagree, `CLAUDE.md` wins and the skill is what
+needs fixing. Where a skill claims something about this repository that is not
+true — that a test exists, that a document says something — that is a bug worth
+a PR on its own, because a rule that misdescribes the code teaches the next
+reader something false.
+
 ## Commits and pull requests
 
 - Small, one concern each. Imperative subject: "Build the parse stage", not
