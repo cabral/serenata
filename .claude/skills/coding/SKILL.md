@@ -26,7 +26,7 @@ Do these steps in order. The order is the point.
 
 ### 1. Write the hypothesis file
 
-Create `docs/hypotheses/<module>.md` before writing any detection code, named after the classifier module it governs — a classifier at `serenata/classify/rushed_award.py` has `docs/hypotheses/rushed_award.md`. That coupling is what `tests/test_constraints.py` checks, and it is why the name is the module rather than a number. (Case files under `docs/cases/` keep the `NNN-slug` numbering; hypotheses are addressed by the code they bind.) Template:
+Create `docs/hypotheses/<module>.md` before writing any detection code, named after the classifier module it governs — a classifier at `serenata/classify/<module>.py` has `docs/hypotheses/<module>.md`. That coupling is what `tests/test_constraints.py` checks, and it is why the name is the module rather than a number. (Case files under `docs/cases/` keep the `NNN-slug` numbering; hypotheses are addressed by the code they bind.) Template:
 
 ```markdown
 # <name>

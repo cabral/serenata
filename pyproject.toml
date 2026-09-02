@@ -73,7 +73,12 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# The coverage floor is a rot detector, not a ratchet: the suite currently sits
-# at 99% with every fetch module at 100%, and 95 leaves room to add a stage
-# without a red build while still catching a stage that arrives untested.
-addopts = "-ra --cov=serenata --cov-report=term-missing --cov-fail-under=95"
+# Coverage is measured on every run and enforced only in CI (see
+# .github/workflows/ci.yml, which passes --cov-fail-under=95). With the floor
+# here, running one test file reported a failing build at 20% coverage, which
+# taught everyone — human and assistant — to reach for --no-cov and lose the
+# report entirely. A gate that trains people to disable it is worse than no
+# gate. The floor is a rot detector, not a ratchet: the suite sits at 99%, and
+# 95 leaves room to add a stage without a red build while still catching one
+# that arrives untested.
+addopts = "-ra --cov=serenata --cov-report=term-missing"

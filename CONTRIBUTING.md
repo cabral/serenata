@@ -143,6 +143,10 @@ mechanically; a missing sign-off will be asked for in review.
   mechanics.
 - A test that can only pass vacuously should assert it is not passing vacuously.
   Several here do.
+- Coverage is reported on every run and the 95% floor is enforced in CI, not
+  locally, so running one file is not a failing build. Coverage measures which
+  lines ran, not whether anything was checked; do not treat the number as the
+  goal.
 - For anything with a measured claim behind it, prefer a check against the real
   archive over an assertion about what you expect it to contain.
 

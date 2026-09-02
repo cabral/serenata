@@ -11,7 +11,7 @@ Everything public-facing is written for two readers at once: the person it's add
 
 Honest, short, specific. Numbers over adjectives. If a sentence would survive with the adjective deleted, delete the adjective. Placeholders stay visibly bracketed like [THIS] until Felipe fills them; never invent a metric, a date, or an endorsement to make a draft look finished.
 
-Before finalizing any draft longer than a paragraph, read `references/writing-style.md` in this skill and apply it.
+Before finalizing any draft longer than a paragraph, re-read the rules above and apply them line by line. (This pointed at a bundled writing-style reference under references/ that has never existed in this repository; if that file turns up, add it here and point at it again.)
 
 ## Framing
 
