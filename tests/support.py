@@ -1,4 +1,4 @@
-"""Builders for the fetch tests: a stand-in TED and a clock that never ticks.
+"""Builders for the tests: a stand-in TED, a clock that never ticks, notices.
 
 Nothing here touches the network or a real clock. Package fixtures are built
 in memory with obviously synthetic notice IDs, per ``tests/fixtures/README.md``.
@@ -64,3 +64,74 @@ class FakeClock:
 
     def advance(self, seconds: float) -> None:
         self.now += seconds
+
+
+#: Namespaces an eForms notice declares. Repeated here rather than imported
+#: from `serenata.eforms` on purpose: a fixture that took its namespaces from
+#: the code under test would still pass if that code renamed one.
+CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+EXT = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+EFAC = "http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1"
+EFBC = "http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1"
+EFEXT = "http://data.europa.eu/p27/eforms-ubl-extensions/1"
+
+#: An impossible TED publication number, per tests/fixtures/README.md.
+SYNTHETIC_PUBLICATION = "00000001-2026"
+
+#: Ditto for the notice's UUID: nothing that could be mistaken for a real one.
+SYNTHETIC_NOTICE_ID = "00000000-0000-0000-0000-000000000001"
+
+
+def notice_xml(
+    *,
+    root: str = "ContractNotice",
+    notice_id: str = SYNTHETIC_NOTICE_ID,
+    publication_id: str = SYNTHETIC_PUBLICATION,
+    publication_date: str = "2026-08-17+02:00",
+    language: str = "ENG",
+    body: str = "",
+    extension: str = "",
+) -> bytes:
+    """A synthetic eForms notice carrying whatever ``body`` adds.
+
+    Deliberately richer than the parse tests' builder: the normalise stage reads
+    the publication block, the notice language and the extension, and a fixture
+    without them exercises none of the columns that matter.
+    """
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<{root} xmlns="urn:oasis:names:specification:ubl:schema:xsd:{root}-2"
+        xmlns:cac="{CAC}" xmlns:cbc="{CBC}" xmlns:ext="{EXT}"
+        xmlns:efac="{EFAC}" xmlns:efbc="{EFBC}" xmlns:efext="{EFEXT}">
+  <cbc:ID>{notice_id}</cbc:ID>
+  <cbc:NoticeLanguageCode>{language}</cbc:NoticeLanguageCode>
+  {body}
+  <ext:UBLExtensions><ext:UBLExtension><ext:ExtensionContent>
+    <efext:EformsExtension>
+      <efac:Publication>
+        <efbc:NoticePublicationID>{publication_id}</efbc:NoticePublicationID>
+        <efbc:PublicationDate>{publication_date}</efbc:PublicationDate>
+      </efac:Publication>
+      {extension}
+    </efext:EformsExtension>
+  </ext:ExtensionContent></ext:UBLExtension></ext:UBLExtensions>
+</{root}>""".encode()
+
+
+def make_notice_package(
+    notices: dict[str, bytes], prefix: str = PACKAGE_PREFIX
+) -> bytes:
+    """A gzipped tar shaped like a TED daily package, carrying real notices.
+
+    `make_package` above builds the shape the fetch tests need and nothing
+    readable inside; this one carries documents the parse and normalise stages
+    can actually read.
+    """
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+        for name, body in notices.items():
+            info = tarfile.TarInfo(f"{prefix}/{name}")
+            info.size = len(body)
+            info.mtime = 0
+            archive.addfile(info, io.BytesIO(body))
+    return buffer.getvalue()

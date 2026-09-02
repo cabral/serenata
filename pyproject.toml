@@ -7,8 +7,13 @@ authors = [{ name = "Felipe B. Cabral", email = "felipe.benites@gmail.com" }]
 license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-# httpx is BSD-3-Clause, compatible with AGPL-3.0 (ADR-0002).
-dependencies = ["httpx>=0.27"]
+# httpx is BSD-3-Clause (ADR-0002) and pyarrow is Apache-2.0 (ADR-0001, which
+# names it as the Parquet writer). Both are AGPL-3.0 compatible, and
+# tests/test_constraints.py checks that against installed metadata every run.
+dependencies = [
+    "httpx>=0.27",
+    "pyarrow>=25.0.1",
+]
 
 [project.urls]
 Repository = "https://github.com/cabral/serenata"
@@ -19,8 +24,11 @@ serenata = "serenata.cli:main"
 [dependency-groups]
 # Development tooling only; none of this ships with the distributed package.
 # All permissive and AGPL-3.0 compatible, and tests/test_constraints.py checks
-# that on every run rather than trusting this comment.
+# that on every run rather than trusting this comment. duckdb (MIT) is here
+# rather than in dependencies because the pipeline writes Parquet and only the
+# tests read it back; classifiers will move it when they need SQL (ADR-0001).
 dev = [
+    "duckdb>=1.5.5",
     "mypy>=1.13",
     "pip-audit>=2.7",
     "pytest>=8",
@@ -55,6 +63,13 @@ select = [
 python_version = "3.12"
 strict = true
 files = ["serenata"]
+
+# pyarrow ships no type information. The alternative to this override is an
+# ignore comment on every import of it, which says the same thing in more
+# places; our own use of it stays typed either way.
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
