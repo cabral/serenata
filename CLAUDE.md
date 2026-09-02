@@ -2,10 +2,9 @@
 
 Open-source anomaly detection pipeline for EU public procurement data (TED/eForms).
 Successor to Operação Serenata de Amor (okfn-brasil/serenata-de-amor), rebuilt for
-EU data by co-founder Felipe Cabral. An NLnet NGI Zero Commons Fund application is
-pending (deadline 1 Aug 2026); this repository is referenced in that application
-and will be read by NLnet reviewers. Code quality, documentation honesty, and the
-constraints below are not optional.
+EU data by co-founder Felipe Cabral. This is a public repository, read by people
+deciding whether the output can be trusted. Code quality, documentation honesty,
+and the constraints below are not optional.
 
 ## Hard constraints — never violate, never "temporarily" work around
 
@@ -62,7 +61,7 @@ constraints below are not optional.
 - Small PRs/commits, imperative messages, one concern each.
 - When a design decision isn't covered here, propose it in a short ADR
   (docs/adr/NNNN-title.md) instead of burying it in code.
-- The README is part of the product: NLnet reviewers and journalists read it.
-  Keep the project plan, milestone status, and honest limitations current.
+- The README is part of the product: funders, journalists and contributors read
+  it. Keep the project plan, milestone status, and honest limitations current.
 - Never fabricate sample data that looks like real findings. Examples in docs use
   obviously synthetic notice IDs or real public notices reproduced accurately.

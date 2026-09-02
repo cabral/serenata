@@ -1,0 +1,23 @@
+name: Audit
+
+# Vulnerability data changes independently of this repository, so a clean audit
+# on the last push says nothing about today. This runs on a schedule instead of
+# on push, and can be triggered by hand when a dependency changes.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked
+      - name: Audit dependencies for known vulnerabilities
+        run: uv run pip-audit
