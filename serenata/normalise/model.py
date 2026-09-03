@@ -231,6 +231,33 @@ PROCEDURE_TABLE = Table(
             "process_reason_code",
             "cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode",
         ),
+        # What the buyer expected to spend, against what the notice records
+        # being awarded. The gap between the two is one of the indicators the
+        # published literature is built on, and neither was carried before.
+        Column(
+            "estimated_amount",
+            "cac:ProcurementProject/cac:RequestedTenderTotal"
+            "/cbc:EstimatedOverallContractAmount",
+            currency=True,
+        ),
+        Column(
+            "total_amount",
+            f"{EXT}/efac:NoticeResult/cbc:TotalAmount",
+            currency=True,
+        ),
+        # A framework's ceiling for the whole notice. `max` is the binding one;
+        # `approximate` is the buyer's estimate of what will be called off, and
+        # eForms carries both because they answer different questions.
+        Column(
+            "framework_overall_max_amount",
+            f"{EXT}/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount",
+            currency=True,
+        ),
+        Column(
+            "framework_overall_approximate_amount",
+            f"{EXT}/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount",
+            currency=True,
+        ),
     ),
 )
 
@@ -256,6 +283,26 @@ LOT_TABLE = Table(
         ),
         Column("internal_id", "cac:ProcurementProject/cbc:ID"),
         Column("funding_programme_code", "cac:TenderingTerms/cbc:FundingProgramCode"),
+        Column(
+            "estimated_amount",
+            "cac:ProcurementProject/cac:RequestedTenderTotal"
+            "/cbc:EstimatedOverallContractAmount",
+            currency=True,
+        ),
+        # The deadline for receiving tenders, as two columns because eForms
+        # publishes two elements and both carry their own UTC offset. How long
+        # bidders were given is the difference between this and the publication
+        # date, and a length computed from the date alone is wrong by up to a
+        # day — so the pair is stored as published and the arithmetic belongs to
+        # whoever asks, explicitly (ADR-0006 on storing values as published).
+        Column(
+            "submission_deadline_date",
+            "cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate",
+        ),
+        Column(
+            "submission_deadline_time",
+            "cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime",
+        ),
         # Repeated in 8,028 of 8,624 lots: eForms emits one code per contracting
         # system the lot uses, so the set is the value.
         Column(
@@ -429,6 +476,21 @@ LOT_RESULT_TABLE = Table(
         Column("contract_refs", "efac:SettledContract/cbc:ID", Kind.SET),
         Column("highest_tender_amount", "cbc:HigherTenderAmount", currency=True),
         Column("lowest_tender_amount", "cbc:LowerTenderAmount", currency=True),
+        # This result's own framework ceiling, and the buyer's revised estimate
+        # of it. Both are withheld often enough to matter: `max-val` and
+        # `ree-val` are 17 of the privacy blocks in one publication day, and
+        # until these columns existed there was nothing for those codes to mark
+        # (ADR-0008).
+        Column(
+            "framework_max_amount",
+            "efac:FrameworkAgreementValues/cbc:MaximumValueAmount",
+            currency=True,
+        ),
+        Column(
+            "framework_reestimated_amount",
+            "efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount",
+            currency=True,
+        ),
         Column(
             "decision_reason_code",
             "efac:DecisionReason/efbc:DecisionReasonCode",

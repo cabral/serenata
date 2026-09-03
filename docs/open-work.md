@@ -40,7 +40,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
-| 16 | [Add the three columns the red-flag literature needs](#16-add-the-three-columns-the-red-flag-literature-needs) | **next** | [#27](https://github.com/cabral/serenata/issues/27) |
+| 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
 
 **Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12 and 13 are all done for eForms, and
 12 turned records into a dataset, which closed 9 with it. 13 then made a
@@ -1016,7 +1016,46 @@ so the capability is a recorded trade rather than an absence nobody documented.
 
 ---
 
-## 16. Add the three columns the red-flag literature needs
+## 16. Add the value and timing columns the red-flag literature needs
+
+**Done.** Nine columns across `procedure`, `lot` and `lot_result`, all scalar,
+none on the personal-data list, all populated against the real archive.
+
+**The audit that filed this item was itself incomplete.** It listed three
+missing fields and missed the most important one: the **estimated value** —
+`cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount`, present on 40.6%
+of notices and 35.7% of lots — was not among the fourteen indicators checked.
+Estimated against awarded is one of the most-used comparisons in the literature,
+and the model carried neither side. Before this the model held **three** amount
+columns in total; it now holds nine, and 400 notices in one publication day
+carry both an estimate and an awarded total.
+
+| Table | Column | Populated |
+|---|---|---:|
+| `procedure` | `estimated_amount` | 40.6% |
+| `procedure` | `total_amount` | 34.6% |
+| `procedure` | `framework_overall_max_amount` | 8.4% |
+| `procedure` | `framework_overall_approximate_amount` | 4.8% |
+| `lot` | `estimated_amount` | 51.5% of lots |
+| `lot` | `submission_deadline_date` | 46.5% of lots |
+| `lot` | `submission_deadline_time` | 46.5% of lots |
+| `lot_result` | `framework_max_amount` | 32.5% |
+| `lot_result` | `framework_reestimated_amount` | 30.5% |
+
+**The deadline is two columns, not one.** eForms publishes a date and a time as
+separate elements, both carrying their own UTC offset. They are stored as
+published and combining them is the query's arithmetic — a period length taken
+from the date alone is wrong by up to a day, which is exactly the resolution at
+which a short-window indicator would be decided.
+
+**It closed the privacy gap as a side effect.** `not-val`, `max-val`, `ree-val`,
+`not-max-val` and `not-app-val` are 69 privacy blocks in one publication day
+that recorded a withheld field and could mark nothing, because the column did
+not exist. Coverage went from 143 of 215 blocks to **212 of 215**; the three
+that remain are predicate-ambiguous and always were
+([ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md)).
+
+The original statement of the problem follows.
 
 Checking the model against the established indicator sets — the DIGIWHIST /
 Fazekas "corruption risk index" and the Open Contracting Partnership's red flags —
@@ -1061,5 +1100,4 @@ notice, never computed against a clock.
 presence, and the deadline's date/time question is settled in the document
 rather than in code.
 
-**This is the next piece of work**, and unlike everything else open it is
-neither a decision nor blocked on counsel.
+

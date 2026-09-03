@@ -25,6 +25,7 @@ from serenata.normalise.model import (
     ROLE_QUALIFIERS,
     ROLE_SOURCES,
     TABLES,
+    Column,
     Kind,
     Table,
 )
@@ -238,6 +239,31 @@ class TestCompanionColumns:
             f"amount columns without a currency companion: {amounts}. An "
             "amount without one is a number, not a sum of money."
         )
+
+    def test_every_column_reading_an_amount_carries_a_currency(self) -> None:
+        # The check above matches on the column's *name*, so a money column
+        # called something else would slip past it. This matches on the source
+        # element instead: eForms names every monetary element `…Amount`, so a
+        # column reading one and carrying no currency is the same defect under
+        # a different name.
+        missing = [
+            f"{table.name}.{column.name}"
+            for table in TABLES
+            for column in table.columns
+            if column.path.endswith("Amount") and not column.currency
+        ]
+        assert not missing, (
+            f"columns reading a monetary element without a currency companion: "
+            f"{missing}"
+        )
+
+    def test_that_check_can_actually_fail(self) -> None:
+        # Both currency checks are only worth having if a money column without
+        # a companion is expressible.
+        offender = Column("some_value", "cbc:SomethingAmount")
+        assert offender.path.endswith("Amount")
+        assert not offender.currency
+        assert "some_value_currency" not in offender.companions
 
     def test_set_columns_are_named_plurally(self) -> None:
         singular = [

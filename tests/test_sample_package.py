@@ -214,6 +214,7 @@ class TestTheDatasetItProduces:
             "ORDER BY field_identifier_code",
         )
         assert rows == [
+            ("lot_result", "max-val"),
             ("notice", "not-val"),
             ("lot_result", "rec-sub-cou"),
             ("lot_result", "rec-sub-typ"),
@@ -238,6 +239,43 @@ class TestTheDatasetItProduces:
             "WHERE source_publication_id = '00000001-2026'",
         )
         assert rows == [("EXAMPLE PROCUREMENT OF NOTHING", "ENG")]
+
+    def test_the_value_columns_are_populated(self, dataset: Path) -> None:
+        # Estimated against awarded is the comparison the indicator literature
+        # is built on, and neither side was carried until now. Both levels are
+        # here: the procedure's own estimate and the lot's.
+        assert query(
+            dataset,
+            "SELECT estimated_amount, estimated_amount_currency FROM procedure "
+            "WHERE source_publication_id = '00000001-2026'",
+        ) == [("1000", "EUR")]
+        assert query(
+            dataset,
+            "SELECT estimated_amount, estimated_amount_currency FROM lot "
+            "WHERE source_publication_id = '00000001-2026'",
+        ) == [("400", "EUR")]
+
+    def test_a_withheld_framework_ceiling_reads_withheld(self, dataset: Path) -> None:
+        # The case that had nowhere to land before: `max-val` names the
+        # framework maximum, the notice publishes `-1` for it, and until the
+        # column existed the code was recorded and could mark nothing.
+        assert query(
+            dataset,
+            "SELECT framework_max_amount, framework_max_amount_status "
+            "FROM lot_result WHERE framework_max_amount IS NOT NULL",
+        ) == [("-1", "withheld")]
+
+    def test_the_submission_deadline_keeps_its_date_and_its_time(
+        self, dataset: Path
+    ) -> None:
+        # Two columns, both as published, both carrying their own offset. How
+        # long bidders were given is the query's arithmetic, not this stage's,
+        # and a length taken from the date alone is wrong by up to a day.
+        assert query(
+            dataset,
+            "SELECT submission_deadline_date, submission_deadline_time FROM lot "
+            "WHERE source_publication_id = '00000001-2026'",
+        ) == [("2026-09-17+02:00", "12:00:00+02:00")]
 
     def test_a_place_of_performance_is_a_row(self, dataset: Path) -> None:
         rows = query(

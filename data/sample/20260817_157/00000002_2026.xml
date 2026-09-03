@@ -79,6 +79,13 @@
           <cbc:ID schemeName="result">RES-0001</cbc:ID>
           <cbc:TenderResultCode listName="winner-selection-status">selec-w</cbc:TenderResultCode>
           <cbc:HigherTenderAmount currencyID="EUR">2000</cbc:HigherTenderAmount>
+          <efac:FrameworkAgreementValues>
+            <efac:FieldsPrivacy>
+              <efbc:FieldIdentifierCode listName="non-publication-identifier">max-val</efbc:FieldIdentifierCode>
+              <cbc:ReasonCode listName="non-publication-justification">fair-comp</cbc:ReasonCode>
+            </efac:FieldsPrivacy>
+            <cbc:MaximumValueAmount currencyID="EUR">-1</cbc:MaximumValueAmount>
+          </efac:FrameworkAgreementValues>
           <cbc:LowerTenderAmount currencyID="EUR">500</cbc:LowerTenderAmount>
           <efac:TenderLot><cbc:ID schemeName="Lot">LOT-0001</cbc:ID></efac:TenderLot>
           <efac:LotTender><cbc:ID schemeName="tender">TEN-0001</cbc:ID></efac:LotTender>

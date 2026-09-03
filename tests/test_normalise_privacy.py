@@ -194,13 +194,24 @@ class TestWhatItRefuses:
         assert code not in BLOCK_TARGETS
         assert "predicate" in UNUSABLE[code]
 
-    @pytest.mark.parametrize("code", ["not-val", "max-val", "ree-val", "not-app-val"])
+    @pytest.mark.parametrize("code", ["gro-max-val", "gro-ree-val", "cou-ori"])
     def test_a_code_naming_a_field_this_model_lacks_is_refused(self, code: str) -> None:
-        # The notice's total amount and the framework-agreement values are
-        # withheld in real notices — 44, 11 and 2 rows in OJ S 157/2026 — and
-        # have no column here. `field_privacy` still records every one of them.
+        # Fourteen codes still name a field with no column here — lots-group
+        # framework values, country of origin. `field_privacy` records every
+        # one of them regardless, so nothing is lost, only unacted on.
         assert code in UNUSABLE
         assert "no column" in UNUSABLE[code]
+
+    @pytest.mark.parametrize(
+        "code", ["not-val", "max-val", "ree-val", "not-max-val", "not-app-val"]
+    )
+    def test_the_amounts_the_model_gained_are_now_marked(self, code: str) -> None:
+        # These five were refused for want of a column until the value columns
+        # were added. They are 69 of the 215 privacy blocks in one publication
+        # day, and every one of them is an amount a classifier would otherwise
+        # read as a quantity.
+        assert code in RECORD_TARGETS, UNUSABLE.get(code)
+        assert code not in UNUSABLE
 
     def test_a_block_naming_no_field_marks_nothing(self) -> None:
         # A publisher may give a reason and no field identifier. There is no
@@ -331,6 +342,10 @@ class TestTheRestOfTheDatasetIsUnaffected:
             for name in row
             if name.endswith("_status") and row[name] == Status.WITHHELD
         }
-        # The default fixture withholds a bid count and the code it counts, and
-        # nothing else: its `not-val` block names a column this model lacks.
-        assert withheld == {"statistic_value_status", "statistic_code_status"}
+        # The fixture withholds a bid count, the code it counts, and — since the
+        # value columns were added — the notice total its `not-val` block names.
+        assert withheld == {
+            "statistic_value_status",
+            "statistic_code_status",
+            "total_amount_status",
+        }

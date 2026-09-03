@@ -177,6 +177,10 @@ structure.
 | `internal_id` | `notice/cac:ProcurementProject/cbc:ID` | 83.9% |
 | `procedure_code` | `notice/cac:TenderingProcess/cbc:ProcedureCode` | 91.1% |
 | `process_reason_code` | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` | 76.4% |
+| `estimated_amount` | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 40.6% |
+| `total_amount` | `<ext>/efac:NoticeResult/cbc:TotalAmount` | 34.6% |
+| `framework_overall_max_amount` | `<ext>/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount` | 8.4% |
+| `framework_overall_approximate_amount` | `<ext>/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount` | 4.8% |
 
 `title` and `description` are free text and are carried as **provenance only**.
 Constraint 5 keeps classifiers to structured fields: no core classifier reads
@@ -207,6 +211,9 @@ is where the procurement's substance actually lives.
 | `cpv_code` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` | 99.5% |
 | `internal_id` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ID` | 90.0% |
 | `funding_programme_code` | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgramCode` | 94.1% |
+| `estimated_amount` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 35.7% |
+| `submission_deadline_date` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate` | 44.2% |
+| `submission_deadline_time` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime` | 44.2% |
 | `contracting_system_codes` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ContractingSystem/cbc:ContractingSystemTypeCode` | 93.9% |
 | `gpa_covered` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:GovernmentAgreementConstraintIndicator` | 92.3% |
 | `electronic_auction` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` | 89.7% |
@@ -346,6 +353,8 @@ One row per lot outcome.
 | `contract_refs` | `<ext>/efac:NoticeResult/efac:LotResult/efac:SettledContract/cbc:ID` | 43.5% |
 | `highest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:HigherTenderAmount` | 10.3% |
 | `lowest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:LowerTenderAmount` | 10.3% |
+| `framework_max_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` | 8.4% |
+| `framework_reestimated_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount` | 4.8% |
 | `decision_reason_code` | `<ext>/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efbc:DecisionReasonCode` | 6.3% |
 
 `winning_tender_refs` and `contract_refs` are sets: one lot result was measured
@@ -500,26 +509,36 @@ An `efac:FieldsPrivacy` block names its target with an eForms field identifier �
 which element each code means. That table is generated into
 `serenata/normalise/sdk_privacy.py` and joined onto these columns at import;
 [ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md) records the decision, the
-licence and the checks. **143 of the 215 privacy blocks in this package mark a
+licence and the checks. **212 of the 215 privacy blocks in this package mark a
 column**:
 
 | Column | Blocks | Code |
 |---|---:|---|
 | `lot_tender.payable_amount` | 74 | `win-ten-val` |
+| `procedure.total_amount` | 44 | `not-val` |
 | `lot_tender.is_variant` | 42 | `win-ten-var` |
 | `lot_result.highest_tender_amount` | 11 | `ten-val-hig` |
 | `lot_result.lowest_tender_amount` | 11 | `ten-val-low` |
+| `lot_result.framework_max_amount` | 11 | `max-val` |
+| `procedure.framework_overall_max_amount` | 6 | `not-max-val` |
+| `lot_result.framework_reestimated_amount` | 6 | `ree-val` |
+| `procedure.framework_overall_approximate_amount` | 2 | `not-app-val` |
 | `lot_result_statistic.statistic_value` | 2 | `rec-sub-cou` |
 | `lot_result_statistic.statistic_code` | 2 | `rec-sub-typ` |
 | `lot_result.decision_reason_code` | 1 | `no-awa-rea` |
 
-**The other 72 are refused rather than approximated**, and each one is still a
-`field_privacy` row. Sixty-nine name a field this model has no column for — the
-notice's total amount is withheld 44 times in this package — and three are told
-apart from another field only by an XPath predicate, which these paths do not
-carry (ADR-0005). Eleven of the SDK's 47 codes resolve here, so a `present`
-status on a column no code can reach is weaker evidence than one on a column a
-code can, and `privacy.UNUSABLE` names every gap with its reason.
+**The remaining 3 are refused rather than approximated**, and each is still a
+`field_privacy` row. All three are told apart from another field only by an
+XPath predicate, which these paths do not carry (ADR-0005) — so acting on them
+would mark the wrong column. Sixteen of the SDK's 47 codes resolve here; the
+rest name fields this model has no column for, and `privacy.UNUSABLE` names
+every gap with its reason.
+
+Five of those sixteen were unresolvable until the value columns above existed:
+`not-val`, `max-val`, `ree-val`, `not-max-val` and `not-app-val` are 69 blocks
+between them, and the code was recorded with nothing to mark. Adding the columns
+the indicator literature needed closed the privacy gap as a side effect, which
+is why coverage moved from 143 to 212.
 
 **The value is never rewritten.** A withheld amount still reads `-1`, exactly as
 the notice published it; only the status carries the interpretation. That

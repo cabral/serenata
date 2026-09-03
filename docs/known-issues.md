@@ -91,18 +91,17 @@ as numbers reads a lawful deferral as a negative price or a negative bid count.
 
 The eForms SDK says which element each privacy code names, and that table is
 generated into `serenata/normalise/sdk_privacy.py`
-([ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md)). **143 of the 215 privacy
-blocks in OJ S 157/2026 now set a column's status to `withheld`** — 74 payable
-amounts, 42 variant indicators, 11 highest and 11 lowest tender amounts, 2
-statistics blocks and 1 decision reason.
+([ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md)). **212 of the 215 privacy
+blocks in OJ S 157/2026 set a column's status to `withheld`** — 74 payable
+amounts, 44 notice totals, 42 variant indicators, 28 framework values, 22
+highest and lowest tender amounts, 2 statistics blocks and 1 decision reason.
 
-**The remaining 72 are recorded but not acted on.** Sixty-nine name a field this
-model has no column for — the notice's total amount, withheld 44 times in one
-day, and the framework-agreement values — and three are told apart from another
-field only by an XPath predicate this project's paths do not carry, so acting on
-them would mark the wrong column. Eleven of the SDK's 47 codes resolve here.
-Every block is a `field_privacy` row either way, and `privacy.UNUSABLE` names
-each gap with its reason.
+**The remaining 3 are recorded but not acted on.** All three are told apart from
+another field only by an XPath predicate this project's paths do not carry, so
+acting on them would mark the wrong column. Sixteen of the SDK's 47 codes
+resolve here; the rest name fields this model has no column for. Every block is
+a `field_privacy` row either way, and `privacy.UNUSABLE` names each gap with its
+reason.
 
 **A value that looks withheld and a value that was declared withheld are
 different facts, and they do not always agree.** In one publication day: two
