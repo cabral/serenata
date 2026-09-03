@@ -38,10 +38,15 @@ eForms publishes a withheld value rather than omitting it. A column below holds 
 
 | Column | Values that are `-1` |
 |---|---:|
+| `lot_result.framework_max_amount` | 11 |
+| `lot_result.framework_reestimated_amount` | 6 |
 | `lot_result.highest_tender_amount` | 10 |
 | `lot_result.lowest_tender_amount` | 10 |
 | `lot_result_statistic.statistic_value` | 2 |
 | `lot_tender.payable_amount` | 72 |
+| `procedure.framework_overall_approximate_amount` | 2 |
+| `procedure.framework_overall_max_amount` | 6 |
+| `procedure.total_amount` | 42 |
 | `settled_contract.contract_reference` | 2 |
 
 ## Address-shaped values where none belongs
@@ -71,14 +76,19 @@ The share of rows in each status (ADR-0006). `absent` is "not provided", never "
 | `lot.cpv_code` | 8,624 | 99.8% | — | 0.2% | — | — |
 | `lot.description` | 8,624 | 100.0% | — | 0.0% | — | — |
 | `lot.electronic_auction` | 8,624 | 93.3% | — | 6.7% | — | — |
+| `lot.estimated_amount` | 8,624 | 51.5% | — | 48.5% | — | — |
 | `lot.funding_programme_code` | 8,624 | 97.4% | — | 2.6% | — | — |
 | `lot.gpa_covered` | 8,624 | 92.5% | — | 7.5% | — | — |
 | `lot.internal_id` | 8,624 | 93.0% | — | 7.0% | — | — |
 | `lot.lot_id` | 8,624 | 100.0% | — | — | — | — |
 | `lot.procurement_type_code` | 8,624 | 99.8% | — | 0.2% | — | — |
+| `lot.submission_deadline_date` | 8,624 | 46.5% | — | 53.5% | — | — |
+| `lot.submission_deadline_time` | 8,624 | 46.5% | — | 53.5% | — | — |
 | `lot.title` | 8,624 | 99.9% | — | 0.1% | — | — |
 | `lot_result.contract_refs` | 4,218 | 84.0% | — | 16.0% | — | — |
 | `lot_result.decision_reason_code` | 4,218 | 14.1% | — | 85.8% | 0.0% | — |
+| `lot_result.framework_max_amount` | 4,218 | 32.2% | — | 67.5% | 0.3% | — |
+| `lot_result.framework_reestimated_amount` | 4,218 | 30.4% | — | 69.5% | 0.1% | — |
 | `lot_result.highest_tender_amount` | 4,218 | 32.3% | — | 67.4% | 0.3% | — |
 | `lot_result.lot_ref` | 4,218 | 100.0% | — | — | — | — |
 | `lot_result.lot_result_id` | 4,218 | 100.0% | — | — | — | — |
@@ -126,11 +136,15 @@ The share of rows in each status (ADR-0006). `absent` is "not provided", never "
 | `procedure.contract_folder_id` | 3,190 | 98.3% | — | 1.7% | — | — |
 | `procedure.cpv_code` | 3,190 | 99.9% | — | 0.1% | — | — |
 | `procedure.description` | 3,190 | 99.9% | — | 0.1% | — | — |
+| `procedure.estimated_amount` | 3,190 | 40.6% | — | 59.4% | — | — |
+| `procedure.framework_overall_approximate_amount` | 3,190 | 4.7% | — | 95.2% | 0.1% | — |
+| `procedure.framework_overall_max_amount` | 3,190 | 8.2% | — | 91.6% | 0.2% | — |
 | `procedure.internal_id` | 3,190 | 83.9% | — | 16.1% | — | — |
 | `procedure.procedure_code` | 3,190 | 91.1% | — | 8.9% | — | — |
 | `procedure.process_reason_code` | 3,190 | 76.4% | — | 23.6% | — | — |
 | `procedure.procurement_type_code` | 3,190 | 99.7% | — | 0.3% | — | — |
 | `procedure.title` | 3,190 | 99.9% | — | 0.1% | — | — |
+| `procedure.total_amount` | 3,190 | 33.2% | — | 65.4% | 1.4% | — |
 | `realized_location.country_code` | 14,000 | 98.7% | — | 1.3% | — | — |
 | `realized_location.nuts_code` | 14,000 | 93.8% | — | 6.2% | — | — |
 | `settled_contract.award_date` | 5,835 | 22.4% | — | 77.6% | — | — |

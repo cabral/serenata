@@ -78,7 +78,11 @@ notice in the archive.
 
 ## Consequences
 
-- **143 of 215 privacy blocks now mark a column**, up from 2. In OJ S 157/2026:
+- **143 of 215 privacy blocks now mark a column**, up from 2. *(Amended
+  2026-09-03: 212 of 215 once the value columns of open-work #16 existed — this
+  ADR's own "what would change this" trigger, fired within a day. The
+  consequences below are as measured when the decision was taken.)* In OJ S
+  157/2026:
   74 payable amounts, 42 variant indicators, 11 highest and 11 lowest tender
   amounts, 2 statistics blocks and 1 decision reason. The remaining 72 are all
   accounted for by name in `UNUSABLE`, with the reason.

@@ -56,6 +56,9 @@
         </cac:Country>
       </cac:Address>
     </cac:RealizedLocation>
+    <cac:RequestedTenderTotal>
+      <cbc:EstimatedOverallContractAmount currencyID="EUR">1000</cbc:EstimatedOverallContractAmount>
+    </cac:RequestedTenderTotal>
   </cac:ProcurementProject>
   <cac:TenderingProcess>
     <cbc:ProcedureCode listName="procurement-procedure-type">open</cbc:ProcedureCode>
@@ -66,8 +69,15 @@
       <cbc:Name languageID="ENG">EXAMPLE LOT</cbc:Name>
       <cbc:Description languageID="ENG">An example lot. Enquiries: office@example.invalid</cbc:Description>
       <cbc:ProcurementTypeCode listName="contract-nature">services</cbc:ProcurementTypeCode>
+      <cac:RequestedTenderTotal>
+        <cbc:EstimatedOverallContractAmount currencyID="EUR">400</cbc:EstimatedOverallContractAmount>
+      </cac:RequestedTenderTotal>
     </cac:ProcurementProject>
     <cac:TenderingProcess>
+      <cac:TenderSubmissionDeadlinePeriod>
+        <cbc:EndDate>2026-09-17+02:00</cbc:EndDate>
+        <cbc:EndTime>12:00:00+02:00</cbc:EndTime>
+      </cac:TenderSubmissionDeadlinePeriod>
       <cbc:GovernmentAgreementConstraintIndicator>false</cbc:GovernmentAgreementConstraintIndicator>
       <cac:ContractingSystem>
         <cbc:ContractingSystemTypeCode listName="framework-agreement">none</cbc:ContractingSystemTypeCode>
