@@ -1,0 +1,61 @@
+name: DCO
+
+# Every commit in a pull request must carry a `Signed-off-by` trailer: the
+# submitter's certification, under the Developer Certificate of Origin, that
+# they have the right to contribute the work under AGPL-3.0. The reasoning,
+# including what the trailer means on a patch written with an assistant, is in
+# docs/adr/0009-contribution-provenance.md.
+#
+# Scoped to the commits the pull request adds, never to history. 65 of the 66
+# commits that existed when this was introduced carry no sign-off, and
+# rewriting published history to fix that would buy nothing. The rule starts
+# here and applies forward.
+
+on:
+  pull_request:
+
+jobs:
+  sign-off:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The check compares the base against the head, so it needs both.
+          fetch-depth: 0
+      - name: Check every commit is signed off
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Merge commits carry no content of their own to certify, and a
+          # GitHub merge commit is created server-side where no hook runs.
+          unsigned=$(git log --no-merges \
+            --format='%H%x09%s%x09%(trailers:key=Signed-off-by,valueonly=true,separator=%x2C)' \
+            "$BASE..$HEAD" | awk -F'\t' '$3 == ""')
+
+          if [ -z "$unsigned" ]; then
+            echo "Every commit in this pull request is signed off."
+            exit 0
+          fi
+
+          echo "These commits carry no Signed-off-by trailer:"
+          echo "$unsigned" | while IFS="$(printf '\t')" read -r sha subject _; do
+            echo "  $(printf '%.10s' "$sha")  $subject"
+          done
+          cat <<'MESSAGE'
+
+          The Developer Certificate of Origin (https://developercertificate.org)
+          asks whoever submits a patch to certify they have the right to
+          contribute it under this project's licence. Add the trailer with:
+
+              git rebase --signoff origin/main
+
+          and force-push the branch. To stop having to remember it:
+
+              git config core.hooksPath .githooks
+
+          CONTRIBUTING.md explains what the trailer means on a patch written
+          with an assistant. docs/adr/0009-contribution-provenance.md has the
+          reasoning.
+          MESSAGE
+          exit 1

@@ -139,14 +139,36 @@ Origin](https://developercertificate.org/) rather than a copyright assignment or
 a CLA. It keeps the barrier low and the provenance clean: you are certifying you
 wrote the patch or otherwise have the right to submit it under AGPL-3.0.
 
-Add the line with `git commit -s`:
+Install the hook once per clone and stop thinking about it:
+
+```
+git config core.hooksPath .githooks
+```
+
+[`.githooks/prepare-commit-msg`](.githooks/prepare-commit-msg) then adds the
+trailer from your git identity, so use your real name and an address that
+reaches you. `git commit -s` does the same thing by hand.
 
 ```
 Signed-off-by: Your Name <your.email@example.com>
 ```
 
-Use your real name and an address that reaches you. This is not yet checked
-mechanically; a missing sign-off will be asked for in review.
+**This is checked.** [`.github/workflows/dco.yml`](.github/workflows/dco.yml)
+fails a pull request whose commits lack it, and tells you how to fix it —
+usually `git rebase --signoff origin/main` and a force-push. Merge commits are
+exempt; they carry no content of their own to certify. History before this rule
+was enforced is left alone, so only the commits your pull request adds are
+checked.
+
+**What you are certifying when an assistant wrote part of it.** Most of this
+codebase is written with one, and the DCO still means what it always meant: it
+is a statement about *the right to submit*, not about who typed the code. You
+are certifying you have the right to contribute this under AGPL-3.0 — which
+matters more with an assistant, not less, because the realistic risk is a model
+reproducing a fragment of someone else's licensed code. Read what you submit.
+`Co-Authored-By` is the separate trailer that discloses the tool, and both
+belong on the commit. [ADR-0009](docs/adr/0009-contribution-provenance.md) has
+the full reasoning, including what a sign-off here does and does not prove.
 
 ## Tests
 

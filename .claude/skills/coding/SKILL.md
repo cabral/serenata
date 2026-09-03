@@ -102,6 +102,7 @@ Run this before approving any classifier or pipeline PR. Reject with the specifi
 - New dependencies are AGPL-compatible and source-available. Check the license before `uv add`, not after.
 - An ADR exists if the change constrains future work or reverses a prior ADR.
 - Docs updated. Honest and short beats impressive. If a sentence in the docs would survive with its adjective deleted, delete the adjective.
+- Every commit the PR adds carries a `Signed-off-by` trailer. CI checks it (`.github/workflows/dco.yml`); the hook in `.githooks/` adds it. On an AI-assisted patch the trailer certifies the right to submit under AGPL-3.0, not who typed it, and `Co-Authored-By` is the separate disclosure — ADR-0009.
 
 ## Stack conventions
 
