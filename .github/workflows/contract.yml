@@ -8,6 +8,10 @@ name: Contract
 # On a schedule rather than on push: the assumptions it watches change on TED's
 # timetable, not on ours, and asserting them on every commit would be a request
 # to a public service for no new information.
+# Both triggers only take effect once this file is on the default branch:
+# GitHub runs schedules from the default branch's copy, and `workflow_dispatch`
+# needs the workflow to exist there before it can be started by hand. Until then
+# the tests are run locally with `uv run pytest -m contract`.
 on:
   schedule:
     - cron: "0 7 * * 1"
