@@ -23,7 +23,7 @@ notice and a damaged one on purpose. Four notices become 33 rows.
 
 | Member | What it is | What it covers |
 |---|---|---|
-| `00000001_2026.xml` | contract notice | a lot, two organisations, a title in two languages, two places of performance, two contracting-system codes on one lot — and a `cac:Contact` block that must never reach a record |
+| `00000001_2026.xml` | contract notice | a lot, two organisations, a title in two languages, two places of performance, two contracting-system codes on one lot; a `cac:Contact` block that must never reach a record; and **two contact addresses typed into fields that are not contact fields** — a city and a lot description — which the drop list cannot catch and `docs/dataset-shape.md` counts |
 | `00000002_2026.xml` | contract award notice | a lot result, its winning tenders and settled contract; **a withheld bid count** published as the code `unpublished` with the number `-1`; **a withheld amount** published as `-1`; privacy blocks at three different scopes |
 | `00000003_2026.xml` | contract award notice | carries the **same `cbc:ID` as `00000002_2026.xml`** under a different publication number, which is what two notices in OJ S 157/2026 do. Anything keyed on the notice UUID merges them |
 | `00000004_2026.xml` | contract award notice | an organisation flagged `efbc:NaturalPersonIndicator`, whose identifying values are suppressed while its opaque key is kept, and an `efac:UltimateBeneficialOwner` subtree, which is dropped outright |

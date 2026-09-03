@@ -648,6 +648,10 @@ tables, 4.2 MB on disk, in about 12 seconds and 339 MB of peak resident memory
 Rerunning it writes byte-identical files, which
 [#9](open-work.md#9-add-the-rerun-identity-determinism-test) asserts in CI.
 
+The row counts, and how populated each column of this model actually is, are in
+[`dataset-shape.md`](dataset-shape.md) — generated from the archive rather than
+written here, so a model that stops matching its own output says so.
+
 ## What this does not settle
 
 - **Cross-notice organisation identity.** Milestone 3. `company_id` is an

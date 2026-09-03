@@ -6,6 +6,7 @@ in memory with obviously synthetic notice IDs, per ``tests/fixtures/README.md``.
 
 from __future__ import annotations
 
+import gzip
 import io
 import tarfile
 from pathlib import Path
@@ -129,7 +130,13 @@ def make_notice_package(
     can actually read.
     """
     buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+    # gzip stamps the current time into its header unless told not to, which
+    # would make the same notices a different package on every run — and this
+    # package feeds tests that compare bytes.
+    with (
+        gzip.GzipFile(fileobj=buffer, mode="wb", mtime=0) as compressed,
+        tarfile.open(fileobj=compressed, mode="w") as archive,
+    ):
         for name, body in notices.items():
             info = tarfile.TarInfo(f"{prefix}/{name}")
             info.size = len(body)

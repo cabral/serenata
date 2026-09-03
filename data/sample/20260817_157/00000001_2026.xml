@@ -64,7 +64,7 @@
     <cbc:ID schemeName="Lot">LOT-0001</cbc:ID>
     <cac:ProcurementProject>
       <cbc:Name languageID="ENG">EXAMPLE LOT</cbc:Name>
-      <cbc:Description languageID="ENG">An example lot.</cbc:Description>
+      <cbc:Description languageID="ENG">An example lot. Enquiries: office@example.invalid</cbc:Description>
       <cbc:ProcurementTypeCode listName="contract-nature">services</cbc:ProcurementTypeCode>
     </cac:ProcurementProject>
     <cac:TenderingProcess>
@@ -118,6 +118,12 @@
             <cac:PartyIdentification><cbc:ID>ORG-0002</cbc:ID></cac:PartyIdentification>
             <cac:PartyName><cbc:Name languageID="ENG">EXAMPLE REVIEW BODY</cbc:Name></cac:PartyName>
             <cac:PartyLegalEntity><cbc:CompanyID>X0000002</cbc:CompanyID></cac:PartyLegalEntity>
+            <cac:PostalAddress>
+              <!-- A contact address typed into a field that is not a contact
+                   field. The drop list matches paths and cannot catch this;
+                   `docs/dataset-shape.md` counts it. -->
+              <cbc:CityName>firstname.lastname@example.invalid</cbc:CityName>
+            </cac:PostalAddress>
           </efac:Company>
         </efac:Organization>
       </efac:Organizations>

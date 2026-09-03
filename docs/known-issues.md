@@ -25,11 +25,13 @@ Constraint 2's drop list is **structural**: it rejects paths through
 wherever they appear. That is the right shape for the rule and it cannot catch a
 publisher who types a contact address into a field that is not one.
 
-They do. Scanning the normalised package for email-shaped values finds **46 of
-them in 7 columns** that should hold a city, a registration number, a street, a
-website or a description — and **13 are shaped like a person's own address**
-(`firstname.lastname@`), which is personal data landing in the dataset through a
-field the drop list has no reason to reject.
+They do. [`dataset-shape.md`](dataset-shape.md) counts it, regenerated from the
+archive rather than remembered: **46 address-shaped values in 7 columns** that
+should hold a city, a registration number, a street, a website or a description
+— and **13 shaped like a person's own address** (`firstname.lastname@`), which
+is personal data landing in the dataset through a field the drop list has no
+reason to reject. That report carries counts and never values, for the same
+reason this entry does.
 
 Nothing is published yet, so this is not yet an exposure; it is one before the
 first dataset release. It also cannot be fixed by adding paths to the list,
@@ -83,11 +85,11 @@ test is the better one and the survey should adopt it — issue [#18](https://gi
 ## A withheld value is published as `-1`, and only sometimes marked
 
 A publisher may withhold a field through `efac:FieldsPrivacy`, and eForms
-publishes the withheld value rather than omitting it: **72 tender payable
-amounts, 42 notice total amounts, 10 highest and 10 lowest tender amounts in
-OJ S 157/2026 carry `-1`**, and a withheld bid count carries the code
-`unpublished` with the number `-1`. A classifier reading those as numbers reads a
-lawful deferral as a negative price or a negative bid count.
+publishes the withheld value rather than omitting it. Counted in
+[`dataset-shape.md`](dataset-shape.md): **72 tender payable amounts, 10 highest
+and 10 lowest tender amounts** carry `-1`, and a withheld bid count carries the
+code `unpublished` with the number `-1`. A classifier reading those as numbers
+reads a lawful deferral as a negative price or a negative bid count.
 
 The `field_privacy` table records every such block with the element it sits
 inside. The **status** is derived only where containment proves the target — a
@@ -224,40 +226,37 @@ documented interfaces against the live service, on a schedule, outside the
 offline suite. Until it exists, **the archive is the only thing that would tell
 you TED changed**, and it tells you by failing to parse.
 
-## Some figures in these documents are measured by hand, and can rot
+## Which figures are generated, and which are not
 
 A claim about the data is only as good as the last time someone checked it, and
 this repository makes many. They fall in two groups, and only one of them is
 safe.
 
-**Generated, and checked on every run.** Everything in
-[`field-usage.md`](field-usage.md) — presence, countries, and how many times a
-path repeats inside a record. `serenata.survey` produces that file from the
-archive, regenerating it against the same packages reproduces it byte for byte,
-and `tests/test_data_model.py` and `tests/test_normalise_model.py` fail if the
-model stops agreeing with it.
+**Generated from the archive, and regenerable by anyone who has one.** Two
+documents, both produced by `python -m serenata.survey`, both byte-reproducible
+against the same packages, and both naming the packages they measured with their
+SHA-256:
 
-**Measured by hand, and not checked by anything.** The normalise stage's
-figures: 98,629 rows from one package, 4.2 MB, 46 email-shaped values in 7
-columns, 72 payable amounts published as `-1`, two notice UUIDs appearing twice,
-and the cost table above. Each was measured against the local archive with a
-throwaway script that is not in the repository. **They were true when written
-and nothing will tell you when they stop being.** A second publication day would
-move most of them.
+- [`field-usage.md`](field-usage.md) — which element paths notices populate, in
+  how many member states, and how many times a path repeats inside one record.
+  `tests/test_data_model.py` and `tests/test_normalise_model.py` fail if the
+  model stops agreeing with it.
+- [`dataset-shape.md`](dataset-shape.md) — rows per table, how populated every
+  column is, withheld sentinels, address-shaped values in columns that should
+  not hold them, and whether any table has rows sharing a key.
 
-Half of that gap is now covered from the other side. The *properties* those
-numbers illustrate — that a withheld count is not a number, that the notice UUID
-is not unique, that a sole trader keeps only an opaque key, that every table's
-key is unique — are assertions in `tests/test_sample_package.py`, over notices
-carrying each case deliberately. So the shape of the data the pipeline promises
-to handle is checked on every push; the counts from one real publication day are
-not.
+**Measured by hand, and not checked by anything.** What is left is the cost
+table above — wall clock, peak memory, bytes on disk — which cannot be
+byte-reproducible because it is a property of the machine as much as of the
+data. Each figure there was measured with a throwaway script, and the method is
+stated beside it so it can be reproduced rather than trusted.
 
-What is left is to generate the counts the way `field-usage.md` is generated,
-from whatever archive the person running it has, with the packages and their
-checksums stated in the output. Until then, treat an unsourced number in these
-documents as a measurement with a date on it, not as a property of the
-pipeline.
+The *properties* behind the generated numbers are also asserted, over notices
+carrying each case deliberately: `tests/test_sample_package.py` checks that a
+withheld count is not a number, that the notice UUID is not unique, that a sole
+trader keeps only an opaque key, and that every table's key is unique. So the
+shape of the data the pipeline promises to handle is checked on every push, and
+the counts from a real publication day are a command away.
 
 ## A published dataset would carry the writer's version
 

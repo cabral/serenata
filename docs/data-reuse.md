@@ -41,7 +41,10 @@ report cannot quietly lose it. A test asserts it is present.
   restriction above.
 - **No republication of notice content.** Published outputs are counts,
   measurements and links back to the source notice. `docs/field-usage.md`
-  carries element paths and frequencies, no field values.
+  carries element paths and frequencies, and `docs/dataset-shape.md` carries row
+  and status counts; neither carries a field value. The second one measures how
+  often a contact address turned up in a column that should not hold one, which
+  is precisely a measurement that must report counts and never values.
 - **No republication of personal data.** Fields that can name a natural person
   are dropped at ingestion and never reach a published artefact. That is a
   standing constraint, not a property of any one dataset.
