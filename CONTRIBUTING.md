@@ -34,6 +34,24 @@ if anything tries to open one. That is not a convenience: fetching is the only
 networked stage, and a test that reached the network would quietly make the rest
 of the pipeline non-reproducible.
 
+## Generated files
+
+Two files under `docs/` and one under `serenata/` are generated rather than
+written, and editing one by hand is a change that the next regeneration silently
+undoes:
+
+| File | Regenerate with |
+|---|---|
+| [`docs/field-usage.md`](docs/field-usage.md) | `python -m serenata.survey <package>…` |
+| [`docs/dataset-shape.md`](docs/dataset-shape.md) | `python -m serenata.survey <package>… --report shape -o docs/dataset-shape.md` |
+| `serenata/normalise/sdk_privacy.py` | `python tools/generate_sdk_privacy.py` |
+
+The first two read archived packages and are deterministic — the same archive
+reproduces the same file byte for byte, which is what makes them citable. The
+third fetches the eForms SDK, and is the one script in this repository that
+reaches the network on purpose; [`tools/README.md`](tools/README.md) says why it
+lives outside `serenata/`.
+
 ## The constraints
 
 Six rules bind every change. Five are enforced by
@@ -155,6 +173,10 @@ mechanically; a missing sign-off will be asked for in review.
   bug in the test.
 - For anything with a measured claim behind it, prefer a check against the real
   archive over an assertion about what you expect it to contain.
+- **A test that cannot fail is worse than no test.** Several here assert that
+  their own fixture still carries the thing they are checking for — search for
+  `can_actually_fail` — because a fixture that quietly lost it would leave the
+  assertion passing and meaningless.
 
 ## Picking something up
 

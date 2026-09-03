@@ -37,15 +37,20 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
 | 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings | [#14](https://github.com/cabral/serenata/issues/14) |
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
-| 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | [#21](https://github.com/cabral/serenata/issues/21) |
+| 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 
-**Order matters.** 2 fed 1; 1, 3, 4, 5, 7 and 12 are all done for eForms, and 12
-turned records into a dataset, which closed 9 with it. What comes next is 13:
-the dataset now stores a withheld amount as the number `-1` with the status
-`present`, and the first classifier will read exactly those columns. 14 is the
-other thing 12 turned up and is a decision rather than a task. 6 is filed so it
-is not discovered late, not because it should be done now.
+**Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12 and 13 are all done for eForms, and
+12 turned records into a dataset, which closed 9 with it. 13 then made a
+withheld amount read `withheld` rather than `present`, which was the last thing
+between the dataset and a classifier that can trust what it reads.
+
+**Milestone 1 is complete for eForms.** What is open is either a decision rather
+than a task (11, 14), a format this project has not measured (3, and the legacy
+half of 4), or filed so it is not discovered late (6). The next code is the
+first classifier, which milestone 2 owns and which constraint 6 governs: a
+written hypothesis citing its risk-indicator source, tests, and measured base
+rates on real historical data, before it merges.
 
 Every open item below has a GitHub issue mirroring it. Say there that you are
 taking something, so two people do not start the same thing.
@@ -824,6 +829,50 @@ and comparing checksums — passes in CI. That test is the proof, not a review.
 
 ## 13. Derive the withheld status from the eForms field identifiers
 
+**Done.** A withheld amount reads `withheld`.
+[`tools/generate_sdk_privacy.py`](../tools/generate_sdk_privacy.py) generates
+the eForms SDK's own privacy table into `serenata/normalise/sdk_privacy.py`, and
+`serenata/normalise/privacy.py` joins it onto the model's columns at import.
+[ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md) records the decision, the
+licence and the checks.
+
+**143 of the 215 privacy blocks in OJ S 157/2026 now mark a column**, against 2
+before: 74 payable amounts, 42 variant indicators, 11 highest and 11 lowest
+tender amounts, 2 statistics blocks and 1 decision reason.
+
+Four things that measuring first settled, each of which would have been a wrong
+guess:
+
+- **One publication day declares three SDK versions** — 1,993 notices on
+  `eforms-sdk-1.13`, 906 on 1.14, 291 on 1.12. A mapping generated from the
+  newest alone would have been a claim about a third of a package. The generator
+  checks four versions against each other and refuses to write if any code's
+  target moved; all 47 codes are identical across 1.12.0 to 1.15.1.
+- **A code is not always resolvable, and guessing would mark the wrong column.**
+  `pro-acc` and `dir-awa-jus` are the same element told apart only by an XPath
+  predicate, which this project's paths do not carry (ADR-0005). The generator
+  computes those collisions across all 1,256 SDK fields; 11 of 47 codes survive
+  both that test and the "is there a column" test, and the rest are refused by
+  name with a reason.
+- **Containment was right about the bid count for the wrong reason.** Both
+  withheld statistics blocks carry `rec-sub-cou` *and* `rec-sub-typ`, so marking
+  both columns happened to be correct. It is now a rule rather than a
+  coincidence, and the conservative fallback is kept for codes that cannot be
+  placed.
+- **The placeholder and the declaration disagree, in both directions.** Two
+  notices declare a payable amount non-public and publish a real number anyway;
+  one publishes `1` rather than `-1`; two settled contracts carry a contract
+  reference of `-1` that nothing declares. Marking on the value would have been
+  wrong six times in one day, which is why the status follows the declaration
+  and [`dataset-shape.md`](dataset-shape.md) keeps counting `-1` separately.
+
+**What is left**, and it is a data-model question rather than a mapping one: 69
+of the unacted blocks name a field with no column here — the notice's total
+amount is withheld 44 times in one day. Adding those columns makes them resolve
+with no change to this machinery.
+
+The original statement of the problem follows.
+
 A publisher may mark a field non-public through `efac:FieldsPrivacy`, and eForms
 **publishes the withheld value rather than omitting it**. Measured in OJ S
 157/2026: 72 tender payable amounts, 42 notice total amounts, 10 highest and 10
@@ -860,9 +909,6 @@ guessing.
 **Done when** a withheld amount reads `withheld` rather than `present`, the
 mapping cites where each entry came from, and a test asserts the bid-count case
 that already works has not regressed.
-
-**This is the next piece of work**, and it blocks the first classifier rather
-than the pipeline.
 
 ---
 

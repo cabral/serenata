@@ -193,16 +193,19 @@ class TestTheDatasetItProduces:
             ("unpublished", "-1", "withheld"),
         ]
 
-    def test_a_withheld_amount_is_visible_as_the_sentinel(self, dataset: Path) -> None:
-        # Not yet marked `withheld` — that needs the eForms field identifiers
-        # (open-work #13). What the dataset guarantees today is that the value
-        # is the string the notice published, not a number something cast.
+    def test_a_withheld_amount_reads_withheld_and_keeps_what_was_published(
+        self, dataset: Path
+    ) -> None:
+        # TEN-0002 publishes `-1` and a `win-ten-val` privacy block. The eForms
+        # SDK says that code names `cbc:PayableAmount`, so the status carries
+        # the deferral and the value stays exactly as published — a classifier
+        # reading the status cannot mistake it for a negative sum of money.
         rows = query(
             dataset,
             "SELECT payable_amount, payable_amount_currency, payable_amount_status "
             "FROM lot_tender ORDER BY tender_id",
         )
-        assert rows == [("500", "EUR", "present"), ("-1", "SEK", "present")]
+        assert rows == [("500", "EUR", "present"), ("-1", "SEK", "withheld")]
 
     def test_a_privacy_block_says_what_it_qualifies(self, dataset: Path) -> None:
         rows = query(
@@ -213,6 +216,7 @@ class TestTheDatasetItProduces:
         assert rows == [
             ("notice", "not-val"),
             ("lot_result", "rec-sub-cou"),
+            ("lot_result", "rec-sub-typ"),
             ("lot_tender", "win-ten-val"),
         ]
 

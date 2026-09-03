@@ -463,6 +463,17 @@ LOT_RESULT_STATISTIC_TABLE = Table(
     ),
 )
 
+#: Column -> its source element *inside* a statistics block. The columns above
+#: are `COMPUTED` because a block is a row rather than a record, so they carry
+#: no path of their own; this is where that path is stated, once. `rows.py`
+#: reads the block with it and `privacy.py` joins the eForms SDK's withheld
+#: fields onto it, so the two cannot drift into disagreeing about which element
+#: a column holds.
+STATISTIC_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("statistic_code", "efbc:StatisticsCode"),
+    ("statistic_value", "efbc:StatisticsNumeric"),
+)
+
 
 SETTLED_CONTRACT_TABLE = Table(
     name="settled_contract",

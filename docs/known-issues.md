@@ -82,28 +82,41 @@ and zero legacy ones, and every filename matches its content. But
 the figure to quote is "eForms-named notices", not "eForms notices". Parse's
 test is the better one and the survey should adopt it — issue [#18](https://github.com/cabral/serenata/issues/18).
 
-## A withheld value is published as `-1`, and only sometimes marked
+## Two thirds of withheld fields are marked; the rest are named, not marked
 
 A publisher may withhold a field through `efac:FieldsPrivacy`, and eForms
-publishes the withheld value rather than omitting it. Counted in
-[`dataset-shape.md`](dataset-shape.md): **72 tender payable amounts, 10 highest
-and 10 lowest tender amounts** carry `-1`, and a withheld bid count carries the
-code `unpublished` with the number `-1`. A classifier reading those as numbers
-reads a lawful deferral as a negative price or a negative bid count.
+publishes the withheld value rather than omitting it — an amount as `-1`, a bid
+count as the code `unpublished` with the number `-1`. A classifier reading those
+as numbers reads a lawful deferral as a negative price or a negative bid count.
 
-The `field_privacy` table records every such block with the element it sits
-inside. The **status** is derived only where containment proves the target — a
-privacy block inside a statistics block marks that block, so those rows read
-`withheld`. Everywhere else the block names its target with an eForms field
-identifier (`win-ten-val`, `ten-val-low`, `max-val`), and mapping those to
-columns needs the eForms SDK this pipeline does not carry.
+The eForms SDK says which element each privacy code names, and that table is
+generated into `serenata/normalise/sdk_privacy.py`
+([ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md)). **143 of the 215 privacy
+blocks in OJ S 157/2026 now set a column's status to `withheld`** — 74 payable
+amounts, 42 variant indicators, 11 highest and 11 lowest tender amounts, 2
+statistics blocks and 1 decision reason.
 
-Until it does, a withheld amount reads `present` with the value `-1`. Amounts
-are stored as published strings rather than numbers, so nothing silently turns
-the sentinel into a price, but **a classifier reading an amount must exclude
-`-1` explicitly**. This is the first thing to build after the normalise stage:
-[open-work #13](open-work.md#13-derive-the-withheld-status-from-the-eforms-field-identifiers)
-and issue [#21](https://github.com/cabral/serenata/issues/21).
+**The remaining 72 are recorded but not acted on.** Sixty-nine name a field this
+model has no column for — the notice's total amount, withheld 44 times in one
+day, and the framework-agreement values — and three are told apart from another
+field only by an XPath predicate this project's paths do not carry, so acting on
+them would mark the wrong column. Eleven of the SDK's 47 codes resolve here.
+Every block is a `field_privacy` row either way, and `privacy.UNUSABLE` names
+each gap with its reason.
+
+**A value that looks withheld and a value that was declared withheld are
+different facts, and they disagree.** In one publication day: two notices
+declare a payable amount non-public and publish a real number anyway, one
+publishes `1` rather than `-1` for a withheld highest and lowest tender amount,
+and two settled contracts carry a contract reference of `-1` that no block
+declares. The status follows the declaration;
+[`dataset-shape.md`](dataset-shape.md) counts `-1` by column independently, so a
+classifier author can see both. **An amount still has to be read with its
+status**, and amounts are stored as published strings so nothing silently turns
+a sentinel into a price.
+
+What would close the gap is the model gaining the columns the refused codes
+name, which makes most of them resolve with no other change.
 
 ## `not_applicable` is never derived
 

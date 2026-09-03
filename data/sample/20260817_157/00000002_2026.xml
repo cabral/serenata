@@ -93,6 +93,10 @@
               <efbc:FieldIdentifierCode listName="non-publication-identifier">rec-sub-cou</efbc:FieldIdentifierCode>
               <cbc:ReasonCode listName="non-publication-justification">oth-int</cbc:ReasonCode>
             </efac:FieldsPrivacy>
+            <efac:FieldsPrivacy>
+              <efbc:FieldIdentifierCode listName="non-publication-identifier">rec-sub-typ</efbc:FieldIdentifierCode>
+              <cbc:ReasonCode listName="non-publication-justification">oth-int</cbc:ReasonCode>
+            </efac:FieldsPrivacy>
             <efbc:StatisticsCode listName="received-submission-type">unpublished</efbc:StatisticsCode>
             <efbc:StatisticsNumeric>-1</efbc:StatisticsNumeric>
           </efac:ReceivedSubmissionsStatistics>

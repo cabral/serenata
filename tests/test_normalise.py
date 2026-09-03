@@ -72,6 +72,10 @@ RESULTS = """
               <efbc:FieldIdentifierCode>rec-sub-cou</efbc:FieldIdentifierCode>
               <cbc:ReasonCode>oth-int</cbc:ReasonCode>
             </efac:FieldsPrivacy>
+            <efac:FieldsPrivacy>
+              <efbc:FieldIdentifierCode>rec-sub-typ</efbc:FieldIdentifierCode>
+              <cbc:ReasonCode>oth-int</cbc:ReasonCode>
+            </efac:FieldsPrivacy>
             <efbc:StatisticsCode>unpublished</efbc:StatisticsCode>
             <efbc:StatisticsNumeric>-1</efbc:StatisticsNumeric>
           </efac:ReceivedSubmissionsStatistics>
@@ -397,17 +401,24 @@ class TestBlocks:
 
     def test_a_privacy_block_says_what_it_sits_inside(self) -> None:
         privacy = rows("field_privacy")
-        scopes = {r["scope_path"].rsplit("/", 1)[-1]: r for r in privacy}
-        assert set(scopes) == {
-            "efac:NoticeResult",
-            "efac:ReceivedSubmissionsStatistics",
+        scopes = {
+            (r["scope_path"].rsplit("/", 1)[-1], r["field_identifier_code"]): r
+            for r in privacy
         }
-        assert scopes["efac:NoticeResult"]["field_identifier_code"] == "not-val"
-        assert scopes["efac:NoticeResult"]["reason_code"] == "eo-int"
-        assert scopes["efac:NoticeResult"]["scope_table"] == "notice"
-        statistics = scopes["efac:ReceivedSubmissionsStatistics"]
+        # Two blocks share the statistics scope, one per withheld field, which
+        # is what a real notice does: the count and the code it counts are
+        # withheld separately. Keying on the scope alone would hide one.
+        assert set(scopes) == {
+            ("efac:NoticeResult", "not-val"),
+            ("efac:ReceivedSubmissionsStatistics", "rec-sub-cou"),
+            ("efac:ReceivedSubmissionsStatistics", "rec-sub-typ"),
+        }
+        notice_scope = scopes["efac:NoticeResult", "not-val"]
+        assert notice_scope["reason_code"] == "eo-int"
+        assert notice_scope["scope_table"] == "notice"
+        statistics = scopes["efac:ReceivedSubmissionsStatistics", "rec-sub-cou"]
         assert statistics["scope_table"] == "lot_result"
-        assert statistics["field_identifier_code"] == "rec-sub-cou"
+        assert statistics["block_ordinal"] == 0
 
     def test_a_notice_with_no_privacy_block_produces_no_rows(self) -> None:
         assert rows("field_privacy", extension=ORGANISATIONS) == []

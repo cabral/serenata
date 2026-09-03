@@ -380,11 +380,16 @@ without the code is reading an unknown quantity**, which is why the pair is a
 row rather than two columns that could each hold one of twelve blocks.
 
 **A withheld count is published, not omitted.** Two blocks in this package carry
-the code `unpublished` and the number `-1`, with an `efac:FieldsPrivacy` block
-inside them. Their `statistic_value_status` is `withheld`: containment proves
-the target without needing the eForms field identifier, so this is the one place
-the status is derived today. A classifier reading the number without the status
-would read a lawful deferral as a negative bid count.
+the code `unpublished` and the number `-1`, with `efac:FieldsPrivacy` blocks
+inside them naming `rec-sub-cou` (the number) and `rec-sub-typ` (the code it
+counts). Both columns read `withheld`. A classifier reading the number without
+the status would read a lawful deferral as a negative bid count.
+
+Scope here is by containment as well as by code: a privacy block *inside* a
+statistics block is about that block, which is what keeps one withheld count
+from marking the other eleven a lot result can carry. Where the code is missing
+or unresolvable both columns are marked, which is the conservative direction and
+was the only behaviour available before the SDK mapping existed.
 
 ### `settled_contract`
 
@@ -452,9 +457,10 @@ record. `efac:FieldsPrivacy` was measured inside `efac:NoticeResult` (52),
 row therefore carries `scope_table` and `scope_ordinal` for the record, plus
 `scope_path` for the element within it and `block_ordinal` for which block.
 
-This table is what should turn a withheld field into the status `withheld` on
-the field it names. It does so today only where containment proves the target —
-see [Absence](#absence).
+This table is what turns a withheld field into the status `withheld` on the
+field it names, for the codes the eForms SDK can place — 143 of these 215 rows.
+Every row is kept either way, including the 72 whose code this model cannot act
+on; see [Absence](#absence).
 
 ## Absence
 
@@ -483,21 +489,45 @@ containers. The status is kept because conflating a blank element with an absent
 one would be silently wrong and costs nothing to avoid, not because this package
 shows it happening. `absent` is the complement.
 
-**`withheld` is derived only where containment proves the target.** A privacy
-block inside an `efac:ReceivedSubmissionsStatistics` block marks that block's
-own fields, so those rows get `withheld` — two in this package. Everywhere else
-the block names its target with an eForms field identifier — `win-ten-val`,
-`ten-val-low`, `max-val` — and mapping those to columns needs the eForms SDK
-this pipeline does not carry. Until it does, the fact is in `field_privacy` and
-the marked column reads `present` or `absent` like any other.
+**`withheld` is derived from the code the publisher published**, because a
+withheld value is published rather than omitted. An amount marked non-public
+arrives as `-1`, and a bid count as the code `unpublished` with the number `-1`.
+A classifier reading those as quantities reads a lawful deferral as a negative
+price, which is the failure this status exists to prevent.
 
-**That gap has teeth, because a withheld value is published rather than
-omitted.** Amounts marked non-public are published as `-1`: 72 tender payable
-amounts, 42 notice total amounts, 10 highest and 10 lowest tender amounts in
-this package alone. A classifier reading those as sums of money reads a lawful
-deferral as a negative price. Deriving `withheld` from the field identifiers is
-therefore the first thing to build after this stage, and is tracked in
-[`open-work.md`](open-work.md).
+An `efac:FieldsPrivacy` block names its target with an eForms field identifier —
+`win-ten-val`, `ten-val-low`, `rec-sub-cou` — and the eForms SDK is what says
+which element each code means. That table is generated into
+`serenata/normalise/sdk_privacy.py` and joined onto these columns at import;
+[ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md) records the decision, the
+licence and the checks. **143 of the 215 privacy blocks in this package mark a
+column**:
+
+| Column | Blocks | Code |
+|---|---:|---|
+| `lot_tender.payable_amount` | 74 | `win-ten-val` |
+| `lot_tender.is_variant` | 42 | `win-ten-var` |
+| `lot_result.highest_tender_amount` | 11 | `ten-val-hig` |
+| `lot_result.lowest_tender_amount` | 11 | `ten-val-low` |
+| `lot_result_statistic.statistic_value` | 2 | `rec-sub-cou` |
+| `lot_result_statistic.statistic_code` | 2 | `rec-sub-typ` |
+| `lot_result.decision_reason_code` | 1 | `no-awa-rea` |
+
+**The other 72 are refused rather than approximated**, and each one is still a
+`field_privacy` row. Sixty-nine name a field this model has no column for — the
+notice's total amount is withheld 44 times in this package — and three are told
+apart from another field only by an XPath predicate, which these paths do not
+carry (ADR-0005). Eleven of the SDK's 47 codes resolve here, so a `present`
+status on a column no code can reach is weaker evidence than one on a column a
+code can, and `privacy.UNUSABLE` names every gap with its reason.
+
+**The value is never rewritten.** A withheld amount still reads `-1`, exactly as
+the notice published it; only the status carries the interpretation. That
+matters because the two disagree: two notices in this package declare a payable
+amount non-public and publish a real number anyway, one publishes `1` rather
+than `-1`, and two settled contracts carry a contract reference of `-1` that no
+block declares. [`dataset-shape.md`](dataset-shape.md) counts `-1` by column
+independently of any declaration, so neither signal hides the other.
 
 `not_applicable` is derived from the eForms notice-subtype rules and needs the
 same SDK. Until then an inapplicable field is recorded `absent`, which is
@@ -663,9 +693,11 @@ written here, so a model that stops matching its own output says so.
   with it.
 - **`not_applicable` derivation.** Needs the notice-subtype rules from the
   eForms SDK, which the offline pipeline does not carry today.
-- **`withheld` derivation beyond containment.** The `field_privacy` rows are
-  written; mapping an eForms field identifier to the column it names needs the
-  same SDK. Until then a withheld amount reads `present` with the value `-1`.
+- **The 72 privacy blocks whose code cannot be placed**, above. Sixty-nine name
+  a field with no column here — the notice's total amount most often — and three
+  are distinguished from another field only by an XPath predicate these paths do
+  not carry. Adding the columns makes most of them resolve with no other change
+  (ADR-0008).
 - **Personal data a publisher put in the wrong field**, above. The model has no
   mechanism for it, and inventing one is a decision rather than a patch.
 - **Legacy TED mappings**, above.

@@ -40,12 +40,14 @@ from serenata.normalise.model import (
     ROLE_QUALIFIERS,
     ROLE_SOURCES,
     STATISTIC_BLOCKS,
+    STATISTIC_COLUMNS,
     TABLES,
     Column,
     Kind,
     Status,
     Table,
 )
+from serenata.normalise.privacy import BLOCK_TARGETS, RECORD_TARGETS, Target, covers
 from serenata.parse.records import Field, ParsedNotice, Record
 
 #: Where the citable TED reference lives, relative to the notice record. Every
@@ -75,6 +77,9 @@ SCOPE_TABLE = {
     "settled_contract": "settled_contract",
     "tendering_party": "tendering_party",
 }
+
+#: Where a privacy block names the field it withholds, relative to the block.
+FIELD_IDENTIFIER = "efbc:FieldIdentifierCode"
 
 #: Rows = one dictionary per row, keyed by table name.
 Rows = dict[str, list[dict[str, Any]]]
@@ -224,6 +229,11 @@ def _record_rows(
 ) -> Iterator[dict[str, Any]]:
     """Rows for a table whose every row is one parse record."""
     for record in notice.of_kind(table.record):
+        withheld = {
+            target.column
+            for target in _withheld_in(record)
+            if target.table == table.name
+        }
         row: dict[str, Any] = {}
         for column in table.columns:
             if column.structural:
@@ -233,6 +243,8 @@ def _record_rows(
                     row |= _computed(column, notice.root_element, Status.PRESENT)
                 continue
             row |= _read(record, column, language)
+            if column.name in withheld:
+                row[f"{column.name}_status"] = Status.WITHHELD.value
         yield _identity_of(notice) | {"ordinal": record.ordinal} | row
 
 
@@ -324,6 +336,35 @@ def _location_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                 yield row
 
 
+def _withheld_in_block(fields: Sequence[Field], block: str) -> set[str]:
+    """Which columns of a statistics block its own privacy blocks withhold.
+
+    Scoped by containment: a privacy block *inside* a statistics block is about
+    that block, which is what keeps one withheld count from marking the other
+    eleven a lot result can carry.
+
+    Which of the block's two columns it names is the code's job to say, and
+    `rec-sub-cou` (the number) and `rec-sub-typ` (the code) say it. Where a code
+    is missing or `serenata.normalise.privacy` cannot place it, both columns are
+    marked, which is the conservative direction and was this function's only
+    behaviour before the SDK mapping existed. Both blocks measured withheld in
+    OJ S 157/2026 carry both codes, so the mapping confirms what containment
+    already said there rather than changing it.
+    """
+    cut = len(block) + 1
+    inside = [item.path[cut:] for item in fields]
+    if not any(path.startswith(f"{PRIVACY_BLOCK}/") for path in inside):
+        return set()
+    codes = {
+        item.value
+        for item in fields
+        if item.path[cut:] == f"{PRIVACY_BLOCK}/{FIELD_IDENTIFIER}"
+    }
+    if codes and all(code in BLOCK_TARGETS for code in codes):
+        return {target.column for code in codes for target in BLOCK_TARGETS[code]}
+    return {name for name, _path in STATISTIC_COLUMNS}
+
+
 def _statistic_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
     """One row per statistics block of a lot result.
 
@@ -338,23 +379,16 @@ def _statistic_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
         for block, kind in STATISTIC_BLOCKS.items():
             for ordinal, fields in _blocks(record, block):
                 inside = _relative(fields, block)
-                # A privacy block inside a statistics block marks that block's
-                # own fields. Which of the two it names is an eForms SDK
-                # question this pipeline cannot answer, so both are marked
-                # withheld — the conservative direction.
-                withheld = any(path.startswith(f"{PRIVACY_BLOCK}/") for path in inside)
+                withheld = _withheld_in_block(fields, block)
                 row = _identity_of(notice) | {
                     "lot_result_ordinal": record.ordinal,
                     "statistic_kind": kind,
                     "block_ordinal": ordinal,
                 }
-                for name, path in (
-                    ("statistic_code", "efbc:StatisticsCode"),
-                    ("statistic_value", "efbc:StatisticsNumeric"),
-                ):
+                for name, path in STATISTIC_COLUMNS:
                     found = inside.get(path)
                     status = _status_of([found] if found is not None else [])
-                    if withheld:
+                    if name in withheld:
                         status = Status.WITHHELD
                     row |= _computed(
                         columns[name],
@@ -362,6 +396,45 @@ def _statistic_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                         status,
                     )
                 yield row
+
+
+def _privacy_blocks(record: Record) -> Iterator[tuple[str, int, dict[str, Field]]]:
+    """Every `efac:FieldsPrivacy` block in a record, with where it sits.
+
+    Yields ``(scope path, block ordinal, fields below the block)``. The scope
+    path is relative to the record and is empty when the block qualifies the
+    record itself; it is what says a block inside `efac:DecisionReason` is about
+    the decision reason and not about the whole lot result.
+    """
+    scopes: dict[str, None] = {}
+    for item in record.fields:
+        head, marker, _ = item.path.partition(PRIVACY_BLOCK + "/")
+        if marker:
+            scopes[head.rstrip("/")] = None
+    for scope_path in scopes:
+        prefix = f"{scope_path}/{PRIVACY_BLOCK}" if scope_path else PRIVACY_BLOCK
+        for ordinal, fields in _blocks(record, prefix):
+            yield scope_path, ordinal, _relative(fields, prefix)
+
+
+def _withheld_in(record: Record) -> set[Target]:
+    """The columns this record's privacy blocks mark non-public.
+
+    A publisher withholds a field by publishing a placeholder in it — an amount
+    as ``-1`` — and naming it by code here. `serenata.normalise.privacy` turns
+    the code into a column, from the eForms SDK's own field definitions, and
+    refuses the codes it cannot place rather than marking something adjacent.
+    The value stays exactly as published; only the status changes (ADR-0006).
+    """
+    found: set[Target] = set()
+    for scope_path, _ordinal, inside in _privacy_blocks(record):
+        code = inside.get(FIELD_IDENTIFIER)
+        if code is None:
+            continue
+        for target in RECORD_TARGETS.get(code.value, ()):
+            if covers(scope_path, target):
+                found.add(target)
+    return found
 
 
 def _privacy_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
@@ -374,33 +447,25 @@ def _privacy_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
     """
     columns = {column.name: column for column in FIELD_PRIVACY_TABLE.columns}
     for record in notice.records:
-        scopes: dict[str, None] = {}
-        for item in record.fields:
-            head, marker, _ = item.path.partition(PRIVACY_BLOCK + "/")
-            if marker:
-                scopes[head.rstrip("/")] = None
-        for scope_path in scopes:
-            prefix = f"{scope_path}/{PRIVACY_BLOCK}" if scope_path else PRIVACY_BLOCK
-            for ordinal, fields in _blocks(record, prefix):
-                inside = _relative(fields, prefix)
-                row = _identity_of(notice) | {
-                    "scope_table": SCOPE_TABLE[record.kind],
-                    "scope_ordinal": record.ordinal,
-                    "scope_path": scope_path,
-                    "block_ordinal": ordinal,
-                }
-                for name, path in (
-                    ("field_identifier_code", "efbc:FieldIdentifierCode"),
-                    ("reason_code", "cbc:ReasonCode"),
-                    ("publication_date", "efbc:PublicationDate"),
-                ):
-                    found = inside.get(path)
-                    row |= _computed(
-                        columns[name],
-                        found.value if found is not None else None,
-                        _status_of([found] if found is not None else []),
-                    )
-                yield row
+        for scope_path, ordinal, inside in _privacy_blocks(record):
+            row = _identity_of(notice) | {
+                "scope_table": SCOPE_TABLE[record.kind],
+                "scope_ordinal": record.ordinal,
+                "scope_path": scope_path,
+                "block_ordinal": ordinal,
+            }
+            for name, path in (
+                ("field_identifier_code", FIELD_IDENTIFIER),
+                ("reason_code", "cbc:ReasonCode"),
+                ("publication_date", "efbc:PublicationDate"),
+            ):
+                found = inside.get(path)
+                row |= _computed(
+                    columns[name],
+                    found.value if found is not None else None,
+                    _status_of([found] if found is not None else []),
+                )
+            yield row
 
 
 #: Tables whose rows are a block inside a record rather than a record, and so
