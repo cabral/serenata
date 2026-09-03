@@ -285,18 +285,24 @@ outputs written by one version, which is what determinism means here: the same
 code and the same data produce the same bytes. A dependency bump is a change of
 code, and it will show up as one.
 
-## Sign-off is asked for, not enforced
+## 65 commits in the history carry no sign-off
 
-[`CONTRIBUTING.md`](../CONTRIBUTING.md) requires a Developer Certificate of
-Origin sign-off on every commit, which is how contributions are licensed. There
-is **no CI check for it**: a pull request without one passes the build and gets
-asked in review.
+[`CONTRIBUTING.md`](../CONTRIBUTING.md) asks for a Developer Certificate of
+Origin sign-off on every commit, and until 2026-09-03 nothing checked it: **one
+commit out of 66 carried the trailer**, the one that added the rule.
 
-Fine at this size, and the reason to fix it is provenance rather than process —
-an unsigned commit in the history is a contribution whose licensing nobody
-recorded, and it is far easier to ask at the time than to chase later. The check
-is a few lines in the existing workflow and costs nothing to run (GitHub Actions
-is free for public repositories), so this is unstarted rather than blocked.
+It is enforced now. A hook adds the trailer, `.github/workflows/dco.yml` fails a
+pull request whose commits lack it, and
+[ADR-0009](adr/0009-contribution-provenance.md) records what signing means on a
+patch written with an assistant.
+
+**What stays true is the history.** The check is scoped to the commits a pull
+request adds, so those 65 remain unsigned — rewriting published history to
+satisfy a policy adopted afterwards would change every hash and prove nothing.
+They are all by the maintainer, who holds the copyright in them, so the
+provenance question they leave open is narrow. Anyone auditing licensing should
+read the sign-off record as starting on 2026-09-03 rather than covering the
+project.
 
 ## CI runs on deprecated action runtimes
 
