@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC. Not a real notice. See data/sample/README.md.
+     Covers constraint 2 on both of its rules: an organisation flagged as a
+     natural person, whose identifying values are suppressed while its opaque
+     key is kept, and an ultimate beneficial owner subtree, which is dropped
+     wherever it appears. Every value that must never reach a row is spelled
+     MUST-NEVER-APPEAR, so a test can assert on it without inventing a name. -->
+<ContractAwardNotice
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:efac="http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1"
+    xmlns:efbc="http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1"
+    xmlns:efext="http://data.europa.eu/p27/eforms-ubl-extensions/1">
+  <cbc:ID>00000000-0000-0000-0000-000000000004</cbc:ID>
+  <cbc:ContractFolderID>FOLDER-0004</cbc:ContractFolderID>
+  <cbc:IssueDate>2026-08-15+02:00</cbc:IssueDate>
+  <cbc:NoticeTypeCode listName="notice-subtype">can-standard</cbc:NoticeTypeCode>
+  <cbc:NoticeLanguageCode>SWE</cbc:NoticeLanguageCode>
+  <cac:ProcurementProject>
+    <cbc:Name languageID="SWE">EXEMPEL PA UPPHANDLING</cbc:Name>
+  </cac:ProcurementProject>
+  <ext:UBLExtensions><ext:UBLExtension><ext:ExtensionContent>
+    <efext:EformsExtension>
+      <efac:NoticeSubType><cbc:SubTypeCode listName="notice-subtype">29</cbc:SubTypeCode></efac:NoticeSubType>
+      <efac:Publication>
+        <efbc:NoticePublicationID schemeName="ojs-notice-id">00000004-2026</efbc:NoticePublicationID>
+        <efbc:GazetteID schemeName="ojs-id">157/2026</efbc:GazetteID>
+        <efbc:PublicationDate>2026-08-17+02:00</efbc:PublicationDate>
+      </efac:Publication>
+      <efac:Organizations>
+        <efac:Organization>
+          <efbc:NaturalPersonIndicator>true</efbc:NaturalPersonIndicator>
+          <efac:Company>
+            <cac:PartyIdentification><cbc:ID>ORG-0005</cbc:ID></cac:PartyIdentification>
+            <cac:PartyName><cbc:Name>MUST-NEVER-APPEAR</cbc:Name></cac:PartyName>
+            <cac:PartyLegalEntity><cbc:CompanyID>MUST-NEVER-APPEAR</cbc:CompanyID></cac:PartyLegalEntity>
+            <cac:PostalAddress>
+              <cbc:StreetName>MUST-NEVER-APPEAR</cbc:StreetName>
+              <cbc:CityName>MUST-NEVER-APPEAR</cbc:CityName>
+            </cac:PostalAddress>
+          </efac:Company>
+        </efac:Organization>
+        <efac:Organization>
+          <efac:Company>
+            <cac:PartyIdentification><cbc:ID>ORG-0006</cbc:ID></cac:PartyIdentification>
+            <cac:PartyName><cbc:Name languageID="SWE">EXEMPELBOLAGET</cbc:Name></cac:PartyName>
+            <cac:PartyLegalEntity><cbc:CompanyID>X0000006</cbc:CompanyID></cac:PartyLegalEntity>
+          </efac:Company>
+          <efac:UltimateBeneficialOwner>
+            <cbc:ID>UBO-0001</cbc:ID>
+            <cbc:FamilyName>MUST-NEVER-APPEAR</cbc:FamilyName>
+            <cbc:FirstName>MUST-NEVER-APPEAR</cbc:FirstName>
+          </efac:UltimateBeneficialOwner>
+        </efac:Organization>
+      </efac:Organizations>
+    </efext:EformsExtension>
+  </ext:ExtensionContent></ext:UBLExtension></ext:UBLExtensions>
+</ContractAwardNotice>

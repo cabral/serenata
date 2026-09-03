@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import tarfile
+from pathlib import Path
 from typing import Any
 
 #: An impossible notice ID: real TED numbers are nowhere near this range.
@@ -135,3 +136,29 @@ def make_notice_package(
             info.mtime = 0
             archive.addfile(info, io.BytesIO(body))
     return buffer.getvalue()
+
+
+#: The committed sample, as it sits unpacked: one directory named the way TED
+#: names a package's members, one XML file per notice.
+SAMPLE = Path(__file__).resolve().parent.parent / "data" / "sample"
+
+
+def sample_notices() -> dict[str, bytes]:
+    """Every notice in the committed sample, by member name."""
+    return {
+        path.name: path.read_bytes()
+        for path in sorted((SAMPLE / PACKAGE_PREFIX).glob("*.xml"))
+    }
+
+
+def sample_package(destination: Path) -> Path:
+    """Pack the committed sample into a package, the shape `fetch` archives.
+
+    The notices are committed as XML rather than as a ``.tar.gz`` because a
+    fixture nobody can read in a diff is a fixture nobody checks — and this one
+    exists to be checked. Packing them here costs a line and gives the tests the
+    same input the pipeline takes in production.
+    """
+    package = destination / f"{PACKAGE_ID}.tar.gz"
+    package.write_bytes(make_notice_package(sample_notices()))
+    return package

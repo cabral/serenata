@@ -114,7 +114,7 @@ docs/
   data-model.md # the relational contract: entities, provenance, absence
   data-reuse.md # TED's reuse terms and this project's attribution
   hypotheses/   # one file per classifier: hypothesis, sources, base rates
-data/           # gitignored workspace, except the committed sample/
+data/sample/    # six notices in package layout: the end-to-end test's input
 .claude/skills/ # the working rules this project is built to, in long form
 ```
 
@@ -233,8 +233,14 @@ uv sync
 uv run pytest
 ```
 
-Tests run offline against fixtures in `tests/fixtures/`; nothing in the test
-suite touches the network, and the suite refuses a socket if anything tries.
+Tests run offline; nothing in the suite touches the network, and it refuses a
+socket if anything tries. One of them runs the whole pipeline over
+[`data/sample/`](data/sample/) — six notices in the layout TED delivers a
+package in, through the archive layer, parse, normalise, Parquet and a DuckDB
+query. They are synthetic, because a real notice carries a contact name and
+e-mail in 99.9% of cases and committing one to test that we remove personal data
+would leave it here permanently. What that leaves unproven is in
+[`docs/known-issues.md`](docs/known-issues.md).
 
 The constraints this project runs on are executable, not just documented.
 [`tests/test_constraints.py`](tests/test_constraints.py) enforces them on every

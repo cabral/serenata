@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC. Not a real notice. See data/sample/README.md.
+     Covers: a contract notice with one lot; a path that repeats inside one
+     record (two contracting systems); a title published in two languages; two
+     places of performance; and a contact block that must never reach a row. -->
+<ContractNotice
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:efac="http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1"
+    xmlns:efbc="http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1"
+    xmlns:efext="http://data.europa.eu/p27/eforms-ubl-extensions/1">
+  <cbc:ID>00000000-0000-0000-0000-000000000001</cbc:ID>
+  <cbc:ContractFolderID>FOLDER-0001</cbc:ContractFolderID>
+  <cbc:IssueDate>2026-08-13+02:00</cbc:IssueDate>
+  <cbc:IssueTime>09:00:00+02:00</cbc:IssueTime>
+  <cbc:VersionID>01</cbc:VersionID>
+  <cbc:RegulatoryDomain>32014L0024</cbc:RegulatoryDomain>
+  <cbc:NoticeTypeCode listName="notice-subtype">cn-standard</cbc:NoticeTypeCode>
+  <cbc:NoticeLanguageCode>ENG</cbc:NoticeLanguageCode>
+  <cbc:CustomizationID>eforms-sdk-1.13</cbc:CustomizationID>
+  <cac:ContractingParty>
+    <cac:ContractingPartyType>
+      <cbc:PartyTypeCode listName="buyer-legal-type">body-pl</cbc:PartyTypeCode>
+    </cac:ContractingPartyType>
+    <cac:ContractingActivity>
+      <cbc:ActivityTypeCode listName="authority-activity">gen-pub</cbc:ActivityTypeCode>
+    </cac:ContractingActivity>
+    <cac:Party>
+      <cac:PartyIdentification><cbc:ID>ORG-0001</cbc:ID></cac:PartyIdentification>
+    </cac:Party>
+  </cac:ContractingParty>
+  <cac:ProcurementProject>
+    <cbc:ID>INTERNAL-0001</cbc:ID>
+    <cbc:Name languageID="ENG">EXAMPLE PROCUREMENT OF NOTHING</cbc:Name>
+    <cbc:Name languageID="FRA">EXEMPLE DE MARCHE DE RIEN</cbc:Name>
+    <cbc:Description languageID="ENG">An example description.</cbc:Description>
+    <cbc:Description languageID="FRA">Une description d'exemple.</cbc:Description>
+    <cbc:ProcurementTypeCode listName="contract-nature">services</cbc:ProcurementTypeCode>
+    <cac:MainCommodityClassification>
+      <cbc:ItemClassificationCode listName="cpv">79000000</cbc:ItemClassificationCode>
+    </cac:MainCommodityClassification>
+    <cac:RealizedLocation>
+      <cac:Address>
+        <cac:Country>
+          <cbc:IdentificationCode listName="country">SWE</cbc:IdentificationCode>
+        </cac:Country>
+      </cac:Address>
+    </cac:RealizedLocation>
+    <cac:RealizedLocation>
+      <cac:Address>
+        <cbc:CountrySubentityCode listName="nuts">FI1B</cbc:CountrySubentityCode>
+        <cac:Country>
+          <cbc:IdentificationCode listName="country">FIN</cbc:IdentificationCode>
+        </cac:Country>
+      </cac:Address>
+    </cac:RealizedLocation>
+  </cac:ProcurementProject>
+  <cac:TenderingProcess>
+    <cbc:ProcedureCode listName="procurement-procedure-type">open</cbc:ProcedureCode>
+  </cac:TenderingProcess>
+  <cac:ProcurementProjectLot>
+    <cbc:ID schemeName="Lot">LOT-0001</cbc:ID>
+    <cac:ProcurementProject>
+      <cbc:Name languageID="ENG">EXAMPLE LOT</cbc:Name>
+      <cbc:Description languageID="ENG">An example lot.</cbc:Description>
+      <cbc:ProcurementTypeCode listName="contract-nature">services</cbc:ProcurementTypeCode>
+    </cac:ProcurementProject>
+    <cac:TenderingProcess>
+      <cbc:GovernmentAgreementConstraintIndicator>false</cbc:GovernmentAgreementConstraintIndicator>
+      <cac:ContractingSystem>
+        <cbc:ContractingSystemTypeCode listName="framework-agreement">none</cbc:ContractingSystemTypeCode>
+      </cac:ContractingSystem>
+      <cac:ContractingSystem>
+        <cbc:ContractingSystemTypeCode listName="dps-usage">none</cbc:ContractingSystemTypeCode>
+      </cac:ContractingSystem>
+    </cac:TenderingProcess>
+    <cac:TenderingTerms>
+      <cac:AppealTerms>
+        <cac:AppealReceiverParty>
+          <cac:PartyIdentification><cbc:ID>ORG-0002</cbc:ID></cac:PartyIdentification>
+        </cac:AppealReceiverParty>
+      </cac:AppealTerms>
+    </cac:TenderingTerms>
+  </cac:ProcurementProjectLot>
+  <ext:UBLExtensions><ext:UBLExtension><ext:ExtensionContent>
+    <efext:EformsExtension>
+      <efac:NoticeSubType><cbc:SubTypeCode listName="notice-subtype">16</cbc:SubTypeCode></efac:NoticeSubType>
+      <efac:Publication>
+        <efbc:NoticePublicationID schemeName="ojs-notice-id">00000001-2026</efbc:NoticePublicationID>
+        <efbc:GazetteID schemeName="ojs-id">157/2026</efbc:GazetteID>
+        <efbc:PublicationDate>2026-08-17+02:00</efbc:PublicationDate>
+      </efac:Publication>
+      <efac:Organizations>
+        <efac:Organization>
+          <efac:Company>
+            <cac:PartyIdentification><cbc:ID>ORG-0001</cbc:ID></cac:PartyIdentification>
+            <cac:PartyName><cbc:Name languageID="ENG">EXAMPLE BUYING BODY</cbc:Name></cac:PartyName>
+            <cac:PartyLegalEntity><cbc:CompanyID>X0000001</cbc:CompanyID></cac:PartyLegalEntity>
+            <cac:PostalAddress>
+              <cbc:CityName>EXAMPLE CITY</cbc:CityName>
+              <cbc:PostalZone>00000</cbc:PostalZone>
+              <cbc:CountrySubentityCode listName="nuts">SE110</cbc:CountrySubentityCode>
+              <cac:Country>
+                <cbc:IdentificationCode listName="country">SWE</cbc:IdentificationCode>
+              </cac:Country>
+            </cac:PostalAddress>
+            <cac:Contact>
+              <cbc:Name>DROPPED-CONTACT-VALUE</cbc:Name>
+              <cbc:ElectronicMail>DROPPED-CONTACT-VALUE</cbc:ElectronicMail>
+              <cbc:Telephone>DROPPED-CONTACT-VALUE</cbc:Telephone>
+            </cac:Contact>
+          </efac:Company>
+        </efac:Organization>
+        <efac:Organization>
+          <efac:Company>
+            <cac:PartyIdentification><cbc:ID>ORG-0002</cbc:ID></cac:PartyIdentification>
+            <cac:PartyName><cbc:Name languageID="ENG">EXAMPLE REVIEW BODY</cbc:Name></cac:PartyName>
+            <cac:PartyLegalEntity><cbc:CompanyID>X0000002</cbc:CompanyID></cac:PartyLegalEntity>
+          </efac:Company>
+        </efac:Organization>
+      </efac:Organizations>
+    </efext:EformsExtension>
+  </ext:ExtensionContent></ext:UBLExtension></ext:UBLExtensions>
+</ContractNotice>

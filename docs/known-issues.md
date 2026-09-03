@@ -203,15 +203,26 @@ Two things worth knowing if this ever matters:
 At this cost a year of notices is an hour or two, so this is recorded rather
 than worked on.
 
-## No committed sample package, so CI never reads a real notice
+## No test reads a notice TED actually published
 
-`tests/fixtures/` and `data/sample/` are empty: the parse and normalise tests
-build their notices in memory, which keeps a fixture and the test that reads it
-in one file but means **no test reads a package TED actually published**. The
-rerun-identity test proves determinism over synthetic notices.
+`data/sample/` now carries six notices in the layout a real package uses, and
+`tests/test_sample_package.py` runs the whole pipeline over them — archive
+layer, parse, normalise, Parquet, DuckDB. That closed the larger gap: something
+in CI reads a package rather than a notice built inside the test that reads it.
 
-Tracked as [open-work #7](open-work.md#7-commit-a-small-sample-package-for-end-to-end-tests)
-and issue [#16](https://github.com/cabral/serenata/issues/16).
+What it does not close is the tripwire. **Those notices are synthetic**, written
+by this project to be structurally faithful, so a change in what TED emits — a
+renamed element, a new code list, a shape nobody anticipated — would not fail
+this build. Real notices cannot be committed for it: a contact name, e-mail and
+telephone appear in 99.9% of them, and putting one in a public repository to
+test that the pipeline removes personal data would leave the data in the
+repository permanently.
+
+The tripwire is [open-work #5](open-work.md#5-add-an-opt-in-test-for-teds-live-contract)
+and issue [#17](https://github.com/cabral/serenata/issues/17): assert TED's
+documented interfaces against the live service, on a schedule, outside the
+offline suite. Until it exists, **the archive is the only thing that would tell
+you TED changed**, and it tells you by failing to parse.
 
 ## Some figures in these documents are measured by hand, and can rot
 
@@ -227,18 +238,26 @@ and `tests/test_data_model.py` and `tests/test_normalise_model.py` fail if the
 model stops agreeing with it.
 
 **Measured by hand, and not checked by anything.** The normalise stage's
-figures: 98,629 rows from one package, 4.2 MB, 46
-email-shaped values in 7 columns, 72 payable amounts published as `-1`, two
-notice UUIDs appearing twice. Each was measured against the local archive with a
+figures: 98,629 rows from one package, 4.2 MB, 46 email-shaped values in 7
+columns, 72 payable amounts published as `-1`, two notice UUIDs appearing twice,
+and the cost table above. Each was measured against the local archive with a
 throwaway script that is not in the repository. **They were true when written
 and nothing will tell you when they stop being.** A second publication day would
 move most of them.
 
-The fix is the same one as above — a committed sample package makes a smaller
-version of each measurement a test — plus promoting the useful ones into
-generated output the way `field-usage.md` already is. Until then, treat an
-unsourced number in these documents as a measurement with a date on it, not as a
-property of the pipeline.
+Half of that gap is now covered from the other side. The *properties* those
+numbers illustrate — that a withheld count is not a number, that the notice UUID
+is not unique, that a sole trader keeps only an opaque key, that every table's
+key is unique — are assertions in `tests/test_sample_package.py`, over notices
+carrying each case deliberately. So the shape of the data the pipeline promises
+to handle is checked on every push; the counts from one real publication day are
+not.
+
+What is left is to generate the counts the way `field-usage.md` is generated,
+from whatever archive the person running it has, with the packages and their
+checksums stated in the output. Until then, treat an unsourced number in these
+documents as a measurement with a date on it, not as a property of the
+pipeline.
 
 ## A published dataset would carry the writer's version
 

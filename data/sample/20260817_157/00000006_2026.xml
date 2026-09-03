@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC, and deliberately broken: the root element is never closed.
+     Covers the case where one damaged document must not cost the other five —
+     it is reported by name and the run continues. -->
+<ContractNotice xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2">
+  <truncated

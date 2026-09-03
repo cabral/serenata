@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC. Not a real notice. See data/sample/README.md.
+     A legacy TED notice: six digits in the filename, TED_EXPORT at the root.
+     Covers the refusal. The mapping from legacy elements into the data model
+     has never been measured, so parse names this notice and refuses it rather
+     than guessing which of its fields can carry a person's name. -->
+<TED_EXPORT>
+  <CODED_DATA_SECTION>
+    <NOTICE_DATA>
+      <NO_DOC_OJS>000005-2026</NO_DOC_OJS>
+    </NOTICE_DATA>
+  </CODED_DATA_SECTION>
+</TED_EXPORT>

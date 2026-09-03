@@ -31,7 +31,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open | [#17](https://github.com/cabral/serenata/issues/17) |
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later | [#15](https://github.com/cabral/serenata/issues/15) |
-| 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | start here | [#16](https://github.com/cabral/serenata/issues/16) |
+| 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
@@ -40,7 +40,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 
-**Order matters.** 2 fed 1; 1, 3, 4 and 12 are all done for eForms, and 12
+**Order matters.** 2 fed 1; 1, 3, 4, 7 and 12 are all done for eForms, and 12
 turned records into a dataset, which closed 9 with it. What comes next is 13:
 the dataset now stores a withheld amount as the number `-1` with the status
 `present`, and the first classifier will read exactly those columns. 14 is the
@@ -470,6 +470,38 @@ Filed now so it is not discovered late.
 
 ## 7. Commit a small sample package for end-to-end tests
 
+**Done.** [`data/sample/`](../data/sample/) holds six notices in the layout TED
+delivers a package in, and `tests/test_sample_package.py` runs the whole
+pipeline over them — archive layer, parse, normalise, Parquet, DuckDB — with no
+special casing. Nineteen assertions, over the cases that cost something: a
+withheld bid count published as `-1`, a withheld amount published as `-1`, two
+notices sharing a UUID under different publication numbers, a suppressed natural
+person, a beneficial owner subtree, a refused legacy notice, and a damaged
+document that must not cost the other five. Every table's key is checked for
+uniqueness rather than the one somebody thought to check, and the rerun-identity
+test now runs over a package rather than a notice built in place.
+
+**Two deliberate departures from the plan below**, both worth arguing with if
+you disagree:
+
+- **The notices are committed as XML, not as a `.tar.gz`.** A fixture is worth
+  having only if a reviewer can read it. A one-line change to one notice is
+  reviewable; a changed compressed archive is a new binary nobody checks. The
+  tests pack it in one line, so what the pipeline receives is identical.
+- **They are synthetic rather than real notices.** The plan allowed either. A
+  contact name, e-mail and telephone appear in 99.9% of real notices, so
+  committing one to a public repository — in order to test that the pipeline
+  removes personal data — would put that data in the repository permanently, and
+  redacting one first makes it neither accurate nor synthetic.
+
+**What that leaves open**, and it is the reason this item does not close the gap
+it was filed against: no test reads a notice TED actually published, so a change
+in what TED emits still would not fail the build. The tripwire for that is
+[#5](#5-add-an-opt-in-test-for-teds-live-contract), which asserts TED's
+interfaces against the live service on a schedule.
+
+The original statement of the problem follows.
+
 `data/sample/` is empty and says so: "Empty until the pipeline can read it." Now
 that `fetch` produces packages, it can. A committed sample lets tests exercise a
 real archive end to end without fetching. A full daily package is ~20 MB
@@ -493,12 +525,13 @@ person's name; if reproducing a real notice, check it against #3 first.
 comfortably, its README says what each notice is and which case it covers, and a
 test reads it through the archive layer without special-casing.
 
-**What it would upgrade.** The rerun-identity test
-([#9](#9-add-the-rerun-identity-determinism-test)) and the normalise tests build
-their notices in memory, so nothing in CI reads a package TED actually
-published. The figures this repository quotes for OJ S 157/2026 were measured by
-hand against the local archive; a committed sample makes a smaller version of
-that measurement a test.
+**What it upgraded.** The rerun-identity test
+([#9](#9-add-the-rerun-identity-determinism-test)) now runs over a package, and
+the properties this repository states about the data — that a withheld count is
+not a number, that the notice UUID is not a key, that a sole trader keeps only
+an opaque key — are assertions rather than sentences. The figures for OJ S
+157/2026 itself are still hand-measured; [`known-issues.md`](known-issues.md)
+says which those are.
 
 ---
 
