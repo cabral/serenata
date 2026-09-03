@@ -1019,7 +1019,7 @@ so the capability is a recorded trade rather than an absence nobody documented.
 ## 16. Add the three columns the red-flag literature needs
 
 Checking the model against the established indicator sets — the DIGIWHIST /
-Fazekas corruption-risk index and the Open Contracting Partnership's red flags —
+Fazekas "corruption risk index" and the Open Contracting Partnership's red flags —
 finds ten of fourteen components already modelled: single bidding, procedure
 type, direct-award justification, award value, price spread, award date, winner
 country, CPV, buyer identity, buyer type. One is dropped on purpose
@@ -1034,7 +1034,7 @@ country, CPV, buyer identity, buyer type. One is dropped on purpose
 | framework maximum value | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` | 8.4%, 24 countries |
 
 The first is the one that costs most. **Length of the advertisement period** —
-publication to submission deadline — is a core component of the published risk
+publication to submission deadline — is a core component of that published
 index, on the hypothesis that an unusually short window favours a bidder who
 knew in advance. Without the deadline it cannot be computed at all.
 
