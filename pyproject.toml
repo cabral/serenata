@@ -7,8 +7,13 @@ authors = [{ name = "Felipe B. Cabral", email = "felipe.benites@gmail.com" }]
 license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-# httpx is BSD-3-Clause, compatible with AGPL-3.0 (ADR-0002).
-dependencies = ["httpx>=0.27"]
+# httpx is BSD-3-Clause (ADR-0002) and pyarrow is Apache-2.0 (ADR-0001, which
+# names it as the Parquet writer). Both are AGPL-3.0 compatible, and
+# tests/test_constraints.py checks that against installed metadata every run.
+dependencies = [
+    "httpx>=0.27",
+    "pyarrow>=25.0.1",
+]
 
 [project.urls]
 Repository = "https://github.com/cabral/serenata"
@@ -19,8 +24,11 @@ serenata = "serenata.cli:main"
 [dependency-groups]
 # Development tooling only; none of this ships with the distributed package.
 # All permissive and AGPL-3.0 compatible, and tests/test_constraints.py checks
-# that on every run rather than trusting this comment.
+# that on every run rather than trusting this comment. duckdb (MIT) is here
+# rather than in dependencies because the pipeline writes Parquet and only the
+# tests read it back; classifiers will move it when they need SQL (ADR-0001).
 dev = [
+    "duckdb>=1.5.5",
     "mypy>=1.13",
     "pip-audit>=2.7",
     "pytest>=8",
@@ -56,9 +64,28 @@ python_version = "3.12"
 strict = true
 files = ["serenata"]
 
+# pyarrow ships no type information. The alternative to this override is an
+# ignore comment on every import of it, which says the same thing in more
+# places; our own use of it stays typed either way.
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# The coverage floor is a rot detector, not a ratchet: the suite currently sits
-# at 99% with every fetch module at 100%, and 95 leaves room to add a stage
-# without a red build while still catching a stage that arrives untested.
-addopts = "-ra --cov=serenata --cov-report=term-missing --cov-fail-under=95"
+# Coverage is measured on every run and enforced only in CI (see
+# .github/workflows/ci.yml, which passes --cov-fail-under=95). With the floor
+# here, running one test file reported a failing build at 20% coverage, which
+# taught everyone — human and assistant — to reach for --no-cov and lose the
+# report entirely. A gate that trains people to disable it is worse than no
+# gate. The floor is a rot detector, not a ratchet: the suite sits at 99%, and
+# 95 leaves room to add a stage without a red build while still catching one
+# that arrives untested.
+# `-m "not contract"` keeps the live TED tests out of the default run: the
+# suite's offline promise is enforced by a socket guard in tests/conftest.py,
+# and those tests are the one deliberate exception to it. Run them with
+# `uv run pytest -m contract`; CI runs them weekly, not on every push.
+addopts = "-ra --cov=serenata --cov-report=term-missing -m 'not contract'"
+markers = [
+    "contract: reaches the live TED service; excluded from the default run",
+]

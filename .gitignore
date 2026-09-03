@@ -222,8 +222,10 @@ __marimo__/
 data/*
 !data/sample/
 
-# Working notes and agent skills. These carry stakeholder relationships, brand
-# and funding status, and the project's own assessment of its legal exposure —
-# none of which belongs in a public repository. The standards that contributors
-# actually need are restated in CONTRIBUTING.md instead.
-.claude/
+# Agent skills are tracked: they are the working rules this project is built to,
+# and a rule a contributor cannot read is a rule they cannot follow or improve.
+# CONTRIBUTING.md restates the parts a human needs first; .claude/skills/ is the
+# long form. Only machine-local settings stay out — they are per-checkout
+# permissions, not project standards.
+.claude/settings.local.json
+.claude/*.local.json

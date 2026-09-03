@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC. Not a real notice. See data/sample/README.md.
+     Covers the key that is not one: this notice carries the SAME cbc:ID as
+     00000002_2026.xml and a different publication number, which is what two
+     notices in OJ S 157/2026 do. Anything keyed on the notice UUID merges the
+     two; the dataset is keyed on the publication. -->
+<ContractAwardNotice
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:efac="http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1"
+    xmlns:efbc="http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1"
+    xmlns:efext="http://data.europa.eu/p27/eforms-ubl-extensions/1">
+  <cbc:ID>00000000-0000-0000-0000-000000000002</cbc:ID>
+  <cbc:ContractFolderID>FOLDER-0002</cbc:ContractFolderID>
+  <cbc:IssueDate>2026-08-14+02:00</cbc:IssueDate>
+  <cbc:NoticeTypeCode listName="notice-subtype">can-standard</cbc:NoticeTypeCode>
+  <cbc:NoticeLanguageCode>ENG</cbc:NoticeLanguageCode>
+  <cac:ProcurementProject>
+    <cbc:Name languageID="ENG">EXAMPLE AWARDED PROCUREMENT</cbc:Name>
+  </cac:ProcurementProject>
+  <ext:UBLExtensions><ext:UBLExtension><ext:ExtensionContent>
+    <efext:EformsExtension>
+      <efac:NoticeSubType><cbc:SubTypeCode listName="notice-subtype">29</cbc:SubTypeCode></efac:NoticeSubType>
+      <efac:Publication>
+        <efbc:NoticePublicationID schemeName="ojs-notice-id">00000003-2026</efbc:NoticePublicationID>
+        <efbc:GazetteID schemeName="ojs-id">157/2026</efbc:GazetteID>
+        <efbc:PublicationDate>2026-08-17+02:00</efbc:PublicationDate>
+      </efac:Publication>
+    </efext:EformsExtension>
+  </ext:ExtensionContent></ext:UBLExtension></ext:UBLExtensions>
+</ContractAwardNotice>

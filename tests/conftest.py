@@ -14,13 +14,22 @@ from .support import FakeClock, make_package, search_body
 
 
 @pytest.fixture(autouse=True)
-def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+def no_network(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail any test that tries to open a socket.
 
     The README promises the suite runs offline. That promise is worth
     enforcing rather than trusting: a stubbed-out client is easy to wire up
     wrongly, and a test that quietly reaches TED would be both slow and rude.
+
+    **One exception, and it has to be asked for twice.** A test marked
+    `contract` is the live tripwire in `tests/test_ted_contract.py`, which
+    exists to notice a change on TED's side that a stand-in cannot. Those tests
+    are also excluded from the default run by `-m "not contract"` in
+    pyproject.toml, so reaching the network takes both the marker and an
+    explicit `-m contract`.
     """
+    if request.node.get_closest_marker("contract"):
+        return
 
     def refuse(*args: object, **kwargs: object) -> None:
         raise AssertionError(

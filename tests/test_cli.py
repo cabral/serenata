@@ -1,11 +1,13 @@
 """CLI contract: implemented stages run, unimplemented ones refuse honestly."""
 
+from pathlib import Path
+
 import httpx
 import pytest
 
 from serenata.cli import IMPLEMENTED, STAGES, build_parser, main
 
-from .support import make_package, search_body
+from .support import make_notice_package, make_package, notice_xml, search_body
 
 
 def test_help_lists_every_stage(capsys):
@@ -180,3 +182,69 @@ def ted_handler_for(package: bytes):
         return httpx.Response(200, content=package)
 
     return handler
+
+
+class TestNormalise:
+    """`serenata normalise` turns archived packages into the Parquet dataset."""
+
+    def archive(self, root: Path, count: int = 2) -> Path:
+        """A package where `fetch` would have put one."""
+        directory = root / "data" / "raw" / "ted" / "daily" / "2026"
+        directory.mkdir(parents=True)
+        package = directory / "202600157.tar.gz"
+        package.write_bytes(
+            make_notice_package(
+                {
+                    f"{index:08d}_2026.xml": notice_xml(
+                        publication_id=f"{index:08d}-2026"
+                    )
+                    for index in range(1, count + 1)
+                }
+            )
+        )
+        return package
+
+    def test_it_normalises_every_package_under_the_archive(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        monkeypatch.chdir(tmp_path)
+        self.archive(tmp_path)
+
+        assert main(["normalise"]) == 0
+
+        out = capsys.readouterr().out
+        assert "2 notices" in out
+        assert (tmp_path / "data" / "normalised" / "notice").is_dir()
+
+    def test_a_named_package_is_normalised_on_its_own(self, tmp_path, capsys):
+        package = self.archive(tmp_path)
+
+        assert main(["normalise", str(package), "--out", str(tmp_path / "out")]) == 0
+        assert (tmp_path / "out" / "lot_result_statistic").is_dir()
+        assert "1 package:" in capsys.readouterr().out
+
+    def test_an_empty_archive_says_what_to_do_about_it(self, tmp_path, capsys):
+        assert main(["normalise", "--archive", str(tmp_path)]) == 2
+        assert "no packages found" in capsys.readouterr().err
+
+    def test_a_missing_package_is_named(self, tmp_path, capsys):
+        assert main(["normalise", str(tmp_path / "nope.tar.gz")]) == 2
+        assert "no such package" in capsys.readouterr().err
+
+    def test_a_package_that_loses_notices_exits_nonzero(self, tmp_path, capsys):
+        package = tmp_path / "202600157.tar.gz"
+        package.write_bytes(
+            make_notice_package(
+                {
+                    "00000001_2026.xml": notice_xml(),
+                    "00000002_2026.xml": b"<not-a-notice/>",
+                }
+            )
+        )
+
+        code = main(["normalise", str(package), "--out", str(tmp_path / "out")])
+
+        # The rows that could be written were written; the exit status and
+        # stderr say that something was not, rather than reporting success.
+        assert code == 1
+        assert "were not written" in capsys.readouterr().err

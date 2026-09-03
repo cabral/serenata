@@ -41,10 +41,39 @@ report cannot quietly lose it. A test asserts it is present.
   restriction above.
 - **No republication of notice content.** Published outputs are counts,
   measurements and links back to the source notice. `docs/field-usage.md`
-  carries element paths and frequencies, no field values.
+  carries element paths and frequencies, and `docs/dataset-shape.md` carries row
+  and status counts; neither carries a field value. The second one measures how
+  often a contact address turned up in a column that should not hold one, which
+  is precisely a measurement that must report counts and never values.
 - **No republication of personal data.** Fields that can name a natural person
   are dropped at ingestion and never reach a published artefact. That is a
   standing constraint, not a property of any one dataset.
+
+## Third-party material redistributed in this repository
+
+One file in this repository is not ours and is not TED's:
+`serenata/normalise/sdk_privacy.py` is generated from the **eForms SDK**
+(`fields/fields.json`), © European Union, published by the Publications Office
+of the European Union at <https://github.com/OP-TED/eForms-SDK> and licensed
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+**It is modified**, which CC BY 4.0 requires saying: it carries one relation
+extracted from the SDK — which privacy code withholds which field — reshaped
+into a table and carrying none of the SDK's other content. The attribution and
+that statement are in the file itself, which is what ships in the distributed
+package, and `tests/test_normalise_privacy.py` fails if a regeneration drops
+them.
+
+Why the file exists at all: eForms publishes a withheld value rather than
+omitting it, and only the SDK says which field a publisher's privacy code names.
+[ADR-0008](adr/0008-eforms-sdk-privacy-mapping.md) has the reasoning.
+
+**This does not change the licence of anything else.** CC BY 4.0 carries no
+copyleft, so redistributing that file imposes nothing on the rest of the
+repository; the code stays [AGPL-3.0](../LICENSE), and the AGPL grant does not
+extend over the vendored table. The three sets of terms — TED's reuse decision,
+the SDK's CC BY 4.0, and this project's own AGPL-3.0 and CC BY 4.0 — travel
+separately and none implies another.
 
 ## Licence of this project's own outputs
 

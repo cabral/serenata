@@ -436,3 +436,81 @@ class TestCli:
 
         document = out.read_text(encoding="utf-8")
         assert document.index("a.tar.gz") < document.index("b.tar.gz")
+
+
+def notice_with_lots(*, systems_per_lot: int = 1, lots: int = 1) -> bytes:
+    """A notice whose lots repeat a path inside themselves.
+
+    The distinction this exists to test: two lots each carrying one identifier
+    is *not* the same fact as one lot carrying two contracting-system codes.
+    The first is one value per record and the second is a set, and a survey that
+    counted per notice would report both as two.
+    """
+    systems = "".join(
+        "<cac:ContractingSystem>"
+        "<cbc:ContractingSystemTypeCode>none</cbc:ContractingSystemTypeCode>"
+        "</cac:ContractingSystem>"
+        for _ in range(systems_per_lot)
+    )
+    body = "".join(
+        f"""
+  <cac:ProcurementProjectLot>
+    <cbc:ID>LOT-{index:04d}</cbc:ID>
+    <cac:TenderingProcess>{systems}</cac:TenderingProcess>
+  </cac:ProcurementProjectLot>"""
+        for index in range(1, lots + 1)
+    )
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<ContractNotice xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2"
+        xmlns:cac="{CAC}" xmlns:cbc="{CBC}" xmlns:efac="{EFAC}">
+  <cbc:ID>00000001-2026</cbc:ID>{body}
+</ContractNotice>""".encode()
+
+
+class TestCardinality:
+    """How many times a path occurs **inside one record**, not one notice.
+
+    This is the measurement the data model needed and did not have: written
+    against presence alone, it gave a scalar column to a path that repeats, and
+    `tests/test_normalise_model.py` now checks the model against this number.
+    """
+
+    def cardinality(self, document: bytes) -> dict[str, int]:
+        return dict(read_notice(io.BytesIO(document)).max_per_record)
+
+    def test_a_path_that_never_repeats_reports_one(self) -> None:
+        measured = self.cardinality(notice_with_lots(lots=3))
+        assert measured[f"{ROOT}/cac:ProcurementProjectLot/cbc:ID"] == 1
+
+    def test_three_lots_do_not_make_the_lot_id_repeat(self) -> None:
+        # The failure this guards: counting per notice would say 3, and the
+        # model would carry a list column for a field every lot has once.
+        measured = self.cardinality(notice_with_lots(lots=3))
+        assert measured[f"{ROOT}/cac:ProcurementProjectLot/cbc:ID"] == 1
+        # The lot element itself does repeat, in the record that contains it.
+        assert measured[f"{ROOT}/cac:ProcurementProjectLot"] == 3
+
+    def test_a_path_repeating_inside_one_record_reports_the_repeat(self) -> None:
+        measured = self.cardinality(notice_with_lots(systems_per_lot=2))
+        path = (
+            f"{ROOT}/cac:ProcurementProjectLot/cac:TenderingProcess"
+            "/cac:ContractingSystem/cbc:ContractingSystemTypeCode"
+        )
+        assert measured[path] == 2
+
+    def test_the_maximum_is_taken_across_records_and_notices(self) -> None:
+        survey = Survey()
+        survey.add(read_notice(io.BytesIO(notice_with_lots(systems_per_lot=1))))
+        survey.add(read_notice(io.BytesIO(notice_with_lots(systems_per_lot=4))))
+        path = (
+            f"{ROOT}/cac:ProcurementProjectLot/cac:TenderingProcess"
+            "/cac:ContractingSystem/cbc:ContractingSystemTypeCode"
+        )
+        assert survey.max_per_record[path] == 4
+
+    def test_the_report_carries_the_column(self) -> None:
+        survey = Survey()
+        survey.add(read_notice(io.BytesIO(notice_with_lots(systems_per_lot=2))))
+        document = render(survey)
+        assert "| Present | Countries | Max/record | Path |" in document
+        assert "| 100.0% | 0 | 2 | `notice/cac:ProcurementProjectLot"

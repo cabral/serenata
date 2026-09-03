@@ -25,6 +25,8 @@ jobs:
       - name: Type check
         run: uv run mypy
       # Runs the constraint gates in tests/test_constraints.py alongside the
-      # rest of the suite, and enforces the coverage floor from pyproject.toml.
+      # rest of the suite. The coverage floor lives here rather than in
+      # pyproject.toml so that running a subset of the suite locally is not a
+      # failing build; see the comment there.
       - name: Test
-        run: uv run pytest
+        run: uv run pytest --cov-fail-under=95

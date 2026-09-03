@@ -34,6 +34,24 @@ if anything tries to open one. That is not a convenience: fetching is the only
 networked stage, and a test that reached the network would quietly make the rest
 of the pipeline non-reproducible.
 
+## Generated files
+
+Two files under `docs/` and one under `serenata/` are generated rather than
+written, and editing one by hand is a change that the next regeneration silently
+undoes:
+
+| File | Regenerate with |
+|---|---|
+| [`docs/field-usage.md`](docs/field-usage.md) | `python -m serenata.survey <package>…` |
+| [`docs/dataset-shape.md`](docs/dataset-shape.md) | `python -m serenata.survey <package>… --report shape -o docs/dataset-shape.md` |
+| `serenata/normalise/sdk_privacy.py` | `python tools/generate_sdk_privacy.py` |
+
+The first two read archived packages and are deterministic — the same archive
+reproduces the same file byte for byte, which is what makes them citable. The
+third fetches the eForms SDK, and is the one script in this repository that
+reaches the network on purpose; [`tools/README.md`](tools/README.md) says why it
+lives outside `serenata/`.
+
 ## The constraints
 
 Six rules bind every change. Five are enforced by
@@ -55,7 +73,7 @@ law), not a style preference, and it is the one place to err on the side of
 dropping too much.
 
 **3. Flags are anomalies, never accusations.** No user-facing string, document
-or example calls a flagged record corrupt, fraudulent or guilty. Most flags have
+or example calls a flagged record `corrupt`, `fraudulent` or `guilty`. Most flags have
 innocent explanations, and the project publishes about institutions whose
 lawyers can read.
 
@@ -83,6 +101,26 @@ probably is not crisp yet.
 An ADR that turns out to be wrong gets an amendment with a date, not a quiet
 edit. [ADR-0003](docs/adr/0003-xml-parsing-without-defusedxml.md) is the worked
 example.
+
+## The working rules in `.claude/skills/`
+
+This project is largely built with an AI coding assistant, and the rules it
+works to are in [`.claude/skills/`](.claude/skills/) — the classifier workflow
+and merge checklist (`coding`), the intake gates a detection idea has to pass
+(`case-research`), the defamation and GDPR guardrails (`legal`), and how the
+project writes for people outside it (`communication`, `patreon`).
+
+They are in the repository rather than on one laptop for two reasons. A rule
+nobody can read is a rule nobody can follow, disagree with, or improve. And the
+standards an assistant is held to should be the standards a human contributor is
+held to; if they differ, one of them is wrong.
+
+**They are ordinary files: improve them with a pull request like anything else.**
+Where a skill and `CLAUDE.md` disagree, `CLAUDE.md` wins and the skill is what
+needs fixing. Where a skill claims something about this repository that is not
+true — that a test exists, that a document says something — that is a bug worth
+a PR on its own, because a rule that misdescribes the code teaches the next
+reader something false.
 
 ## Commits and pull requests
 
@@ -123,8 +161,22 @@ mechanically; a missing sign-off will be asked for in review.
   mechanics.
 - A test that can only pass vacuously should assert it is not passing vacuously.
   Several here do.
+- Coverage is reported on every run and the 95% floor is enforced in CI, not
+  locally, so running one file is not a failing build. Coverage measures which
+  lines ran, not whether anything was checked; do not treat the number as the
+  goal.
+- **The suite is offline and a socket guard enforces it.** The one exception is
+  `tests/test_ted_contract.py`, which asserts what this project assumes about
+  TED against the live service. It is excluded from `uv run pytest` and runs
+  weekly in CI; run it on purpose with `uv run pytest -m contract`, and expect
+  it to make a handful of requests. Anything else that reaches the network is a
+  bug in the test.
 - For anything with a measured claim behind it, prefer a check against the real
   archive over an assertion about what you expect it to contain.
+- **A test that cannot fail is worse than no test.** Several here assert that
+  their own fixture still carries the thing they are checking for — search for
+  `can_actually_fail` — because a fixture that quietly lost it would leave the
+  assertion passing and meaningless.
 
 ## Picking something up
 

@@ -217,6 +217,35 @@ class TestDeterminism:
         )
 
 
+def markdown_files() -> list[Path]:
+    """Every document a reader of this repository is offered.
+
+    Including `.claude/skills/`, which are project text now: they state the
+    rules, and a rule stated in the words it forbids is a rule that has drifted.
+    """
+    root = PACKAGE_ROOT.parent
+    found = [root / name for name in ("README.md", "CONTRIBUTING.md", "CLAUDE.md")]
+    for directory in ("docs", ".claude", "tests", "data"):
+        found.extend(sorted((root / directory).rglob("*.md")))
+    return [path for path in found if path.is_file()]
+
+
+def quoted_spans(line: str) -> list[tuple[int, int]]:
+    """Where this line quotes something, in backticks or double quotes.
+
+    Quoting is how a document names a word without using it. "Never the words
+    `corrupt` or `fraud`" states the rule; the same sentence without the marks
+    would be indistinguishable, to a gate, from a document that calls somebody
+    fraudulent.
+    """
+    spans: list[tuple[int, int]] = []
+    for pattern in (r"`[^`\n]*`", r'"[^"\n]*"', "\u201c[^\u201d\n]*\u201d"):
+        spans.extend(
+            (match.start(), match.end()) for match in re.finditer(pattern, line)
+        )
+    return spans
+
+
 class TestFlagsAreNotAccusations:
     """Constraint: a flag is a statistical anomaly, never an accusation.
 
@@ -224,10 +253,14 @@ class TestFlagsAreNotAccusations:
     institutions and companies whose lawyers can read. The words below must not
     reach a user through project output.
 
-    Scoped to string literals: comments and docstrings explain code to
-    maintainers and legitimately discuss the rule itself. The allowlist covers
-    the file-integrity sense of "corrupt", which is about bytes on disk rather
-    than anyone's conduct.
+    Two surfaces, because the project has two. In code the gate reads string
+    literals: comments and docstrings explain code to maintainers, and only a
+    literal can reach a reader. In markdown it reads everything, because a
+    document is nothing but what a reader reads — and the documents are the
+    surface a journalist or a flagged buyer's lawyer actually meets first.
+
+    A document that states the rule has to name the words. It may, by quoting
+    them; an unquoted one reads as the project's own vocabulary.
     """
 
     FORBIDDEN = re.compile(
@@ -250,6 +283,38 @@ class TestFlagsAreNotAccusations:
             "Flags are statistical anomalies with possible innocent "
             "explanations (CLAUDE.md constraint 3)."
         )
+
+    @pytest.mark.parametrize(
+        "path",
+        markdown_files(),
+        ids=lambda p: str(Path(p).relative_to(PACKAGE_ROOT.parent)),
+    )
+    def test_no_accusatory_words_in_unquoted_prose(self, path: Path) -> None:
+        offenders = []
+        for number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            spans = quoted_spans(line)
+            for match in self.FORBIDDEN.finditer(line):
+                inside = any(
+                    start <= match.start() and match.end() <= end
+                    for start, end in spans
+                )
+                if not inside:
+                    offenders.append(f"line {number}: {match.group(0)}")
+        assert not offenders, (
+            f"{path.relative_to(PACKAGE_ROOT.parent)} uses accusatory wording "
+            f"unquoted: {offenders}. A "
+            "document that states the rule quotes the word; one that uses it "
+            "is writing the project's own vocabulary (CLAUDE.md constraint 3)."
+        )
+
+    def test_the_markdown_gate_can_actually_fail(self) -> None:
+        # The quoting rule is what makes this gate liveable, and it is also how
+        # it could quietly stop enforcing anything.
+        assert self.FORBIDDEN.search("this buyer was fraudulent")
+        assert not quoted_spans("this buyer was fraudulent")
+        assert quoted_spans('never the words "fraud" or `guilty`')
 
     def test_the_classify_stage_is_covered_once_it_exists(self) -> None:
         # The prize is generated flag text, which does not exist yet. When

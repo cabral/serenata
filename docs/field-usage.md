@@ -119,464 +119,466 @@ The countries each notice names, not a single attributed buyer country — a not
 
 **Present** is the share of notices carrying a non-empty value. **Countries** is how many distinct countries appear in notices that populate the path — a low count against a high presence means the field is concentrated in a few member states.
 
-| Present | Countries | Path |
-|---:|---:|---|
-| 100.0% | 45 | `notice/cbc:CustomizationID` |
-| 100.0% | 45 | `notice/cbc:ID` |
-| 100.0% | 45 | `notice/cbc:IssueDate` |
-| 100.0% | 45 | `notice/cbc:IssueTime` |
-| 100.0% | 45 | `notice/cbc:NoticeLanguageCode` |
-| 100.0% | 45 | `notice/cbc:NoticeTypeCode` |
-| 100.0% | 45 | `notice/cbc:RegulatoryDomain` |
-| 100.0% | 45 | `notice/cbc:UBLVersionID` |
-| 100.0% | 45 | `notice/cbc:VersionID` |
-| 100.0% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeSubType/cbc:SubTypeCode` |
-| 100.0% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:GazetteID` |
-| 100.0% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:NoticePublicationID` |
-| 100.0% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:PublicationDate` |
-| 99.9% | 45 | `notice/cac:ContractingParty/cac:Party/cac:PartyIdentification/cbc:ID` |
-| 99.9% | 45 | `notice/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` |
-| 99.9% | 45 | `notice/cac:ProcurementProject/cbc:Description` |
-| 99.9% | 45 | `notice/cac:ProcurementProject/cbc:Name` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:ElectronicMail` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyIdentification/cbc:ID` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyName/cbc:Name` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CityName` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:PostalZone` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telephone` |
-| 99.9% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CountrySubentityCode` |
-| 99.8% | 45 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Description` |
-| 99.8% | 45 | `notice/cac:ProcurementProjectLot/cbc:ID` |
-| 99.7% | 45 | `notice/cac:ProcurementProject/cbc:ProcurementTypeCode` |
-| 99.7% | 45 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Name` |
-| 99.5% | 45 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` |
-| 99.5% | 45 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ProcurementTypeCode` |
-| 99.3% | 45 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:AppealReceiverParty/cac:PartyIdentification/cbc:ID` |
-| 98.3% | 45 | `notice/cbc:ContractFolderID` |
-| 94.1% | 44 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` |
-| 94.1% | 45 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgramCode` |
-| 93.9% | 44 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ContractingSystem/cbc:ContractingSystemTypeCode` |
-| 92.4% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:StreetName` |
-| 92.3% | 44 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:GovernmentAgreementConstraintIndicator` |
-| 91.9% | 44 | `notice/cac:ContractingParty/cac:ContractingActivity/cbc:ActivityTypeCode` |
-| 91.7% | 44 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` |
-| 91.1% | 44 | `notice/cac:TenderingProcess/cbc:ProcedureCode` |
-| 91.1% | 45 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cbc:WebsiteURI` |
-| 90.0% | 42 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ID` |
-| 89.7% | 43 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` |
-| 88.4% | 44 | `notice/cac:ContractingParty/cac:ContractingPartyType/cbc:PartyTypeCode` |
-| 86.5% | 34 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` |
-| 83.9% | 35 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` |
-| 83.9% | 42 | `notice/cac:ProcurementProject/cbc:ID` |
-| 77.8% | 41 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:AwardingCriterionTypeCode` |
-| 76.8% | 41 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:Description` |
-| 76.4% | 41 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` |
-| 74.5% | 40 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:PresentationPeriod/cbc:Description` |
-| 67.4% | 44 | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cac:Party/cac:PartyIdentification/cbc:ID` |
-| 67.4% | 44 | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cbc:ServiceTypeCode` |
-| 66.3% | 38 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Name` |
-| 58.9% | 35 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AwardCriterionParameter/efbc:ParameterNumeric` |
-| 58.5% | 35 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AwardCriterionParameter/efbc:ParameterCode` |
-| 57.5% | 35 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:AppealInformationParty/cac:PartyIdentification/cbc:ID` |
-| 57.5% | 39 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:ContractExecutionRequirement/cbc:ExecutionRequirementCode` |
-| 57.4% | 40 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AdditionalInformationParty/cac:PartyIdentification/cbc:ID` |
-| 54.1% | 37 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementTypeCode` |
-| 51.5% | 35 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:DurationMeasure` |
-| 51.5% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
-| 51.5% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentType` |
-| 51.5% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:ID` |
-| 51.3% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:TendererRequirementTypeCode` |
-| 51.0% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:Language/cbc:ID` |
-| 50.8% | 38 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:TendererRequirementTypeCode` |
-| 50.8% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:SubmissionMethodCode` |
-| 49.9% | 37 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderRecipientParty/cbc:EndpointID` |
-| 49.8% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicPaymentUsageIndicator` |
-| 49.7% | 38 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicOrderUsageIndicator` |
-| 49.0% | 36 | `notice/cac:ContractingParty/cbc:BuyerProfileURI` |
-| 47.7% | 38 | `notice/cac:TenderResult/cbc:AwardDate` |
-| 47.5% | 38 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:ID` |
-| 47.5% | 38 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:TenderLot/cbc:ID` |
-| 44.2% | 34 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate` |
-| 44.2% | 34 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cbc:ID` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderLot/cbc:ID` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderReference/cbc:ID` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderingParty/cbc:ID` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/cbc:ID` |
-| 44.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/cbc:ID` |
-| 43.8% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:LotTender/cbc:ID` |
-| 43.8% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:ID` |
-| 43.7% | 30 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:Name` |
-| 43.7% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:LotTender/cbc:ID` |
-| 43.6% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:ContractReference/cbc:ID` |
-| 43.5% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:SettledContract/cbc:ID` |
-| 43.3% | 34 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderValidityPeriod/cbc:DurationMeasure` |
-| 42.6% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:IssueDate` |
-| 42.1% | 32 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telefax` |
-| 41.0% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermCode` |
-| 40.6% | 35 | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` |
-| 40.2% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` |
-| 39.8% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:TenderResultCode` |
-| 39.4% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsCode` |
-| 39.4% | 37 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsNumeric` |
-| 39.2% | 37 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:AdditionalCommodityClassification/cbc:ItemClassificationCode` |
-| 38.3% | 28 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/cbc:ID` |
-| 37.6% | 30 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CityName` |
-| 37.0% | 37 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
-| 36.6% | 33 | `notice/cac:ProcurementProject/cac:AdditionalCommodityClassification/cbc:ItemClassificationCode` |
-| 36.6% | 31 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CityName` |
-| 36.1% | 38 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cbc:MaximumNumberNumeric` |
-| 36.0% | 32 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:VariantConstraintCode` |
-| 35.9% | 24 | `notice/cbc:RequestedPublicationDate` |
-| 35.8% | 34 | `notice/cac:ProcurementProject/cbc:Note` |
-| 35.7% | 35 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartDate` |
-| 35.7% | 34 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` |
-| 34.6% | 36 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/cbc:TotalAmount` |
-| 34.5% | 36 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/efbc:CompanySizeCode` |
-| 30.7% | 27 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:PostalZone` |
-| 30.5% | 31 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:PostalZone` |
-| 30.3% | 33 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:OccurrenceDate` |
-| 30.3% | 33 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:OccurrenceTime` |
-| 29.0% | 36 | `notice/cac:ProcurementProject/cac:RealizedLocation/cbc:Description` |
-| 28.0% | 32 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Note` |
-| 27.1% | 37 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cbc:Description` |
-| 26.8% | 35 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:GuaranteeTypeCode` |
-| 26.7% | 35 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndDate` |
-| 26.1% | 35 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalFormCode` |
-| 25.6% | 29 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:SMESuitableIndicator` |
-| 25.4% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:OfficialLanguages/cac:Language/cbc:ID` |
-| 24.5% | 27 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:AwardingCPBIndicator` |
-| 23.9% | 25 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:Description` |
-| 23.9% | 25 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:TendererRequirementTypeCode` |
-| 23.4% | 34 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:ContractExecutionRequirement/cbc:Description` |
-| 22.8% | 28 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:AcquiringCPBIndicator` |
-| 22.4% | 23 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:MultipleTendersCode` |
-| 21.7% | 29 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderRecipientParty/cac:PartyIdentification/cbc:ID` |
-| 21.5% | 30 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:TenderRankedIndicator` |
-| 20.8% | 24 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:Description` |
-| 20.4% | 32 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:AwardDate` |
-| 19.6% | 29 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RequiredCurriculaCode` |
-| 19.6% | 30 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:Department` |
-| 19.2% | 28 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:StreetName` |
-| 18.9% | 26 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:StreetName` |
-| 18.9% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:TransmissionDate` |
-| 18.9% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:TransmissionTime` |
-| 18.8% | 23 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RecurringProcurementIndicator` |
-| 18.7% | 30 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cac:OccurenceLocation/cbc:Description` |
-| 18.5% | 9 | `notice/cbc:ProfileID` |
-| 17.4% | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:Description` |
-| 16.9% | 30 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cbc:OptionsDescription` |
-| 16.7% | 32 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:TenderVariantIndicator` |
-| 16.5% | 31 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PaymentTerms/cbc:Note` |
-| 16.2% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:DocumentProviderParty/cac:PartyIdentification/cbc:ID` |
-| 15.8% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cbc:EndpointID` |
-| 15.6% | 28 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:Title` |
-| 15.3% | 31 | `notice/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ID` |
-| 14.8% | 31 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efbc:ChangedNoticeIdentifier` |
-| 14.5% | 26 | `notice/cac:TenderingProcess/cbc:Description` |
-| 14.5% | 23 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cbc:RankCode` |
-| 14.3% | 31 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:ChangeReason/cbc:ReasonCode` |
-| 13.8% | 25 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderEvaluationParty/cac:PartyIdentification/cbc:ID` |
-| 13.7% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalInformationRequestPeriod/cbc:EndDate` |
-| 13.6% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalInformationRequestPeriod/cbc:EndTime` |
-| 12.9% | 29 | `notice/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsSubmittedNumeric` |
-| 12.8% | 20 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/cbc:DocumentDescription` |
-| 12.2% | 30 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cbc:CalculationExpression` |
-| 12.1% | 27 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cac:Renewal/cac:Period/cbc:Description` |
-| 12.1% | 28 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementType` |
-| 11.8% | 28 | `notice/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsAwardedNumeric` |
-| 11.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/cbc:Name` |
-| 10.5% | 27 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:ListedOnRegulatedMarketIndicator` |
-| 10.4% | 7 | `notice/cac:TenderingTerms/cbc:FundingProgramCode` |
-| 10.4% | 26 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:ChangeReason/efbc:ReasonDescription` |
-| 10.3% | 23 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:HigherTenderAmount` |
-| 10.3% | 23 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:LowerTenderAmount` |
-| 9.9% | 32 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Region` |
-| 9.7% | 17 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:MediationParty/cac:PartyIdentification/cbc:ID` |
-| 9.7% | 30 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Region` |
-| 9.6% | 21 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:Description` |
-| 9.6% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efac:ChangedSection/efbc:ChangedSectionIdentifier` |
-| 9.5% | 27 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:NaturalPersonIndicator` |
-| 9.5% | 26 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:MaximumOperatorQuantity` |
-| 9.3% | 15 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:AccessToolName` |
-| 9.2% | 25 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:Description` |
-| 9.0% | 15 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:AccessToolsURI` |
-| 8.6% | 19 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:SecurityClearanceTerm/cbc:Code` |
-| 8.4% | 24 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` |
-| 8.4% | 24 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount` |
-| 8.1% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:UltimateBeneficialOwner/cbc:ID` |
-| 8.1% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:ID` |
-| 8.0% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cac:SignatoryParty/cac:PartyIdentification/cbc:ID` |
-| 7.4% | 14 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:SubsequentProcessTenderRequirement/cbc:Name` |
-| 7.3% | 18 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalForm` |
-| 7.3% | 18 | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:FrameworkMaximumAmount` |
-| 7.2% | 17 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:FrameworkMaximumAmount` |
-| 7.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:Change/efbc:ChangeDescription` |
-| 7.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:ChangeReason/cbc:ReasonCode` |
-| 7.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:ChangeReason/efbc:ReasonDescription` |
-| 7.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efbc:ChangedNoticeIdentifier` |
-| 7.0% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efbc:ModifiedContractIdentifier` |
-| 6.9% | 14 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PartyIdentification/cbc:ID` |
-| 6.8% | 18 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ChangeDescription` |
-| 6.8% | 9 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:LanguageID` |
-| 6.8% | 14 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PartyName/cbc:Name` |
-| 6.8% | 21 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:DescriptionCode` |
-| 6.7% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:AppealRequestsStatistics/efbc:StatisticsNumeric` |
-| 6.5% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
-| 6.5% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CityName` |
-| 6.5% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CountrySubentityCode` |
-| 6.5% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:PostalZone` |
-| 6.5% | 10 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/efac:Nationality/cbc:NationalityID` |
-| 6.5% | 6 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:AppealReceiverParty/cac:PartyIdentification/cbc:ID` |
-| 6.3% | 24 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efbc:DecisionReasonCode` |
-| 6.3% | 6 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
-| 6.2% | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentStatusCode` |
-| 6.2% | 5 | `notice/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` |
-| 6.1% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ParticipationRequestReceptionPeriod/cbc:EndDate` |
-| 6.1% | 28 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ParticipationRequestReceptionPeriod/cbc:EndTime` |
-| 6.0% | 6 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:PresentationPeriod/cbc:Description` |
-| 5.7% | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:AdditionalStreetName` |
-| 5.6% | 15 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:URI` |
-| 5.6% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efbc:ContractFrameworkIndicator` |
-| 5.4% | 20 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ProcurementDocumentsChangeIndicator` |
-| 5.3% | 19 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ID` |
-| 5.2% | 3 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:DurationMeasure` |
-| 5.2% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:Country/cbc:Name` |
-| 5.2% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:AddressFormatCode` |
-| 5.2% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CountrySubentity` |
-| 5.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:Country/cbc:Name` |
-| 5.0% | 28 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReason` |
-| 5.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:AddressFormatCode` |
-| 4.9% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:AppealRequestsStatistics/efbc:StatisticsCode` |
-| 4.8% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount` |
-| 4.8% | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount` |
-| 4.7% | 24 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:CandidateReductionConstraintIndicator` |
-| 4.5% | 4 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentType` |
-| 4.5% | 4 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:ID` |
-| 4.5% | 4 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:OfficialLanguages/cac:Language/cbc:ID` |
-| 4.3% | 4 | `notice/cac:TenderingProcess/cbc:AccessToolsURI` |
-| 4.3% | 4 | `notice/cac:TenderingTerms/cac:Language/cbc:ID` |
-| 4.3% | 4 | `notice/cac:TenderingTerms/cac:TenderRecipientParty/cac:PartyIdentification/cbc:ID` |
-| 4.3% | 4 | `notice/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:GuaranteeTypeCode` |
-| 4.2% | 22 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:LimitationDescription` |
-| 4.0% | 15 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:Change/efac:ChangedSection/efbc:ChangedSectionIdentifier` |
-| 4.0% | 17 | `notice/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:ProcedureRelaunchIndicator` |
-| 3.8% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CountrySubentity` |
-| 3.7% | 13 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ElectronicMail` |
-| 3.6% | 10 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cbc:WebsiteURI` |
-| 3.5% | 15 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cbc:ID` |
-| 3.5% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:PercentageKnownIndicator` |
-| 3.5% | 22 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:ValueKnownIndicator` |
-| 3.4% | 16 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ProcurementDocumentsChangeDate` |
-| 3.4% | 17 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cac:NoticeDocumentReference/cbc:ID` |
-| 3.2% | 23 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:MinimumQuantity` |
-| 3.0% | 6 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
-| 2.9% | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cbc:ID` |
-| 2.9% | 22 | `notice/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementTypeCode` |
-| 2.9% | 15 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cbc:ID` |
-| 2.9% | 13 | `notice/cac:TenderingProcess/cbc:TerminatedIndicator` |
-| 2.8% | 18 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:ProcedureRelaunchIndicator` |
-| 2.8% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:JobTitle` |
-| 2.6% | 13 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telephone` |
-| 2.6% | 14 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:AdditionalStreetName` |
-| 2.6% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cac:PayerParty/cac:PartyIdentification/cbc:ID` |
-| 2.6% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/efbc:GroupLeadIndicator` |
-| 2.6% | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NonOfficialLanguages/cac:Language/cbc:ID` |
-| 2.5% | 16 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:AdditionalStreetName` |
-| 2.5% | 18 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:GroupLeadIndicator` |
-| 2.5% | 11 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efbc:SecondStageIndicator` |
-| 2.4% | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:CalculationExpressionCode` |
-| 2.4% | 14 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:MaximumQuantity` |
-| 2.3% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
-| 2.3% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalDocumentReference/cbc:ID` |
-| 2.2% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cbc:Description` |
-| 2.0% | 18 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efbc:DPSTerminationIndicator` |
-| 2.0% | 11 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:NoFurtherNegotiationIndicator` |
-| 2.0% | 17 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cac:FinancingParty/cac:PartyIdentification/cbc:ID` |
-| 2.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:Postbox` |
-| 1.9% | 2 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:AppealInformationParty/cac:PartyIdentification/cbc:ID` |
-| 1.8% | 9 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/efbc:FinancingIdentifier` |
-| 1.7% | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/cbc:FundingProgramCode` |
-| 1.6% | 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 1.6% | 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 1.6% | 17 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:EstimatedOverallContractQuantity` |
-| 1.5% | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:StartDate` |
-| 1.5% | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cbc:Description` |
-| 1.5% | 17 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermPercent` |
-| 1.5% | 2 | `notice/cac:ProcurementProject/cac:ContractExtension/cbc:MaximumNumberNumeric` |
-| 1.5% | 14 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
-| 1.5% | 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 1.5% | 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 1.4% | 12 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:AddressLine/cbc:Line` |
-| 1.4% | 11 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RecurringProcurementDescription` |
-| 1.4% | 10 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:AddressLine/cbc:Line` |
-| 1.4% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/cbc:FundingProgramCode` |
-| 1.3% | 16 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermDescription` |
-| 1.3% | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:Description` |
-| 1.2% | 11 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
-| 1.2% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:DocumentHash` |
-| 1.2% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:FileName` |
-| 1.2% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicCatalogueUsageIndicator` |
-| 1.2% | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
-| 1.1% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efac:CriterionParameter/efbc:ParameterCode` |
-| 1.1% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efac:CriterionParameter/efbc:ParameterNumeric` |
-| 1.1% | 14 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermAmount` |
-| 1.1% | 8 | `notice/cac:AdditionalNoticeLanguage/cbc:ID` |
-| 1.1% | 19 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/efbc:FinancingIdentifier` |
-| 1.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsSubmittedNumeric` |
-| 1.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsAwardedNumeric` |
-| 1.0% | 14 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
-| 1.0% | 6 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telefax` |
-| 0.9% | 6 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:SubsequentProcessTenderRequirement/cbc:Description` |
-| 0.9% | 9 | `notice/cbc:PlannedDate` |
-| 0.9% | 10 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:StreetName` |
-| 0.9% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/cbc:Description` |
-| 0.9% | 1 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalForm` |
-| 0.9% | 1 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalFormCode` |
-| 0.8% | 3 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartDate` |
-| 0.8% | 2 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:MediationParty/cac:PartyIdentification/cbc:ID` |
-| 0.8% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FamilyName` |
-| 0.8% | 2 | `notice/cac:ProcurementProject/cac:ContractExtension/cac:Renewal/cac:Period/cbc:Description` |
-| 0.8% | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` |
-| 0.8% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:ProcedureCode` |
-| 0.7% | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:Justification` |
-| 0.7% | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:AddressLine/cbc:Line` |
-| 0.7% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cac:Country/cbc:IdentificationCode` |
-| 0.7% | 1 | `notice/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:Description` |
-| 0.7% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CountrySubentityCode` |
-| 0.6% | 8 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:SubContractor/cbc:ID` |
-| 0.6% | 8 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:SubContractor/efac:MainContractor/cbc:ID` |
-| 0.6% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CityName` |
-| 0.6% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:PostalZone` |
-| 0.6% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` |
-| 0.5% | 1 | `notice/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:AccessToolName` |
-| 0.5% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:ElectronicMail` |
-| 0.5% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:StreetName` |
-| 0.5% | 9 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AllowedSubcontractTerms/cbc:SubcontractingConditionsCode` |
-| 0.5% | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
-| 0.5% | 9 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:TenderSubcontractingRequirements/efbc:TenderSubcontractingRequirementsCode` |
-| 0.5% | 11 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/cbc:Description` |
-| 0.5% | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Name` |
-| 0.4% | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Description` |
-| 0.4% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:CalculationExpression` |
-| 0.4% | 6 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
-| 0.4% | 6 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
-| 0.4% | 7 | `notice/cac:TenderingProcess/cbc:PartPresentationCode` |
-| 0.4% | 8 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentTypeCode` |
-| 0.4% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:Description` |
-| 0.4% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telephone` |
-| 0.3% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
-| 0.3% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
-| 0.3% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 0.3% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetMetric/efbc:AssetMetricCode` |
-| 0.3% | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 0.3% | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ReferencedDocumentInternalAddress` |
-| 0.3% | 1 | `notice/cac:TenderingTerms/cbc:RecurringProcurementIndicator` |
-| 0.3% | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:StrategicProcurementStatistics/efbc:StatisticsNumeric` |
-| 0.3% | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
-| 0.3% | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndTime` |
-| 0.3% | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:SecurityClearanceTerm/cbc:Description` |
-| 0.3% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.3% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.3% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cbc:EndpointID` |
-| 0.3% | 2 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndDate` |
-| 0.3% | 4 | `notice/cac:ProcurementProject/cbc:SMESuitableIndicator` |
-| 0.3% | 1 | `notice/cac:TenderingTerms/cbc:RecurringProcurementDescription` |
-| 0.3% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.3% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.3% | 8 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:StrategicProcurementStatistics/efbc:StatisticsCode` |
-| 0.3% | 8 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
-| 0.2% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AnswerReceptionPeriod/cbc:EndDate` |
-| 0.2% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AnswerReceptionPeriod/cbc:EndTime` |
-| 0.2% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telefax` |
-| 0.2% | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:InterestExpressionReceptionPeriod/cbc:EndDate` |
-| 0.2% | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:InterestExpressionReceptionPeriod/cbc:EndTime` |
-| 0.2% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:Name` |
-| 0.2% | 4 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:Description` |
-| 0.2% | 6 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:RevenueBuyerAmount` |
-| 0.2% | 6 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:RevenueUserAmount` |
-| 0.2% | 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:Origin/efbc:AreaCode` |
-| 0.2% | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:Department` |
-| 0.2% | 1 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:DescriptionCode` |
-| 0.2% | 4 | `notice/cac:TenderingTerms/cac:LotDistribution/cac:LotsGroup/cac:ProcurementProjectLotReference/cbc:ID` |
-| 0.2% | 4 | `notice/cac:TenderingTerms/cac:LotDistribution/cac:LotsGroup/cbc:LotsGroupID` |
-| 0.2% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:ValueDescription` |
-| 0.1% | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartTime` |
-| 0.1% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgram` |
-| 0.1% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:PublicationDate` |
-| 0.1% | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionURI` |
-| 0.1% | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:RankCode` |
-| 0.1% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:BindingOnBuyerIndicator` |
-| 0.1% | 5 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:FollowupContractIndicator` |
-| 0.1% | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
-| 0.1% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:PublicationDate` |
-| 0.1% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 0.1% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Department` |
-| 0.1% | 1 | `notice/cac:AdditionalDocumentReference/cbc:DocumentDescription` |
-| 0.1% | 1 | `notice/cac:AdditionalDocumentReference/cbc:ID` |
-| 0.1% | 1 | `notice/cac:AdditionalDocumentReference/cbc:IssueDate` |
-| 0.1% | 1 | `notice/cac:AdditionalDocumentReference/cbc:ReferencedDocumentInternalAddress` |
-| 0.1% | 1 | `notice/cac:BusinessCapability/cbc:CapabilityTypeCode` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cac:Country/cbc:IdentificationCode` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cbc:CityName` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cbc:PostalZone` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:CompanyID` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:RegistrationDate` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:RegistrationName` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:AdditionalStreetName` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:CityName` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:CountrySubentityCode` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:PostalZone` |
-| 0.1% | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:StreetName` |
-| 0.1% | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:EstimatedMaximumValueAmount` |
-| 0.1% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:TerminatedIndicator` |
-| 0.1% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:CriterionTypeCode` |
-| 0.1% | 1 | `notice/cac:SenderParty/cac:Contact/cbc:ElectronicMail` |
-| 0.1% | 2 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.1% | 2 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.1% | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
-| 0.1% | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
-| 0.1% | 1 | `notice/efac:NoticePurpose/cbc:PurposeCode` |
-| 0.1% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efac:MeasureException/efbc:ExceptionCode` |
-| 0.1% | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efac:MeasureStatistics/efbc:StatisticsNumeric` |
-| 0.1% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetLabel/efbc:LabelCode` |
-| 0.1% | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetMetric/efbc:AssetMetricNumeric` |
-| 0.1% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
-| 0.1% | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FirstName` |
-| 0.0% | 1 | `notice/cac:ProcurementProject/cac:ContractExtension/cbc:OptionsDescription` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:DurationPeriod/cbc:DurationMeasure` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:EndDate` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:EndTime` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReason` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.0% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:Description` |
-| 0.0% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:ValueAmount` |
-| 0.0% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:TechnicalCommitteePerson/cbc:FamilyName` |
-| 0.0% | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EconomicOperatorShortList/cac:PreSelectedParty/cac:PartyName/cbc:Name` |
-| 0.0% | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:LatestSecurityClearanceDate` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Date` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Description` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:ID` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Title` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efac:AppealIrregularity/efbc:IrregularityTypeCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efac:AppealProcessingParty/efbc:AppealProcessingPartyTypeCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efbc:AppealID` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efbc:AppealStageCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:PublicationDate` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efac:FieldsPrivacy/cbc:ReasonCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
-| 0.0% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efbc:MeasureCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:ForeignSubsidiesMeasuresCode` |
-| 0.0% | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ID` |
-| 0.0% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:AddressLine/cbc:Line` |
-| 0.0% | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:AdditionalStreetName` |
+**Max/record** is the most times the path was seen inside a single record — a lot, an organisation, a lot result, or the notice itself for paths outside those. **1 means the path never repeats**, which is what a scalar column in [`data-model.md`](data-model.md) requires; anything higher is a set, and a column that stored one of those values would be storing an arbitrary one. `tests/test_normalise_model.py` checks the model against this column.
+
+| Present | Countries | Max/record | Path |
+|---:|---:|---:|---|
+| 100.0% | 45 | 1 | `notice/cbc:CustomizationID` |
+| 100.0% | 45 | 1 | `notice/cbc:ID` |
+| 100.0% | 45 | 1 | `notice/cbc:IssueDate` |
+| 100.0% | 45 | 1 | `notice/cbc:IssueTime` |
+| 100.0% | 45 | 1 | `notice/cbc:NoticeLanguageCode` |
+| 100.0% | 45 | 1 | `notice/cbc:NoticeTypeCode` |
+| 100.0% | 45 | 1 | `notice/cbc:RegulatoryDomain` |
+| 100.0% | 45 | 1 | `notice/cbc:UBLVersionID` |
+| 100.0% | 45 | 1 | `notice/cbc:VersionID` |
+| 100.0% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeSubType/cbc:SubTypeCode` |
+| 100.0% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:GazetteID` |
+| 100.0% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:NoticePublicationID` |
+| 100.0% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Publication/efbc:PublicationDate` |
+| 99.9% | 45 | 163 | `notice/cac:ContractingParty/cac:Party/cac:PartyIdentification/cbc:ID` |
+| 99.9% | 45 | 1 | `notice/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` |
+| 99.9% | 45 | 2 | `notice/cac:ProcurementProject/cbc:Description` |
+| 99.9% | 45 | 2 | `notice/cac:ProcurementProject/cbc:Name` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:ElectronicMail` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyIdentification/cbc:ID` |
+| 99.9% | 45 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` |
+| 99.9% | 45 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PartyName/cbc:Name` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CityName` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:PostalZone` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telephone` |
+| 99.9% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CountrySubentityCode` |
+| 99.8% | 45 | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Description` |
+| 99.8% | 45 | 1 | `notice/cac:ProcurementProjectLot/cbc:ID` |
+| 99.7% | 45 | 1 | `notice/cac:ProcurementProject/cbc:ProcurementTypeCode` |
+| 99.7% | 45 | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Name` |
+| 99.5% | 45 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` |
+| 99.5% | 45 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ProcurementTypeCode` |
+| 99.3% | 45 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:AppealReceiverParty/cac:PartyIdentification/cbc:ID` |
+| 98.3% | 45 | 1 | `notice/cbc:ContractFolderID` |
+| 94.1% | 44 | 59 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` |
+| 94.1% | 45 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgramCode` |
+| 93.9% | 44 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ContractingSystem/cbc:ContractingSystemTypeCode` |
+| 92.4% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:StreetName` |
+| 92.3% | 44 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:GovernmentAgreementConstraintIndicator` |
+| 91.9% | 44 | 163 | `notice/cac:ContractingParty/cac:ContractingActivity/cbc:ActivityTypeCode` |
+| 91.7% | 44 | 59 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` |
+| 91.1% | 44 | 1 | `notice/cac:TenderingProcess/cbc:ProcedureCode` |
+| 91.1% | 45 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cbc:WebsiteURI` |
+| 90.0% | 42 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ID` |
+| 89.7% | 43 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` |
+| 88.4% | 44 | 163 | `notice/cac:ContractingParty/cac:ContractingPartyType/cbc:PartyTypeCode` |
+| 86.5% | 34 | 59 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` |
+| 83.9% | 35 | 59 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` |
+| 83.9% | 42 | 1 | `notice/cac:ProcurementProject/cbc:ID` |
+| 77.8% | 41 | 19 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:AwardingCriterionTypeCode` |
+| 76.8% | 41 | 22 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:Description` |
+| 76.4% | 41 | 1 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` |
+| 74.5% | 40 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:PresentationPeriod/cbc:Description` |
+| 67.4% | 44 | 36 | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cac:Party/cac:PartyIdentification/cbc:ID` |
+| 67.4% | 44 | 36 | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cbc:ServiceTypeCode` |
+| 66.3% | 38 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Name` |
+| 58.9% | 35 | 19 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AwardCriterionParameter/efbc:ParameterNumeric` |
+| 58.5% | 35 | 19 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AwardCriterionParameter/efbc:ParameterCode` |
+| 57.5% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:AppealInformationParty/cac:PartyIdentification/cbc:ID` |
+| 57.5% | 39 | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:ContractExecutionRequirement/cbc:ExecutionRequirementCode` |
+| 57.4% | 40 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AdditionalInformationParty/cac:PartyIdentification/cbc:ID` |
+| 54.1% | 37 | 16 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementTypeCode` |
+| 51.5% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:DurationMeasure` |
+| 51.5% | 38 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
+| 51.5% | 38 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentType` |
+| 51.5% | 38 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:ID` |
+| 51.3% | 38 | 56 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:TendererRequirementTypeCode` |
+| 51.0% | 38 | 24 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:Language/cbc:ID` |
+| 50.8% | 38 | 31 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:TendererRequirementTypeCode` |
+| 50.8% | 38 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:SubmissionMethodCode` |
+| 49.9% | 37 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderRecipientParty/cbc:EndpointID` |
+| 49.8% | 38 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicPaymentUsageIndicator` |
+| 49.7% | 38 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicOrderUsageIndicator` |
+| 49.0% | 36 | 15 | `notice/cac:ContractingParty/cbc:BuyerProfileURI` |
+| 47.7% | 38 | 1 | `notice/cac:TenderResult/cbc:AwardDate` |
+| 47.5% | 38 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:ID` |
+| 47.5% | 38 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:TenderLot/cbc:ID` |
+| 44.2% | 34 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate` |
+| 44.2% | 34 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime` |
+| 44.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cbc:ID` |
+| 44.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderLot/cbc:ID` |
+| 44.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderReference/cbc:ID` |
+| 44.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:TenderingParty/cbc:ID` |
+| 44.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/cbc:ID` |
+| 44.0% | 37 | 15 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/cbc:ID` |
+| 43.8% | 37 | 683 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:LotTender/cbc:ID` |
+| 43.8% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:ID` |
+| 43.7% | 30 | 22 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:Name` |
+| 43.7% | 37 | 35 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:LotTender/cbc:ID` |
+| 43.6% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:ContractReference/cbc:ID` |
+| 43.5% | 37 | 679 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:SettledContract/cbc:ID` |
+| 43.3% | 34 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderValidityPeriod/cbc:DurationMeasure` |
+| 42.6% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:IssueDate` |
+| 42.1% | 32 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telefax` |
+| 41.0% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermCode` |
+| 40.6% | 35 | 1 | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` |
+| 40.2% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` |
+| 39.8% | 37 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:TenderResultCode` |
+| 39.4% | 37 | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsCode` |
+| 39.4% | 37 | 12 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsNumeric` |
+| 39.2% | 37 | 58 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:AdditionalCommodityClassification/cbc:ItemClassificationCode` |
+| 38.3% | 28 | 3 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/cbc:ID` |
+| 37.6% | 30 | 44 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CityName` |
+| 37.0% | 37 | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
+| 36.6% | 33 | 134 | `notice/cac:ProcurementProject/cac:AdditionalCommodityClassification/cbc:ItemClassificationCode` |
+| 36.6% | 31 | 44 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CityName` |
+| 36.1% | 38 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cbc:MaximumNumberNumeric` |
+| 36.0% | 32 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:VariantConstraintCode` |
+| 35.9% | 24 | 1 | `notice/cbc:RequestedPublicationDate` |
+| 35.8% | 34 | 2 | `notice/cac:ProcurementProject/cbc:Note` |
+| 35.7% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartDate` |
+| 35.7% | 34 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` |
+| 34.6% | 36 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/cbc:TotalAmount` |
+| 34.5% | 36 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/efbc:CompanySizeCode` |
+| 30.7% | 27 | 44 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:PostalZone` |
+| 30.5% | 31 | 44 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:PostalZone` |
+| 30.3% | 33 | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:OccurrenceDate` |
+| 30.3% | 33 | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:OccurrenceTime` |
+| 29.0% | 36 | 21 | `notice/cac:ProcurementProject/cac:RealizedLocation/cbc:Description` |
+| 28.0% | 32 | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Note` |
+| 27.1% | 37 | 21 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cbc:Description` |
+| 26.8% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:GuaranteeTypeCode` |
+| 26.7% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndDate` |
+| 26.1% | 35 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalFormCode` |
+| 25.6% | 29 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:SMESuitableIndicator` |
+| 25.4% | 28 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:OfficialLanguages/cac:Language/cbc:ID` |
+| 24.5% | 27 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:AwardingCPBIndicator` |
+| 23.9% | 25 | 33 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:Description` |
+| 23.9% | 25 | 33 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:TendererRequirementTypeCode` |
+| 23.4% | 34 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:ContractExecutionRequirement/cbc:Description` |
+| 22.8% | 28 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:AcquiringCPBIndicator` |
+| 22.4% | 23 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:MultipleTendersCode` |
+| 21.7% | 29 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderRecipientParty/cac:PartyIdentification/cbc:ID` |
+| 21.5% | 30 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:TenderRankedIndicator` |
+| 20.8% | 24 | 29 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:Description` |
+| 20.4% | 32 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:AwardDate` |
+| 19.6% | 29 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RequiredCurriculaCode` |
+| 19.6% | 30 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:Department` |
+| 19.2% | 28 | 44 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:StreetName` |
+| 18.9% | 26 | 44 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:StreetName` |
+| 18.9% | 19 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:TransmissionDate` |
+| 18.9% | 19 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:TransmissionTime` |
+| 18.8% | 23 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RecurringProcurementIndicator` |
+| 18.7% | 30 | 4 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cac:OccurenceLocation/cbc:Description` |
+| 18.5% | 9 | 1 | `notice/cbc:ProfileID` |
+| 17.4% | 12 | 53 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cac:SpecificTendererRequirement/cbc:Description` |
+| 16.9% | 30 | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cbc:OptionsDescription` |
+| 16.7% | 32 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:TenderVariantIndicator` |
+| 16.5% | 31 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PaymentTerms/cbc:Note` |
+| 16.2% | 28 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:DocumentProviderParty/cac:PartyIdentification/cbc:ID` |
+| 15.8% | 25 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cbc:EndpointID` |
+| 15.6% | 28 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:Title` |
+| 15.3% | 31 | 2 | `notice/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ID` |
+| 14.8% | 31 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efbc:ChangedNoticeIdentifier` |
+| 14.5% | 26 | 2 | `notice/cac:TenderingProcess/cbc:Description` |
+| 14.5% | 23 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/cbc:RankCode` |
+| 14.3% | 31 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:ChangeReason/cbc:ReasonCode` |
+| 13.8% | 25 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TenderEvaluationParty/cac:PartyIdentification/cbc:ID` |
+| 13.7% | 28 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalInformationRequestPeriod/cbc:EndDate` |
+| 13.6% | 28 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalInformationRequestPeriod/cbc:EndTime` |
+| 12.9% | 29 | 1 | `notice/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsSubmittedNumeric` |
+| 12.8% | 20 | 3 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/cbc:DocumentDescription` |
+| 12.2% | 30 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cbc:CalculationExpression` |
+| 12.1% | 27 | 2 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ContractExtension/cac:Renewal/cac:Period/cbc:Description` |
+| 12.1% | 28 | 7 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementType` |
+| 11.8% | 28 | 1 | `notice/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsAwardedNumeric` |
+| 11.0% | 22 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/cbc:Name` |
+| 10.5% | 27 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:ListedOnRegulatedMarketIndicator` |
+| 10.4% | 7 | 1 | `notice/cac:TenderingTerms/cbc:FundingProgramCode` |
+| 10.4% | 26 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:ChangeReason/efbc:ReasonDescription` |
+| 10.3% | 23 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:HigherTenderAmount` |
+| 10.3% | 23 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cbc:LowerTenderAmount` |
+| 9.9% | 32 | 11 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Region` |
+| 9.7% | 17 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:MediationParty/cac:PartyIdentification/cbc:ID` |
+| 9.7% | 30 | 3 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Region` |
+| 9.6% | 21 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:OpenTenderEvent/cbc:Description` |
+| 9.6% | 25 | 25 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efac:ChangedSection/efbc:ChangedSectionIdentifier` |
+| 9.5% | 27 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:NaturalPersonIndicator` |
+| 9.5% | 26 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:MaximumOperatorQuantity` |
+| 9.3% | 15 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:AccessToolName` |
+| 9.2% | 25 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:Description` |
+| 9.0% | 15 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:AccessToolsURI` |
+| 8.6% | 19 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:SecurityClearanceTerm/cbc:Code` |
+| 8.4% | 24 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` |
+| 8.4% | 24 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount` |
+| 8.1% | 12 | 6 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:UltimateBeneficialOwner/cbc:ID` |
+| 8.1% | 12 | 60 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:ID` |
+| 8.0% | 25 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cac:SignatoryParty/cac:PartyIdentification/cbc:ID` |
+| 7.4% | 14 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:SubsequentProcessTenderRequirement/cbc:Name` |
+| 7.3% | 18 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalForm` |
+| 7.3% | 18 | 1 | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:FrameworkMaximumAmount` |
+| 7.2% | 17 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:FrameworkMaximumAmount` |
+| 7.0% | 22 | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:Change/efbc:ChangeDescription` |
+| 7.0% | 22 | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:ChangeReason/cbc:ReasonCode` |
+| 7.0% | 22 | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:ChangeReason/efbc:ReasonDescription` |
+| 7.0% | 22 | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efbc:ChangedNoticeIdentifier` |
+| 7.0% | 22 | 9 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efbc:ModifiedContractIdentifier` |
+| 6.9% | 14 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PartyIdentification/cbc:ID` |
+| 6.8% | 18 | 18 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ChangeDescription` |
+| 6.8% | 9 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:LanguageID` |
+| 6.8% | 14 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PartyName/cbc:Name` |
+| 6.8% | 21 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:DescriptionCode` |
+| 6.7% | 19 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:AppealRequestsStatistics/efbc:StatisticsNumeric` |
+| 6.5% | 12 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
+| 6.5% | 12 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CityName` |
+| 6.5% | 12 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CountrySubentityCode` |
+| 6.5% | 12 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:PostalZone` |
+| 6.5% | 10 | 60 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/efac:Nationality/cbc:NationalityID` |
+| 6.5% | 6 | 1 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:AppealReceiverParty/cac:PartyIdentification/cbc:ID` |
+| 6.3% | 24 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efbc:DecisionReasonCode` |
+| 6.3% | 6 | 3 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
+| 6.2% | 12 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentStatusCode` |
+| 6.2% | 5 | 1 | `notice/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` |
+| 6.1% | 28 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ParticipationRequestReceptionPeriod/cbc:EndDate` |
+| 6.1% | 28 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ParticipationRequestReceptionPeriod/cbc:EndTime` |
+| 6.0% | 6 | 1 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:PresentationPeriod/cbc:Description` |
+| 5.7% | 12 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:AdditionalStreetName` |
+| 5.6% | 15 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cbc:URI` |
+| 5.6% | 25 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efbc:ContractFrameworkIndicator` |
+| 5.4% | 20 | 18 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ProcurementDocumentsChangeIndicator` |
+| 5.3% | 19 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ID` |
+| 5.2% | 3 | 1 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:DurationMeasure` |
+| 5.2% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:Country/cbc:Name` |
+| 5.2% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:AddressFormatCode` |
+| 5.2% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:CountrySubentity` |
+| 5.0% | 1 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:Country/cbc:Name` |
+| 5.0% | 28 | 2 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReason` |
+| 5.0% | 1 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:AddressFormatCode` |
+| 4.9% | 19 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:AppealRequestsStatistics/efbc:StatisticsCode` |
+| 4.8% | 25 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount` |
+| 4.8% | 25 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount` |
+| 4.7% | 24 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:CandidateReductionConstraintIndicator` |
+| 4.5% | 4 | 1 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentType` |
+| 4.5% | 4 | 1 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:ID` |
+| 4.5% | 4 | 1 | `notice/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:OfficialLanguages/cac:Language/cbc:ID` |
+| 4.3% | 4 | 1 | `notice/cac:TenderingProcess/cbc:AccessToolsURI` |
+| 4.3% | 4 | 1 | `notice/cac:TenderingTerms/cac:Language/cbc:ID` |
+| 4.3% | 4 | 1 | `notice/cac:TenderingTerms/cac:TenderRecipientParty/cac:PartyIdentification/cbc:ID` |
+| 4.3% | 4 | 1 | `notice/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:GuaranteeTypeCode` |
+| 4.2% | 22 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:LimitationDescription` |
+| 4.0% | 15 | 10 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:ContractModification/efac:Change/efac:ChangedSection/efbc:ChangedSectionIdentifier` |
+| 4.0% | 17 | 1 | `notice/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:ProcedureRelaunchIndicator` |
+| 3.8% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:CountrySubentity` |
+| 3.7% | 13 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ElectronicMail` |
+| 3.6% | 10 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cbc:WebsiteURI` |
+| 3.5% | 15 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cbc:ID` |
+| 3.5% | 22 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:PercentageKnownIndicator` |
+| 3.5% | 22 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:ValueKnownIndicator` |
+| 3.4% | 16 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Changes/efac:Change/efbc:ProcurementDocumentsChangeDate` |
+| 3.4% | 17 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/cac:NoticeDocumentReference/cbc:ID` |
+| 3.2% | 23 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:MinimumQuantity` |
+| 3.0% | 6 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efbc:ApplicableLegalBasis` |
+| 2.9% | 13 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cbc:ID` |
+| 2.9% | 22 | 15 | `notice/cac:ProcurementProject/cac:ProcurementAdditionalType/cbc:ProcurementTypeCode` |
+| 2.9% | 15 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cbc:ID` |
+| 2.9% | 13 | 1 | `notice/cac:TenderingProcess/cbc:TerminatedIndicator` |
+| 2.8% | 18 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:ProcedureRelaunchIndicator` |
+| 2.8% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:JobTitle` |
+| 2.6% | 13 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telephone` |
+| 2.6% | 14 | 9 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:AdditionalStreetName` |
+| 2.6% | 19 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cac:PayerParty/cac:PartyIdentification/cbc:ID` |
+| 2.6% | 19 | 15 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/efbc:GroupLeadIndicator` |
+| 2.6% | 12 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NonOfficialLanguages/cac:Language/cbc:ID` |
+| 2.5% | 16 | 7 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:AdditionalStreetName` |
+| 2.5% | 18 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efbc:GroupLeadIndicator` |
+| 2.5% | 11 | 33 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efbc:SecondStageIndicator` |
+| 2.4% | 3 | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:CalculationExpressionCode` |
+| 2.4% | 14 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:EconomicOperatorShortList/cbc:MaximumQuantity` |
+| 2.3% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
+| 2.3% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AdditionalDocumentReference/cbc:ID` |
+| 2.2% | 2 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cbc:Description` |
+| 2.0% | 18 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efbc:DPSTerminationIndicator` |
+| 2.0% | 11 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:NoFurtherNegotiationIndicator` |
+| 2.0% | 17 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/cac:FinancingParty/cac:PartyIdentification/cbc:ID` |
+| 2.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cbc:Postbox` |
+| 1.9% | 2 | 1 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:AppealInformationParty/cac:PartyIdentification/cbc:ID` |
+| 1.8% | 9 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/efbc:FinancingIdentifier` |
+| 1.7% | 12 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/cbc:FundingProgramCode` |
+| 1.6% | 7 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 1.6% | 7 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 1.6% | 17 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:EstimatedOverallContractQuantity` |
+| 1.5% | 13 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:StartDate` |
+| 1.5% | 7 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cbc:Description` |
+| 1.5% | 17 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermPercent` |
+| 1.5% | 2 | 1 | `notice/cac:ProcurementProject/cac:ContractExtension/cbc:MaximumNumberNumeric` |
+| 1.5% | 14 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
+| 1.5% | 7 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 1.5% | 7 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 1.4% | 12 | 6 | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:AddressLine/cbc:Line` |
+| 1.4% | 11 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:RecurringProcurementDescription` |
+| 1.4% | 10 | 9 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:AddressLine/cbc:Line` |
+| 1.4% | 19 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/cbc:FundingProgramCode` |
+| 1.3% | 16 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermDescription` |
+| 1.3% | 12 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:Description` |
+| 1.2% | 11 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
+| 1.2% | 1 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:DocumentHash` |
+| 1.2% | 1 | 42 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cac:Attachment/cac:ExternalReference/cbc:FileName` |
+| 1.2% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:PostAwardProcess/cbc:ElectronicCatalogueUsageIndicator` |
+| 1.2% | 13 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cac:IssuerParty/cac:PartyIdentification/cbc:ID` |
+| 1.1% | 5 | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efac:CriterionParameter/efbc:ParameterCode` |
+| 1.1% | 5 | 12 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/efac:CriterionParameter/efbc:ParameterNumeric` |
+| 1.1% | 14 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermAmount` |
+| 1.1% | 8 | 1 | `notice/cac:AdditionalNoticeLanguage/cbc:ID` |
+| 1.1% | 19 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/efbc:FinancingIdentifier` |
+| 1.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsSubmittedNumeric` |
+| 1.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:LotDistribution/cbc:MaximumLotsAwardedNumeric` |
+| 1.0% | 14 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
+| 1.0% | 6 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telefax` |
+| 0.9% | 6 | 2 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:SubsequentProcessTenderRequirement/cbc:Description` |
+| 0.9% | 9 | 1 | `notice/cbc:PlannedDate` |
+| 0.9% | 10 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:StreetName` |
+| 0.9% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Funding/cbc:Description` |
+| 0.9% | 1 | 1 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalForm` |
+| 0.9% | 1 | 1 | `notice/cac:TenderingTerms/cac:TendererQualificationRequest/cbc:CompanyLegalFormCode` |
+| 0.8% | 3 | 1 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartDate` |
+| 0.8% | 2 | 1 | `notice/cac:TenderingTerms/cac:AppealTerms/cac:MediationParty/cac:PartyIdentification/cbc:ID` |
+| 0.8% | 5 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FamilyName` |
+| 0.8% | 2 | 1 | `notice/cac:ProcurementProject/cac:ContractExtension/cac:Renewal/cac:Period/cbc:Description` |
+| 0.8% | 7 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` |
+| 0.8% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:ProcedureCode` |
+| 0.7% | 13 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:Justification` |
+| 0.7% | 9 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:PostalAddress/cac:AddressLine/cbc:Line` |
+| 0.7% | 5 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cac:Country/cbc:IdentificationCode` |
+| 0.7% | 1 | 1 | `notice/cac:TenderingTerms/cac:RequiredFinancialGuarantee/cbc:Description` |
+| 0.7% | 5 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CountrySubentityCode` |
+| 0.6% | 8 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:SubContractor/cbc:ID` |
+| 0.6% | 8 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:TenderingParty/efac:SubContractor/efac:MainContractor/cbc:ID` |
+| 0.6% | 4 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CityName` |
+| 0.6% | 4 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:PostalZone` |
+| 0.6% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` |
+| 0.5% | 1 | 1 | `notice/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efbc:AccessToolName` |
+| 0.5% | 2 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:ElectronicMail` |
+| 0.5% | 2 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:StreetName` |
+| 0.5% | 9 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AllowedSubcontractTerms/cbc:SubcontractingConditionsCode` |
+| 0.5% | 7 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:FiscalLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
+| 0.5% | 9 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:TenderSubcontractingRequirements/efbc:TenderSubcontractingRequirementsCode` |
+| 0.5% | 11 | 5 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:SettledContract/efac:Funding/cbc:Description` |
+| 0.5% | 9 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Name` |
+| 0.4% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:Description` |
+| 0.4% | 2 | 9 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/cbc:CalculationExpression` |
+| 0.4% | 6 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EmploymentLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
+| 0.4% | 6 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EnvironmentalLegislationDocumentReference/cac:Attachment/cac:ExternalReference/cbc:URI` |
+| 0.4% | 7 | 1 | `notice/cac:TenderingProcess/cbc:PartPresentationCode` |
+| 0.4% | 8 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:CallForTendersDocumentReference/cbc:DocumentTypeCode` |
+| 0.4% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:Description` |
+| 0.4% | 2 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telephone` |
+| 0.3% | 2 | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
+| 0.3% | 2 | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
+| 0.3% | 5 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 0.3% | 5 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetMetric/efbc:AssetMetricCode` |
+| 0.3% | 3 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 0.3% | 3 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:NoticeDocumentReference/cbc:ReferencedDocumentInternalAddress` |
+| 0.3% | 1 | 1 | `notice/cac:TenderingTerms/cbc:RecurringProcurementIndicator` |
+| 0.3% | 9 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:StrategicProcurementStatistics/efbc:StatisticsNumeric` |
+| 0.3% | 9 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
+| 0.3% | 2 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndTime` |
+| 0.3% | 4 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:SecurityClearanceTerm/cbc:Description` |
+| 0.3% | 2 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.3% | 2 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.3% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cbc:EndpointID` |
+| 0.3% | 2 | 1 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:EndDate` |
+| 0.3% | 4 | 1 | `notice/cac:ProcurementProject/cbc:SMESuitableIndicator` |
+| 0.3% | 1 | 1 | `notice/cac:TenderingTerms/cbc:RecurringProcurementDescription` |
+| 0.3% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.3% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.3% | 8 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:StrategicProcurementStatistics/efbc:StatisticsCode` |
+| 0.3% | 8 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
+| 0.2% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AnswerReceptionPeriod/cbc:EndDate` |
+| 0.2% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AnswerReceptionPeriod/cbc:EndTime` |
+| 0.2% | 1 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telefax` |
+| 0.2% | 4 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:InterestExpressionReceptionPeriod/cbc:EndDate` |
+| 0.2% | 4 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:InterestExpressionReceptionPeriod/cbc:EndTime` |
+| 0.2% | 2 | 6 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:Name` |
+| 0.2% | 4 | 1 | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:Description` |
+| 0.2% | 6 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:RevenueBuyerAmount` |
+| 0.2% | 6 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:RevenueUserAmount` |
+| 0.2% | 7 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:Origin/efbc:AreaCode` |
+| 0.2% | 5 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:Department` |
+| 0.2% | 1 | 1 | `notice/cac:ProcurementProject/cac:PlannedPeriod/cbc:DescriptionCode` |
+| 0.2% | 4 | 10 | `notice/cac:TenderingTerms/cac:LotDistribution/cac:LotsGroup/cac:ProcurementProjectLotReference/cbc:ID` |
+| 0.2% | 4 | 3 | `notice/cac:TenderingTerms/cac:LotDistribution/cac:LotsGroup/cbc:LotsGroupID` |
+| 0.2% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:ConcessionRevenue/efbc:ValueDescription` |
+| 0.1% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:PlannedPeriod/cbc:StartTime` |
+| 0.1% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgram` |
+| 0.1% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:PublicationDate` |
+| 0.1% | 3 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionURI` |
+| 0.1% | 3 | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:RankCode` |
+| 0.1% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:BindingOnBuyerIndicator` |
+| 0.1% | 5 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cbc:FollowupContractIndicator` |
+| 0.1% | 1 | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efbc:ProcurementCategoryCode` |
+| 0.1% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:PublicationDate` |
+| 0.1% | 1 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 0.1% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Department` |
+| 0.1% | 1 | 1 | `notice/cac:AdditionalDocumentReference/cbc:DocumentDescription` |
+| 0.1% | 1 | 1 | `notice/cac:AdditionalDocumentReference/cbc:ID` |
+| 0.1% | 1 | 1 | `notice/cac:AdditionalDocumentReference/cbc:IssueDate` |
+| 0.1% | 1 | 1 | `notice/cac:AdditionalDocumentReference/cbc:ReferencedDocumentInternalAddress` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessCapability/cbc:CapabilityTypeCode` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cac:Country/cbc:IdentificationCode` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cbc:CityName` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cac:CorporateRegistrationScheme/cac:JurisdictionRegionAddress/cbc:PostalZone` |
+| 0.1% | 1 | 2 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:CompanyID` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:RegistrationDate` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PartyLegalEntity/cbc:RegistrationName` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:AdditionalStreetName` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:CityName` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:CountrySubentityCode` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:PostalZone` |
+| 0.1% | 1 | 1 | `notice/cac:BusinessParty/cac:PostalAddress/cbc:StreetName` |
+| 0.1% | 3 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cbc:EstimatedMaximumValueAmount` |
+| 0.1% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:TerminatedIndicator` |
+| 0.1% | 2 | 13 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:SelectionCriteria/cbc:CriterionTypeCode` |
+| 0.1% | 1 | 1 | `notice/cac:SenderParty/cac:Contact/cbc:ElectronicMail` |
+| 0.1% | 2 | 1 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.1% | 2 | 1 | `notice/cac:TenderingTerms/cac:ProcurementLegislationDocumentReference/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.1% | 1 | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:AssetCategoryCode` |
+| 0.1% | 1 | 1 | `notice/cac:TenderingTerms/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
+| 0.1% | 1 | 1 | `notice/efac:NoticePurpose/cbc:PurposeCode` |
+| 0.1% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efac:MeasureException/efbc:ExceptionCode` |
+| 0.1% | 4 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efac:MeasureStatistics/efbc:StatisticsNumeric` |
+| 0.1% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetLabel/efbc:LabelCode` |
+| 0.1% | 3 | 3 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efac:AssetMetric/efbc:AssetMetricNumeric` |
+| 0.1% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:ProcurementDetails/efbc:LegalFrameworkCode` |
+| 0.1% | 3 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FirstName` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProject/cac:ContractExtension/cbc:OptionsDescription` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:FrameworkAgreement/cac:DurationPeriod/cbc:DurationMeasure` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:EndDate` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:InvitationSubmissionPeriod/cbc:EndTime` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReason` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.0% | 2 | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:Description` |
+| 0.0% | 2 | 3 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:Prize/cbc:ValueAmount` |
+| 0.0% | 2 | 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:TechnicalCommitteePerson/cbc:FamilyName` |
+| 0.0% | 1 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EconomicOperatorShortList/cac:PreSelectedParty/cac:PartyName/cbc:Name` |
+| 0.0% | 2 | 1 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:LatestSecurityClearanceDate` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Date` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Description` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:ID` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/cbc:Title` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efac:AppealIrregularity/efbc:IrregularityTypeCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efac:AppealProcessingParty/efbc:AppealProcessingPartyTypeCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efbc:AppealID` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Appeals/efac:AppealInformation/efbc:AppealStageCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 0.0% | 1 | 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:PublicationDate` |
+| 0.0% | 1 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efac:FieldsPrivacy/cbc:ReasonCode` |
+| 0.0% | 1 | 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efac:FieldsPrivacy/efbc:FieldIdentifierCode` |
+| 0.0% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:StrategicProcurement/efac:StrategicProcurementInformation/efac:AppliedMeasure/efbc:MeasureCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efbc:ForeignSubsidiesMeasuresCode` |
+| 0.0% | 1 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ID` |
+| 0.0% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cac:AddressLine/cbc:Line` |
+| 0.0% | 2 | 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:PostalAddress/cbc:AdditionalStreetName` |
 
 ## Never populated
 
