@@ -1,10 +1,12 @@
 """``python -m serenata.survey`` — survey archived packages into a document.
 
-Two reports, both deterministic and both committed under ``docs/``. ``fields``
+Three reports, all deterministic and all committed under ``docs/``. ``fields``
 measures the notices going in: which element paths carry a value, in how many
 member states, and how often a path repeats inside one record. ``shape``
 measures the rows coming out: how many, how populated, and how often the
-sentinels and leaks this project warns about actually occur.
+sentinels and leaks this project warns about actually occur. ``dropped``
+measures what never got that far: which leaves constraint 2 removes, and what
+analysis that costs.
 
 Deliberately not a subcommand of ``serenata``: that CLI names pipeline stages,
 and this is an analysis tool that reads their output.
@@ -16,6 +18,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from serenata.survey.dropped import Dropped, dropped_package
+from serenata.survey.dropped import render as render_dropped
 from serenata.survey.report import Survey, render, survey_package
 from serenata.survey.shape import Shape, shape_package
 from serenata.survey.shape import render as render_shape
@@ -35,11 +39,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--report",
-        choices=("fields", "shape"),
+        choices=("fields", "shape", "dropped"),
         default="fields",
         help=(
             "fields: which element paths notices populate (docs/field-usage.md). "
             "shape: what the normalised rows look like (docs/dataset-shape.md). "
+            "dropped: what constraint 2 removes (docs/dropped-fields.md). "
             "Default: fields."
         ),
     )
@@ -64,7 +69,21 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    if args.report == "shape":
+    if args.report == "dropped":
+        found = Dropped()
+        # Sorted so the report does not depend on the order a shell expanded a
+        # glob; the same packages must give the same document.
+        for package in sorted(args.packages):
+            dropped_package(package, into=found)
+            print(
+                f"measured {package.name}: {found.notices:,} notices so far",
+                file=sys.stderr,
+            )
+        if not found.notices:
+            print("no eForms notices found in those packages", file=sys.stderr)
+            return 1
+        document = render_dropped(found)
+    elif args.report == "shape":
         shape = Shape()
         # Sorted so the report does not depend on the order a shell expanded a
         # glob; the same packages must give the same document.

@@ -270,6 +270,25 @@ matching `cac:Contact`, `efac:UltimateBeneficialOwner`, `Person`, `FamilyName`,
 automatically a gap in the rule: the structural matches in §§1–3 already cover
 anything inside those subtrees. It is a gap only if it sits somewhere new.
 
+## What this list costs
+
+[`dropped-fields.md`](dropped-fields.md) measures it, generated from archived
+packages rather than asserted here: **32,135 leaf elements, 3.6% of every leaf**
+in one publication day. It checks every dropped path against the columns of
+[`data-model.md`](data-model.md) and finds no overlap — every removal is a
+contact block, a beneficial owner, a named committee member or a free-text
+privacy reason, and never an amount, a date, a code, a bid count or a company
+identifier.
+
+That measurement is what answers "why not mirror TED in full and filter at
+publication": a pipeline keeping this data would compute the same flags from it,
+because core classifiers read structured fields only. [ADR-0010](adr/0010-raw-archive-retention.md)
+records the rest of that reasoning and the basis on which the archive is held.
+
+The one exception is `efac:UltimateBeneficialOwner`, 1,486 removals, which is a
+real analytic loss and is filed as [open-work #15](open-work.md#15-decide-whether-beneficial-ownership-can-be-analysed-at-all)
+rather than left as a silent absence.
+
 ## What this list cannot catch
 
 Every rule above is **structural**: it matches a path, and it drops everything

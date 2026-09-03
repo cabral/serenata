@@ -39,6 +39,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
+| 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 
 **Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12 and 13 are all done for eForms, and
 12 turned records into a dataset, which closed 9 with it. 13 then made a
@@ -963,3 +964,51 @@ them is not.
 **Done when** the rule is decided in an ADR, executable, tested against the
 measured cases, and `personal-data.md` says which fields it applies to and why a
 path-based list could not have caught them.
+
+---
+
+## 15. Decide whether beneficial ownership can be analysed at all
+
+The drop list rejects `efac:UltimateBeneficialOwner` outright, and that is
+**1,486 of the 32,135 leaf elements** removed from one publication day —
+identifiers, family and first names, nationality and residence addresses.
+[`dropped-fields.md`](dropped-fields.md) counts them.
+
+Everything else the drop removes costs the analysis nothing: no other dropped
+path is a column of the normalised model, and core classifiers read structured
+fields only, so a pipeline that kept the rest would compute the same flags. This
+subtree is the exception. **Beneficial ownership is one of the most analysable
+signals in procurement integrity** — shell structures, a supplier owned by
+someone connected to the buyer, the same owner behind nominally competing
+bidders. Losing it is a real capability trade, and it is currently silent: the
+data simply is not there and nothing says why.
+
+**What makes it hard.** A beneficial owner is a natural person by definition.
+This is not personal data that leaked into a business field; it is person-level
+data by design, and the legal guardrails route a classifier needing person-level
+data to escalation rather than to a design session. Nothing about it can be
+decided in a pull request.
+
+**What to decide.**
+
+- Whether any analysis of this subtree is available at all, or whether the
+  answer is simply no.
+- If some is: whether an aggregate that never identifies an individual — "this
+  supplier and that one declare an owner in common", as a boolean, without
+  storing who — is a different question legally than storing the owner. The
+  opaque-key treatment already used for sole traders is the precedent to argue
+  from.
+- Whether any of it may be *published*, which is a separate question again, and
+  where the answer is most likely no under the defamation guardrail.
+- Whether the answer differs for `efac:Nationality`, which is arguably special
+  category data and should probably stay dropped regardless.
+
+**Constraints.** Constraint 2 is legal, not stylistic. Whatever is decided,
+[ADR-0010](adr/0010-raw-archive-retention.md) governs what may be retained and
+[`personal-data.md`](personal-data.md) is where the rule becomes executable. A
+change to the drop-at-ingestion rule is on the escalation list.
+
+**Done when** an ADR records the answer, including "no" if that is the answer,
+so the capability is a recorded trade rather than an absence nobody documented.
+
+**Not blocking anything.** Filed so the trade is visible.

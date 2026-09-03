@@ -44,9 +44,10 @@ undoes:
 |---|---|
 | [`docs/field-usage.md`](docs/field-usage.md) | `python -m serenata.survey <package>…` |
 | [`docs/dataset-shape.md`](docs/dataset-shape.md) | `python -m serenata.survey <package>… --report shape -o docs/dataset-shape.md` |
+| [`docs/dropped-fields.md`](docs/dropped-fields.md) | `python -m serenata.survey <package>… --report dropped -o docs/dropped-fields.md` |
 | `serenata/normalise/sdk_privacy.py` | `python tools/generate_sdk_privacy.py` |
 
-The first two read archived packages and are deterministic — the same archive
+The first three read archived packages and are deterministic — the same archive
 reproduces the same file byte for byte, which is what makes them citable. The
 third fetches the eForms SDK, and is the one script in this repository that
 reaches the network on purpose; [`tools/README.md`](tools/README.md) says why it

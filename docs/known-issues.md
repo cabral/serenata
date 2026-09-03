@@ -285,6 +285,25 @@ outputs written by one version, which is what determinism means here: the same
 code and the same data produce the same bytes. A dependency bump is a change of
 code, and it will show up as one.
 
+## The raw archive holds personal data, by design and with a basis
+
+A contact name, e-mail and telephone appear in **99.9%** of notices, and the
+archive keeps whole publication days byte-for-byte because reproducibility needs
+the exact bytes a flag came from. So the archive holds personal data that no
+derived record does.
+
+[ADR-0010](adr/0010-raw-archive-retention.md) records the purpose, the Art.
+6(1)(f) basis and its balancing test, the retention rule and the security
+posture. **It has not been reviewed by counsel** — it is the document to hand
+them, not a substitute for asking.
+
+Two things follow that are worth watching rather than assuming. The retention
+rule says archived packages are kept while the datasets derived from them are
+published, and that this is **reviewed annually**; the first review is due
+2027-09-03 and the outcome belongs in this file. And an erasure request reaching
+the project is an escalation whose answer ADR-0010 deliberately does not
+pre-empt.
+
 ## 65 commits in the history carry no sign-off
 
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) asks for a Developer Certificate of
