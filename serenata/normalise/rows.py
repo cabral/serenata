@@ -33,9 +33,11 @@ from typing import Any
 from serenata.normalise.model import (
     FIELD_PRIVACY_TABLE,
     LOCATION_BLOCK,
+    LOCATION_COLUMNS,
     LOT_RESULT_STATISTIC_TABLE,
     ORGANISATION_ROLE_TABLE,
     PRIVACY_BLOCK,
+    PRIVACY_COLUMNS,
     REALIZED_LOCATION_TABLE,
     ROLE_QUALIFIERS,
     ROLE_SOURCES,
@@ -313,10 +315,6 @@ def _location_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
     """
     columns = {column.name: column for column in REALIZED_LOCATION_TABLE.columns}
     sources = (("procedure", "notice"), ("lot", "lot"))
-    paths = {
-        "country_code": "cac:Address/cac:Country/cbc:IdentificationCode",
-        "nuts_code": "cac:Address/cbc:CountrySubentityCode",
-    }
     for scope_table, kind in sources:
         for record in notice.of_kind(kind):
             for ordinal, fields in _blocks(record, LOCATION_BLOCK):
@@ -326,7 +324,7 @@ def _location_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                     "scope_ordinal": record.ordinal,
                     "block_ordinal": ordinal,
                 }
-                for name, path in paths.items():
+                for name, path in LOCATION_COLUMNS:
                     found = inside.get(path)
                     row |= _computed(
                         columns[name],
@@ -454,11 +452,7 @@ def _privacy_rows(notice: ParsedNotice) -> Iterator[dict[str, Any]]:
                 "scope_path": scope_path,
                 "block_ordinal": ordinal,
             }
-            for name, path in (
-                ("field_identifier_code", FIELD_IDENTIFIER),
-                ("reason_code", "cbc:ReasonCode"),
-                ("publication_date", "efbc:PublicationDate"),
-            ):
+            for name, path in PRIVACY_COLUMNS:
                 found = inside.get(path)
                 row |= _computed(
                     columns[name],

@@ -512,6 +512,16 @@ REALIZED_LOCATION_TABLE = Table(
     ),
 )
 
+#: Column -> its source element inside a `cac:RealizedLocation` block, stated
+#: once here for the same reason as `STATISTIC_COLUMNS`: `rows.py` reads the
+#: block with it, and anything auditing which source elements this model covers
+#: needs them too. A block column is `COMPUTED` and carries no path of its own,
+#: so without this the paths would exist only inside a function.
+LOCATION_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("country_code", "cac:Address/cac:Country/cbc:IdentificationCode"),
+    ("nuts_code", "cac:Address/cbc:CountrySubentityCode"),
+)
+
 
 #: The block a publisher marks a field non-public with, and its three coded
 #: children. The free-text `efbc:ReasonDescription` is not among them: it is
@@ -537,6 +547,15 @@ FIELD_PRIVACY_TABLE = Table(
         Column("reason_code", kind=Kind.COMPUTED),
         Column("publication_date", kind=Kind.COMPUTED),
     ),
+)
+
+#: Column -> its source element inside an `efac:FieldsPrivacy` block. The block's
+#: fourth child, `efbc:ReasonDescription`, is deliberately absent: it is free
+#: text that docs/personal-data.md drops at parse.
+PRIVACY_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("field_identifier_code", "efbc:FieldIdentifierCode"),
+    ("reason_code", "cbc:ReasonCode"),
+    ("publication_date", "efbc:PublicationDate"),
 )
 
 
