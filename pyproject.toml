@@ -81,4 +81,11 @@ testpaths = ["tests"]
 # gate. The floor is a rot detector, not a ratchet: the suite sits at 99%, and
 # 95 leaves room to add a stage without a red build while still catching one
 # that arrives untested.
-addopts = "-ra --cov=serenata --cov-report=term-missing"
+# `-m "not contract"` keeps the live TED tests out of the default run: the
+# suite's offline promise is enforced by a socket guard in tests/conftest.py,
+# and those tests are the one deliberate exception to it. Run them with
+# `uv run pytest -m contract`; CI runs them weekly, not on every push.
+addopts = "-ra --cov=serenata --cov-report=term-missing -m 'not contract'"
+markers = [
+    "contract: reaches the live TED service; excluded from the default run",
+]

@@ -220,11 +220,17 @@ telephone appear in 99.9% of them, and putting one in a public repository to
 test that the pipeline removes personal data would leave the data in the
 repository permanently.
 
-The tripwire is [open-work #5](open-work.md#5-add-an-opt-in-test-for-teds-live-contract)
-and issue [#17](https://github.com/cabral/serenata/issues/17): assert TED's
-documented interfaces against the live service, on a schedule, outside the
-offline suite. Until it exists, **the archive is the only thing that would tell
-you TED changed**, and it tells you by failing to parse.
+The tripwire for that now exists: `tests/test_ted_contract.py` asserts TED's
+documented interfaces — the `limit` cap, the `ojs-number` field, the shape of a
+daily package — against the live service, weekly, outside the offline suite
+(`uv run pytest -m contract`).
+
+**It runs on a schedule, so it tells you within a week, not on the commit.** And
+it watches the *interfaces*, not the notices: a new eForms element, a code list
+gaining a value, a member state populating a field nobody has seen would all
+pass it. Those show up when the archive is re-surveyed, which is a reason to
+re-run `python -m serenata.survey` over new packages rather than to trust the
+last report.
 
 ## Which figures are generated, and which are not
 

@@ -241,8 +241,12 @@ uv sync
 uv run pytest
 ```
 
-Tests run offline; nothing in the suite touches the network, and it refuses a
-socket if anything tries. One of them runs the whole pipeline over
+Tests run offline; nothing in the default suite touches the network, and it
+refuses a socket if anything tries. The exception asks for itself twice:
+`uv run pytest -m contract` asserts what this project assumes about TED — the
+Search API's `limit` cap, the `ojs-number` field, the shape of a daily package —
+against the live service, and runs weekly in CI rather than on every push. A
+stand-in cannot notice TED changing; that is the only thing that can. One of them runs the whole pipeline over
 [`data/sample/`](data/sample/) — six notices in the layout TED delivers a
 package in, through the archive layer, parse, normalise, Parquet and a DuckDB
 query. They are synthetic, because a real notice carries a contact name and

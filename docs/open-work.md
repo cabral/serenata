@@ -29,7 +29,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** | — |
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
-| 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | open | [#17](https://github.com/cabral/serenata/issues/17) |
+| 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | **done** | [#17](https://github.com/cabral/serenata/issues/17) |
 | 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
@@ -40,7 +40,7 @@ same thing. Questions are welcome before code, especially on the blocking items.
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **next** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 
-**Order matters.** 2 fed 1; 1, 3, 4, 7 and 12 are all done for eForms, and 12
+**Order matters.** 2 fed 1; 1, 3, 4, 5, 7 and 12 are all done for eForms, and 12
 turned records into a dataset, which closed 9 with it. What comes next is 13:
 the dataset now stores a withheld amount as the number `-1` with the status
 `present`, and the first classifier will read exactly those columns. 14 is the
@@ -403,6 +403,36 @@ than being silently skipped.
 ---
 
 ## 5. Add an opt-in test for TED's live contract
+
+**Done.** `tests/test_ted_contract.py` asserts every assumption below against
+the live service, and `.github/workflows/contract.yml` runs it weekly and on
+demand. Locally: `uv run pytest -m contract`.
+
+Reaching the network takes two deliberate steps, because the suite's offline
+promise is load-bearing. The tests carry a `contract` marker, `pyproject.toml`
+excludes that marker from the default run, and the socket guard in
+`tests/conftest.py` stands down only for tests carrying it. A test that reaches
+TED without both still fails the way it always did.
+
+Seven assertions, run against the service on 2026-09-03 and passing: the Search
+API answers unauthenticated and still returns `notices` and `totalNoticeCount`;
+an empty `fields` list is still rejected with HTTP 400; a `limit` above 250 is
+still refused **and 250 itself is still accepted**, which is the half that would
+otherwise break paging silently; a notice still carries `ojs-number` as
+`"157/2026"`; and a daily package is still a gzipped tar whose members sit under
+one `YYYYMMDD_NNN` directory.
+
+**Politeness is part of the design.** A run makes a handful of `limit: 1`
+requests through the project's own throttled client, and reads only the *first
+member* of a package rather than pulling twenty megabytes to check a directory
+name. The publication day it uses is resolved rather than hardcoded, so the test
+does not start failing the day a fixed date ages out of the service's window.
+
+What it does not do is tell you on the pull request that broke: it runs weekly,
+so a change on TED's side is noticed within seven days rather than immediately.
+That is the right trade for a public service this project does not pay for.
+
+The original statement of the problem follows.
 
 The fetch tests run against a stand-in TED whose responses were shaped from
 observed behaviour. They catch regressions in our logic but not a change on

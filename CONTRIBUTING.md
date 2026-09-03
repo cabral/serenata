@@ -147,6 +147,12 @@ mechanically; a missing sign-off will be asked for in review.
   locally, so running one file is not a failing build. Coverage measures which
   lines ran, not whether anything was checked; do not treat the number as the
   goal.
+- **The suite is offline and a socket guard enforces it.** The one exception is
+  `tests/test_ted_contract.py`, which asserts what this project assumes about
+  TED against the live service. It is excluded from `uv run pytest` and runs
+  weekly in CI; run it on purpose with `uv run pytest -m contract`, and expect
+  it to make a handful of requests. Anything else that reaches the network is a
+  bug in the test.
 - For anything with a measured claim behind it, prefer a check against the real
   archive over an assertion about what you expect it to contain.
 

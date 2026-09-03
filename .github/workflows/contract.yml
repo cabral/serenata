@@ -1,0 +1,29 @@
+name: Contract
+
+# TED can change without this repository changing, so a green build on the last
+# push says nothing about whether the fetch stage still works today. This is the
+# only workflow that reaches the network, and the only place the test suite's
+# offline promise is deliberately set aside — see tests/test_ted_contract.py.
+#
+# On a schedule rather than on push: the assumptions it watches change on TED's
+# timetable, not on ours, and asserting them on every commit would be a request
+# to a public service for no new information.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked
+      # A handful of limit:1 requests and the first member of one package.
+      - name: Assert TED's documented interfaces
+        run: uv run pytest -m contract --no-cov
