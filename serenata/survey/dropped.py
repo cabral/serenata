@@ -44,7 +44,18 @@ from serenata.eforms import (
     is_eforms_root,
     stream_elements,
 )
-from serenata.normalise.model import TABLES
+from serenata.normalise.model import (
+    CONTAINER_OF,
+    LOCATION_BLOCK,
+    LOCATION_COLUMNS,
+    PRIVACY_BLOCK,
+    PRIVACY_COLUMNS,
+    ROLE_QUALIFIERS,
+    ROLE_SOURCES,
+    STATISTIC_BLOCKS,
+    STATISTIC_COLUMNS,
+    TABLES,
+)
 from serenata.packages import notice_members
 from serenata.parse.personal_data import DROPPED_SEGMENTS, is_dropped
 from serenata.survey.report import ATTRIBUTION, LICENCE
@@ -53,14 +64,52 @@ from serenata.survey.report import ATTRIBUTION, LICENCE
 BENEFICIAL_OWNER = "efac:UltimateBeneficialOwner"
 
 
+def _container(kind: str) -> str:
+    return CONTAINER_OF.get(kind, ROOT)
+
+
 def modelled_paths() -> frozenset[str]:
-    """Every absolute element path the normalised model reads a column from."""
+    """Every absolute element path the normalised model reads a column from.
+
+    Both kinds of column, because a check that saw only one would be weaker
+    than the claim it supports. An ordinary column states its own path. A
+    column of a block-built table — a statistic, a place of performance, a role,
+    a privacy entry — is `COMPUTED` and carries none, so its path is the block
+    prefix plus the element within it, which the model states beside the block.
+    """
     found: set[str] = set()
     for table in TABLES:
         for column in table.columns:
             if not column.structural and column.path:
                 found.add(f"{table.container}/{column.path}")
+
+    lot_result = _container("lot_result")
+    for block in STATISTIC_BLOCKS:
+        for _name, path in STATISTIC_COLUMNS:
+            found.add(f"{lot_result}/{block}/{path}")
+
+    for kind in ("notice", "lot"):
+        for _name, path in LOCATION_COLUMNS:
+            found.add(f"{_container(kind)}/{LOCATION_BLOCK}/{path}")
+
+    for role, (kind, path) in ROLE_SOURCES.items():
+        found.add(f"{_container(kind)}/{path}")
+        for _name, qualifier in ROLE_QUALIFIERS.get(role, ()):
+            found.add(f"{_container(kind)}/{qualifier}")
+
     return frozenset(found)
+
+
+def modelled_block_suffixes() -> frozenset[str]:
+    """Modelled elements whose block sits at no fixed depth.
+
+    A privacy block hangs off a lot tender, a lot result, a statistics block or
+    the notice itself, so there is no one absolute path to compare against —
+    only the block and the element within it. Kept apart from `modelled_paths`
+    rather than folded in, because a set holding both absolute and relative
+    paths is one nobody can reason about.
+    """
+    return frozenset(f"{PRIVACY_BLOCK}/{path}" for _name, path in PRIVACY_COLUMNS)
 
 
 @dataclass
@@ -99,8 +148,13 @@ class Dropped:
         parse stage refuses to fill — a contradiction between two documents that
         are each meant to be authoritative.
         """
-        modelled = modelled_paths()
-        return sorted(path for path in self.removed if path in modelled)
+        absolute = modelled_paths()
+        suffixes = modelled_block_suffixes()
+        return sorted(
+            path
+            for path in self.removed
+            if path in absolute or any(path.endswith(f"/{s}") for s in suffixes)
+        )
 
 
 def checksum(package: Path) -> str:

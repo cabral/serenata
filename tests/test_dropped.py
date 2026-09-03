@@ -24,6 +24,7 @@ from serenata.survey.dropped import (
     BENEFICIAL_OWNER,
     Dropped,
     dropped_package,
+    modelled_block_suffixes,
     modelled_paths,
     render,
 )
@@ -98,6 +99,36 @@ class TestItsOneClaim:
         paths = modelled_paths()
         assert len(paths) > 50
         assert all(path.startswith("notice/") for path in paths)
+
+    def test_it_covers_the_columns_that_carry_no_path_of_their_own(self) -> None:
+        # The defect this exists to prevent: `modelled_paths()` once read only
+        # columns declaring a `path`, which silently excluded every block-built
+        # table — the bid count, the buyer reference, the place of performance.
+        # The claim would then have been checked against a subset of the model,
+        # which is weaker than the sentence the report prints.
+        paths = modelled_paths()
+        bid_count = (
+            "notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent"
+            "/efext:EformsExtension/efac:NoticeResult/efac:LotResult"
+            "/efac:ReceivedSubmissionsStatistics/efbc:StatisticsNumeric"
+        )
+        buyer = "notice/cac:ContractingParty/cac:Party/cac:PartyIdentification/cbc:ID"
+        assert bid_count in paths, "the single-bid input is not covered"
+        assert buyer in paths, "the buyer reference is not covered"
+
+    def test_a_variable_depth_block_is_matched_by_suffix(self) -> None:
+        # A privacy block hangs off four different parents, so it has no one
+        # absolute path. Its coded children are modelled; its free-text sibling
+        # is dropped, and the two must not be confused.
+        suffixes = modelled_block_suffixes()
+        assert "efac:FieldsPrivacy/cbc:ReasonCode" in suffixes
+        assert not any("ReasonDescription" in suffix for suffix in suffixes)
+
+        found = Dropped()
+        found.leaves = 1
+        where = "notice/efac:NoticeResult/efac:FieldsPrivacy/cbc:ReasonCode"
+        found.removed[where] = 1
+        assert found.collisions_with_the_model() == [where]
 
 
 class TestWhatItMustNeverPrint:
