@@ -1,0 +1,43 @@
+#!/bin/sh
+# Append the DCO sign-off trailer, so it stops depending on remembering `-s`.
+#
+# Install once, per clone:
+#
+#     git config core.hooksPath .githooks
+#
+# Why a hook rather than review discipline: the rule existed in CONTRIBUTING.md
+# for the project's whole history and exactly one commit out of 66 carried the
+# trailer — the one that added the rule. A requirement nobody meets is worse
+# than no requirement, so this makes it automatic and CI checks the result.
+#
+# What the trailer means is in docs/adr/0009-contribution-provenance.md. In
+# short: whoever's identity is on the commit certifies they have the right to
+# submit the work under AGPL-3.0. That holds for a patch written with an
+# assistant, because it is a statement about the right to submit rather than
+# about who typed it — and `Co-Authored-By` is what discloses the tool.
+
+set -e
+
+message="$1"
+source="$2"
+
+# A merge has no content of its own to certify, and the DCO check skips them.
+case "$source" in
+merge) exit 0 ;;
+esac
+
+name="$(git config user.name)"
+email="$(git config user.email)"
+
+if [ -z "$name" ] || [ -z "$email" ]; then
+    echo "prepare-commit-msg: git user.name and user.email must be set to sign off." >&2
+    exit 1
+fi
+
+# `addIfDifferent` adds ours unless that exact trailer is already there, so
+# `git commit -s` does not produce two, and a relayed patch keeps the original
+# author's sign-off alongside.
+git interpret-trailers \
+    --if-exists addIfDifferent \
+    --trailer "Signed-off-by: $name <$email>" \
+    --in-place "$message"

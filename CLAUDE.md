@@ -60,7 +60,9 @@ and the constraints below are not optional.
 
 ## Working style
 
-- Small PRs/commits, imperative messages, one concern each.
+- Small PRs/commits, imperative messages, one concern each. Every commit carries
+  a `Signed-off-by` trailer (DCO) and, where a tool helped write it, a
+  `Co-Authored-By` one. CI enforces the first; ADR-0009 says what each means.
 - When a design decision isn't covered here, propose it in a short ADR
   (docs/adr/NNNN-title.md) instead of burying it in code.
 - The README is part of the product: funders, journalists and contributors read
