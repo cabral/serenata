@@ -10,10 +10,20 @@ amount as `-1` — in the field itself. This table says which field each code
 names, so `serenata.normalise.privacy` can mark that column `withheld` instead
 of letting a classifier read the placeholder as a quantity (ADR-0006, ADR-0008).
 
-Source: eForms SDK `fields/fields.json`, published by the Publications Office
-of the European Union under CC BY 4.0 (https://github.com/OP-TED/eForms-SDK).
-Generated from the versions in `SDK_VERSIONS` below, whose privacy mappings are
-identical across all of them. See docs/adr/0008-eforms-sdk-privacy-mapping.md.
+## Attribution
+
+Source: the **eForms SDK** (`fields/fields.json`), © European Union, published
+by the Publications Office of the European Union at
+https://github.com/OP-TED/eForms-SDK and licensed **CC BY 4.0**
+(https://creativecommons.org/licenses/by/4.0/).
+
+**Modified.** This is not the SDK. It is one relation extracted from it — the
+privacy code against the field it withholds — reshaped into the table below and
+carrying none of the SDK's other content. Generated from the versions in
+`SDK_VERSIONS`, whose privacy mappings are identical across all of them.
+
+See docs/adr/0008-eforms-sdk-privacy-mapping.md for why this is vendored, and
+docs/data-reuse.md for the project's attribution terms.
 """
 
 from __future__ import annotations

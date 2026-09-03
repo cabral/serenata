@@ -105,11 +105,11 @@ Every block is a `field_privacy` row either way, and `privacy.UNUSABLE` names
 each gap with its reason.
 
 **A value that looks withheld and a value that was declared withheld are
-different facts, and they disagree.** In one publication day: two notices
-declare a payable amount non-public and publish a real number anyway, one
-publishes `1` rather than `-1` for a withheld highest and lowest tender amount,
-and two settled contracts carry a contract reference of `-1` that no block
-declares. The status follows the declaration;
+different facts, and they do not always agree.** In one publication day: two
+payable amounts declared non-public carry a value other than `-1`, one lot
+result carries `1` for both its declared-non-public highest and lowest tender
+amount, and two settled contracts carry a contract reference of `-1` that no
+block declares. The status follows the declaration;
 [`dataset-shape.md`](dataset-shape.md) counts `-1` by column independently, so a
 classifier author can see both. **An amount still has to be read with its
 status**, and amounts are stored as published strings so nothing silently turns

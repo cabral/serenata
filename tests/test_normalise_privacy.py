@@ -22,11 +22,12 @@ covers less.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from serenata.normalise import Status
+from serenata.normalise import Status, sdk_privacy
 from serenata.normalise import privacy as privacy_module
 from serenata.normalise.model import TABLES, Kind, table
 from serenata.normalise.privacy import (
@@ -141,6 +142,24 @@ class TestTheVendoredTable:
             "1.13",
             "1.14",
         }
+
+    def test_it_carries_the_attribution_its_licence_requires(self) -> None:
+        # The SDK is CC BY 4.0 and this file is a modified extract of it, so the
+        # creator, the licence, a link to its terms and the fact of modification
+        # all have to travel with it — and this file is what ships in the
+        # distributed package. A regeneration that dropped them would be a
+        # licence breach nobody would notice.
+        source = Path(sdk_privacy.__file__).read_text(encoding="utf-8")
+        for required in (
+            "eForms SDK",
+            "© European Union",
+            "Publications Office",
+            "https://github.com/OP-TED/eForms-SDK",
+            "CC BY 4.0",
+            "https://creativecommons.org/licenses/by/4.0/",
+            "Modified",
+        ):
+            assert required in source, required
 
     def test_every_code_is_either_usable_or_refused_with_a_reason(self) -> None:
         placed = set(RECORD_TARGETS) | set(BLOCK_TARGETS)

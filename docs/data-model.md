@@ -523,10 +523,11 @@ code can, and `privacy.UNUSABLE` names every gap with its reason.
 
 **The value is never rewritten.** A withheld amount still reads `-1`, exactly as
 the notice published it; only the status carries the interpretation. That
-matters because the two disagree: two notices in this package declare a payable
-amount non-public and publish a real number anyway, one publishes `1` rather
-than `-1`, and two settled contracts carry a contract reference of `-1` that no
-block declares. [`dataset-shape.md`](dataset-shape.md) counts `-1` by column
+matters because the two do not always agree: in this package, two payable
+amounts declared non-public carry a value other than `-1`, one lot result
+carries `1` for both its declared-non-public highest and lowest tender amount,
+and two settled contracts carry a contract reference of `-1` that no block
+declares. [`dataset-shape.md`](dataset-shape.md) counts `-1` by column
 independently of any declaration, so neither signal hides the other.
 
 `not_applicable` is derived from the eForms notice-subtype rules and needs the

@@ -859,12 +859,19 @@ guess:
   both columns happened to be correct. It is now a rule rather than a
   coincidence, and the conservative fallback is kept for codes that cannot be
   placed.
-- **The placeholder and the declaration disagree, in both directions.** Two
-  notices declare a payable amount non-public and publish a real number anyway;
-  one publishes `1` rather than `-1`; two settled contracts carry a contract
-  reference of `-1` that nothing declares. Marking on the value would have been
-  wrong six times in one day, which is why the status follows the declaration
-  and [`dataset-shape.md`](dataset-shape.md) keeps counting `-1` separately.
+- **The placeholder and the declaration do not always agree.** Two payable
+  amounts declared non-public carry a value other than `-1`; one lot result
+  carries `1` for both its declared-non-public highest and lowest tender amount;
+  two settled contracts carry a contract reference of `-1` that nothing
+  declares. Deriving the status from the value would have been wrong in six
+  rows, which is why it follows the declaration and
+  [`dataset-shape.md`](dataset-shape.md) keeps counting `-1` separately.
+
+**What it costs.** Normalising a package goes from 11.7s to 12.1s, best of
+three runs each, with peak memory unchanged at ~350 MB. The extra 3% is a second
+walk over each record's fields to find its privacy blocks. Recorded rather than
+optimised away: it is a real cost on the only stage that builds every row, and
+if it ever stops being worth paying, the measurement is here to argue from.
 
 **What is left**, and it is a data-model question rather than a mapping one: 69
 of the unacted blocks name a field with no column here — the notice's total

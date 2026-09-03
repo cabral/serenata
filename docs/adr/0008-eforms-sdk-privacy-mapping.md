@@ -99,11 +99,12 @@ notice in the archive.
   published, because the archive is the ground truth and the status is where the
   interpretation belongs. Nothing is rewritten.
 - **The declaration is the authority, not the shape of the value**, and the two
-  disagree in both directions. Two notices declare a payable amount non-public
-  and publish a real number anyway (1,875,000 and 4,228,800); one publishes `1`
-  rather than `-1` for a withheld highest and lowest tender amount; and two
-  settled contracts carry a contract reference of `-1` that no block declares.
-  Marking on the value would have been wrong six times in one publication day.
+  do not always agree. In one publication day: two payable amounts declared
+  non-public carry a value other than `-1`; one lot result carries `1` for both
+  its declared-non-public highest and lowest tender amount; and two settled
+  contracts carry a contract reference of `-1` that no block declares. Deriving
+  the status from the value would have been wrong in six rows, in both
+  directions.
   [`dataset-shape.md`](../dataset-shape.md) keeps counting `-1` by column, so
   the disagreement stays visible instead of being resolved by assumption.
 - **Licence.** The SDK is published by the Publications Office of the European
