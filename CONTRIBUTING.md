@@ -7,6 +7,13 @@ reading the whole repository first.
 applies to humans too, despite the name. Where this page and that one disagree,
 that one wins and this page is what needs fixing.
 
+**If you have not read the code yet**, two documents will save you most of the
+time you would otherwise spend reconstructing it:
+[`docs/architecture.md`](docs/architecture.md) for the stages and why the
+boundaries sit where they do, and [`docs/glossary.md`](docs/glossary.md) for the
+vocabulary — a lot, a lot result and a lot tender are three different things,
+and mixing them up is the most common way to misread the dataset.
+
 ## Getting set up
 
 Python 3.12+ and [uv](https://docs.astral.sh/uv/).
