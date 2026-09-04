@@ -15,18 +15,19 @@ constraint 2 does not bend for a report.
 
 from serenata.survey.paths import (
     EFORMS_PREFIXES,
+    NotEForms,
     NoticeRejected,
     NoticeShape,
     read_notice,
 )
-from serenata.survey.report import Survey, is_eforms, render, survey_package
+from serenata.survey.report import Survey, render, survey_package
 
 __all__ = [
     "EFORMS_PREFIXES",
+    "NotEForms",
     "NoticeRejected",
     "NoticeShape",
     "Survey",
-    "is_eforms",
     "read_notice",
     "render",
     "survey_package",

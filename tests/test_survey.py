@@ -12,11 +12,12 @@ from serenata.survey import __main__ as survey_cli
 from serenata.survey.paths import (
     CHUNK_BYTES,
     ROOT,
+    NotEForms,
     NoticeRejected,
     qualified_name,
     read_notice,
 )
-from serenata.survey.report import Survey, is_eforms, render, survey_package
+from serenata.survey.report import Survey, render, survey_package
 
 CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -174,11 +175,14 @@ class TestDoctypeIsRefused:
         assert "1 members could not be read" in render(survey)
 
     def test_malformed_xml_is_counted_not_fatal(self, tmp_path):
+        # Truncated rather than arbitrary: a document that never closes its
+        # root is what a half-written notice looks like, and it has to be
+        # counted as unreadable rather than as a format nobody recognises.
         package = write_package(
             tmp_path,
             {
                 "d/00000001_2026.xml": notice_xml(),
-                "d/00000002_2026.xml": b"<unclosed>",
+                "d/00000002_2026.xml": notice_xml()[: len(notice_xml()) // 2],
             },
         )
         survey = survey_package(package)
@@ -212,17 +216,70 @@ class TestStreaming:
             read_notice(io.BytesIO(b""))
 
 
-class TestIsEforms:
-    @pytest.mark.parametrize(
-        ("name", "expected"),
-        [
-            ("20260817_157/00566631_2026.xml", True),
-            ("20260817_157/123456_2022.xml", False),
-            ("20260817_157/notanumber_2026.xml", False),
-        ],
+class TestWhatCountsAsANotice:
+    """A member is a notice because of its root element, not its name.
+
+    The survey used to decide from the filename — eight digits and a year —
+    while the parse stage decided from the root namespace, so the two stages
+    disagreed about what a package contained. A name is a claim; the root is
+    the document saying what it is.
+    """
+
+    LEGACY = b"<TED_EXPORT><CODED_DATA_SECTION/></TED_EXPORT>"
+    #: Same schema family as a notice, same prefix, not a notice.
+    INVOICE = (
+        b'<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">'
+        b"</Invoice>"
     )
-    def test_eforms_filenames_carry_eight_digits(self, name, expected):
-        assert is_eforms(name) is expected
+
+    def test_a_legacy_notice_is_refused_by_a_message_naming_the_format(self):
+        with pytest.raises(NotEForms, match="legacy TED") as raised:
+            read_notice(io.BytesIO(self.LEGACY))
+
+        assert raised.value.legacy is True
+
+    def test_a_document_that_is_not_a_notice_is_refused_as_unrecognised(self):
+        with pytest.raises(NotEForms, match="unrecognised") as raised:
+            read_notice(io.BytesIO(self.INVOICE))
+
+        # Not legacy: an unexpected member of a package is not open-work #3.
+        assert raised.value.legacy is False
+
+    def test_an_eforms_notice_under_a_legacy_style_name_is_surveyed(self, tmp_path):
+        # The disagreement itself: six digits and an old year is the legacy
+        # naming convention, and this document is an eForms notice regardless.
+        package = write_package(tmp_path, {"d/123456_2022.xml": notice_xml()})
+        survey = survey_package(package)
+
+        assert survey.notices == 1
+        assert survey.skipped_legacy == 0
+        assert survey.valued[f"{ROOT}/cbc:ID"] == 1
+
+    def test_a_legacy_notice_under_an_eforms_style_name_is_not_surveyed(self, tmp_path):
+        package = write_package(tmp_path, {"d/00000001_2026.xml": self.LEGACY})
+        survey = survey_package(package)
+
+        assert survey.notices == 0
+        assert survey.skipped_legacy == 1
+
+    def test_a_member_that_is_no_notice_at_all_is_counted_on_its_own(self, tmp_path):
+        # Three outcomes, three counters: a format open-work #3 covers, a
+        # document nobody expected, and one that could not be read. A survey
+        # that folded them together would send someone looking for damage
+        # where there is none.
+        package = write_package(
+            tmp_path,
+            {
+                "d/00000001_2026.xml": notice_xml(),
+                "d/00000002_2026.xml": self.LEGACY,
+                "d/00000003_2026.xml": self.INVOICE,
+            },
+        )
+        survey = survey_package(package)
+
+        assert (survey.notices, survey.skipped_legacy) == (1, 1)
+        assert (survey.not_notices, survey.unreadable) == (1, 0)
+        assert "1 members skipped" in render(survey)
 
 
 class TestSurveyPackage:

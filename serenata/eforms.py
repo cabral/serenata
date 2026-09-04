@@ -74,6 +74,27 @@ class NoticeRejected(ValueError):
     """A notice this project will not parse."""
 
 
+class NotEForms(NoticeRejected):
+    """A document whose own root element says it is not an eForms notice.
+
+    Separate from the rest of `NoticeRejected` because the two are different
+    facts about a package, with different work behind them: this one is a
+    format nobody has written a mapping for, the others are documents that are
+    damaged or unsafe to read. A caller that folded them together would report
+    a package of legacy notices as unreadable, and send someone looking for a
+    corruption that is not there.
+    """
+
+    def __init__(self, root: str, message: str) -> None:
+        super().__init__(message)
+        #: The root element's local name, without its namespace.
+        self.root = root
+        #: Whether the document is a legacy TED notice rather than something
+        #: this project has never seen. Legacy notices are open-work #3; the
+        #: rest are a package carrying something unexpected.
+        self.legacy = root == LEGACY_ROOT
+
+
 def qualified_name(tag: str) -> str:
     """``cbc:IssueDate`` for a namespaced ElementTree tag."""
     if not tag.startswith("{"):
@@ -103,6 +124,32 @@ def is_eforms_root(tag: str) -> bool:
     if namespace.startswith(UBL_PREFIX):
         return local.endswith("Notice") and namespace == f"{UBL_PREFIX}{local}-2"
     return namespace in EFORMS_NOTICE_NAMESPACES
+
+
+def accept_eforms_root(tag: str, *, because: str) -> None:
+    """Raise `NotEForms` unless this root element opens an eForms notice.
+
+    Every reader of a package asks the same question of every member, and each
+    one used to answer it for itself — parse from the root namespace, the
+    survey from the filename. A name is a claim and a package mixes formats, so
+    the two disagreed by construction: an eForms notice delivered under a
+    legacy-style name was parsed by one and counted as legacy by the other.
+    One test, in the vocabulary that owns it.
+
+    ``because`` says what *this* reader cannot do with such a document, which
+    is the part that differs — refusing to parse a legacy notice and refusing
+    to measure one are the same refusal for different reasons, and a message
+    that named neither would be no use to whoever hits it.
+    """
+    if is_eforms_root(tag):
+        return
+    root = tag.rpartition("}")[2]
+    described = (
+        "legacy TED notice"
+        if root == LEGACY_ROOT
+        else f"unrecognised notice root element {root!r}"
+    )
+    raise NotEForms(root, f"{described}: {because}")
 
 
 class PrologGuard:

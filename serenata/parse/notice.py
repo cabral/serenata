@@ -29,10 +29,9 @@ from typing import IO
 from xml.etree.ElementTree import ParseError
 
 from serenata.eforms import (
-    LEGACY_ROOT,
     ROOT,
     NoticeRejected,
-    is_eforms_root,
+    accept_eforms_root,
     qualified_name,
     stream_elements,
 )
@@ -64,19 +63,21 @@ def _accept_root(tag: str, name: str) -> str:
 
     Dispatching on the root rather than the filename is deliberate: a package
     mixes formats and a name is a claim, while the root namespace is the
-    document saying what it is.
+    document saying what it is. The test itself is
+    `serenata.eforms.accept_eforms_root`, shared with the survey so the two
+    readers of a package cannot disagree about which members are notices.
     """
-    if is_eforms_root(tag):
-        return name
-    if name == LEGACY_ROOT:
-        raise NoticeRejected(
-            "legacy TED notice. The mapping from legacy elements into the data "
-            "model has not been measured — no archived package contains a "
-            "legacy notice — so parsing one would be a guess about which "
-            "fields can name a person. See docs/personal-data.md and "
-            "docs/data-model.md; open-work #3 is the work that lifts this."
-        )
-    raise NoticeRejected(f"unrecognised notice root element {name!r}")
+    accept_eforms_root(
+        tag,
+        because=(
+            "the mapping from any other format into the data model has never "
+            "been measured — no archived package contains one — so parsing it "
+            "would be a guess about which of its fields can name a person. See "
+            "docs/personal-data.md and docs/data-model.md; open-work #3 is the "
+            "work that lifts this for legacy TED."
+        ),
+    )
+    return name
 
 
 #: ``efbc:NaturalPersonIndicator`` is an ``xs:boolean``, whose lexical space is

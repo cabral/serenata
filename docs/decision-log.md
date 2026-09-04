@@ -111,6 +111,23 @@ survived review because nothing had measured the property the column claimed.
 The report carries a `Max/record` column now, and
 `tests/test_normalise_model.py` checks every column's shape against it.
 
+It also decides differently what a notice *is*. The survey first read that off
+the **filename** — eight digits and a year — while the parse stage read it off
+the **root element's namespace**, so the two disagreed by construction: an
+eForms notice delivered under a legacy-style name was parsed by one and counted
+as skipped legacy by the other, and a legacy document under an eForms-style name
+was surveyed as though its elements were eForms paths. The test is now
+`serenata.eforms.accept_eforms_root`, shared by both, and a member that is
+neither format is counted apart from one that could not be read — a package
+carrying something unexpected and a damaged notice ask for different work.
+
+**The figures above are unchanged by that**, and the change is not a reason to
+requote them. Every `.xml` member of OJ S 157/2026 is an eForms notice under an
+eForms-style name: parse reads all of them and reports 3,190 with no failures,
+and the filename rule counted the same 3,190 with nothing skipped. The two rules
+select the same members there, which is exactly why the disagreement had to be
+closed before a package arrived where they do not.
+
 One finding shapes [#1](#1-write-the-data-model-contract): the report gives
 element paths, not eForms BT codes. Mapping a path to its BT code needs the
 eForms SDK, which the offline survey does not carry, so the data model has to
