@@ -95,6 +95,14 @@ withheld value turned out to be published as `-1` rather than omitted. Each
 correction is in [`docs/data-model.md`](docs/data-model.md) with the
 measurement behind it.
 
+The first classifier is scoped rather than built. Two case files in
+[`docs/cases/`](docs/cases/) take the best-established red flag in the
+literature — a single bid on a competitive procedure — through the project's
+intake gates and **reject it**: it fires on 36.8% of competitive lot outcomes,
+which describes the market rather than flagging anything in it. What survives is
+the comparative form, measured at 2.23%. Rejected cases keep their file here,
+because what a project declined to publish is part of its method.
+
 **There is still no classifier and no flag.** Legacy pre-2024 TED notices are
 refused rather than parsed, because the mapping for them has never been
 measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
