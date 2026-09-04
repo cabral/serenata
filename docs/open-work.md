@@ -97,8 +97,9 @@ three times.
 
 ## 2. Survey which eForms fields notices actually populate
 
-**Done.** [`field-usage.md`](field-usage.md) reports 3,190 notices from OJ S
-157/2026: 456 element paths carry a value, 296 are containers or blank. It also
+**Done.** [`field-usage.md`](field-usage.md) reports 19,180 notices from five
+publication days of 2026: 497 element paths carry a value, 323 are containers
+or blank. It also
 reports how often a path repeats inside one record, which is what stopped a
 scalar column being given to a path that repeats.
 
@@ -113,10 +114,13 @@ scalar column being given to a path that repeats.
 notices rather than read off the specification, and executable as
 `serenata/parse/personal_data.py` with a test that fails if the two disagree.
 
-**What is still open.** OJ S 157/2026 contains zero legacy-schema notices, so
-there is no measured basis for that half, and this project does not publish
-spec-read lists as though they were measured. Until it exists, parse refuses a
-legacy notice rather than guessing which of its fields can name a person.
+**What is still open.** The five 2026 packages now measured — spanning March to
+September — contain **zero legacy-schema notices between them**, so there is no
+measured basis for that half, and this project does not publish spec-read lists
+as though they were measured. Until it exists, parse refuses a legacy notice
+rather than guessing which of its fields can name a person. Five days spread
+across six months finding none is also evidence about how the blocker lifts: it
+will not lift by fetching more recent days.
 
 Fetching a pre-2024 package is one command against an already-built stage —
 though whether TED still serves daily packages that far back is unverified, and
@@ -131,8 +135,9 @@ Full record of the eForms half:
 
 **eForms done; legacy notices are refused rather than guessed at.**
 `serenata/parse/` reads archived notices into typed intermediate records,
-dropping person-carrying fields as it reads. All 3,190 notices of one
-publication day parse into 46,223 records with no failures.
+dropping person-carrying fields as it reads. All 19,180 notices of five
+publication days parse with no failures; the first of them produced 46,223
+records.
 
 **What is still open** is the same blocker as
 [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person): a legacy
@@ -281,7 +286,8 @@ this blocks milestone 2, not milestone 1.
 
 **Done.** `serenata/normalise/` writes the model as Parquet. All 3,190 notices
 of one publication day become **98,629 rows across twelve tables**, byte-identical
-on rerun. Building it corrected the data model three times.
+on rerun; five days are 632,068 rows. Building it corrected the data model three
+times, and widening the evidence to five days corrected it a fourth.
 
 [Full record](decision-log.md#12-build-the-normalise-stage).
 
@@ -305,11 +311,16 @@ Constraint 2's drop list is structural: it rejects any path through
 That is the right shape for the rule, and it cannot catch a publisher who types
 a contact address into a field that is not a contact field.
 
-They do. Scanning the normalised package finds **46 email-shaped values in 7
-columns** — city, registration number, street, website, title, description —
-and **13 of them are shaped like a person's own address**
-(`firstname.lastname@`). The drop list is not wrong; the data arrived in a field
-it has no reason to reject.
+They do. Scanning five normalised packages finds **427 email-shaped values in 7
+columns** — city, registration number, street, website, name, description — and
+**139 of them are shaped like a person's own address** (`firstname.lastname@`).
+The drop list is not wrong; the data arrived in a field it has no reason to
+reject.
+
+**359 of the 427 are in the two description columns.** One publication day
+suggested the problem was scattered across identity fields; five days say it is
+overwhelmingly free text, which narrows the decision below to fields no
+classifier reads and a published dataset would still carry.
 
 **What to decide.** A value-level rule is a different kind of rule from a
 path-level one, and the options lose different things:
@@ -320,7 +331,8 @@ path-level one, and the options lose different things:
   dataset contains partially rewritten source values, which the project has so
   far never done.
 - **Flag the row for review** and publish nothing until a human looks. Does not
-  scale, but the counts are small — 46 values in 98,629 rows.
+  scale — 427 values in 632,068 rows is small as a share and not small as a
+  queue.
 
 Whichever is chosen, [`personal-data.md`](personal-data.md) gains a section, the
 rule becomes executable beside `is_dropped()`, and the decision needs an ADR

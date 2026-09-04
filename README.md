@@ -66,13 +66,20 @@ dropping the fields that can name a person as it reads, and
 [`serenata.normalise`](serenata/normalise/) writes those records as the
 documented model in Parquet.
 
-Against a real publication day, all 3,190 notices parse and become **98,629
-rows across twelve tables** — 4.2 MB, twelve seconds, and byte-identical when
-the run is repeated, which is the determinism the project's whole credibility
-rests on and is now a test rather than an intention. 3.6% of every leaf element
-in the package — the contact details, beneficial owners and named evaluators
+Against five real publication days spanning March to September 2026, all
+**19,180 notices parse and become 632,068 rows across twelve tables**,
+byte-identical when a run is repeated — the determinism the project's whole
+credibility rests on, and now a test rather than an intention. **3.5% of every
+leaf element** — the contact details, beneficial owners and named evaluators
 listed in [`docs/personal-data.md`](docs/personal-data.md) — is dropped before
 it reaches a record.
+
+Widening the evidence from one day to five is also how the model gets corrected:
+five notices turned out to state two legal grounds for their procedure where the
+first day's 3,190 never stated more than one, and they failed to normalise
+rather than silently storing one of the two. `procedure.process_reason_codes` is
+a set now. The design that makes that a visible failure instead of an arbitrary
+value is [ADR-0007](docs/adr/0007-repeated-values-are-carried-not-resolved.md).
 
 What that dataset looks like — rows per table, how populated every column is,
 how many withheld sentinels it carries — is
