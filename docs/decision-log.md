@@ -99,10 +99,22 @@ can tell for any field which source element produced it.
 
 ## 2. Survey which eForms fields notices actually populate
 
-**Done.** [`docs/field-usage.md`](field-usage.md) reports 3,190 eForms notices
-from OJ S 157/2026: **456 element paths carry a value, 296 appear only as
-containers or blank elements.** `serenata/survey/` produces it, and rerunning it
-against the same archive reproduces the file byte for byte.
+**Done.** [`docs/field-usage.md`](field-usage.md) reports **19,180 eForms
+notices from five publication days of 2026** — OJ S 52, 94, 113, 157 and 168:
+**497 element paths carry a value, 323 appear only as containers or blank
+elements.** `serenata/survey/` produces it, and rerunning it against the same
+archive reproduces the file byte for byte.
+
+It was one day (3,190 notices, 456 valued paths) until the evidence base was
+widened, which is worth recording because of what widening it cost and bought.
+It cost four more packages, 80 MB of archive and about twenty minutes. It bought
+41 element paths nobody had seen, a structural correction to the data model —
+`procedure.process_reason_codes` is a set, because 5 notices state two legal
+grounds and one publication day had none that did — and a personal-data figure
+that tripled and moved: 427 address-shaped values in fields that should not hold
+them, 359 of them in the two free-text description columns rather than scattered
+across identity fields as one day suggested. Sixty-six presence figures moved,
+none by more than 3 points, which is the reassuring half of the result.
 
 It reports one thing it did not originally: **how many times each path occurs
 inside a single record**. Presence alone let [#1](#1-write-the-data-model-contract)
