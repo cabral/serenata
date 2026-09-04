@@ -1,0 +1,42 @@
+name: A gap in the pipeline
+description: Something the project should do and does not
+labels: ["open-work"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [`docs/known-issues.md`](https://github.com/cabral/serenata/blob/main/docs/known-issues.md)
+        and [`docs/open-work.md`](https://github.com/cabral/serenata/blob/main/docs/open-work.md)
+        first — most known gaps are already written down, with the reasoning for
+        why they are still open.
+  - type: textarea
+    id: gap
+    attributes:
+      label: What is missing
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it blocks
+      description: >-
+        What becomes possible once it exists, or what is currently wrong because
+        it does not.
+    validations:
+      required: true
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when…
+      description: >-
+        How would someone know this was finished? Every item in `open-work.md`
+        carries this, because "improve the parser" cannot be completed.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Which constraints bind it
+      description: >-
+        From `CLAUDE.md`. Personal data and determinism are the two that most
+        often turn a simple change into a different one. Optional if unsure.

@@ -1,0 +1,14 @@
+# Two kinds of report must not become public issues, so they are routed away
+# from the picker rather than relying on someone reading the template first.
+blank_issues_enabled: true
+contact_links:
+  - name: Personal data in published output, or a security problem
+    url: https://github.com/cabral/serenata/security/advisories/new
+    about: >-
+      Report privately. Do not open a public issue and do not paste the data
+      you found — that publishes it a second time. See SECURITY.md.
+  - name: A legal threat, takedown demand, or data protection request
+    url: https://github.com/cabral/serenata/blob/main/SECURITY.md
+    about: >-
+      Not handled in the tracker. These go to counsel; see the escalation list
+      in SECURITY.md and docs/corrections-policy.md.

@@ -30,7 +30,7 @@ REPO = Path(__file__).resolve().parent.parent
 #: Everything a reader is expected to read. `.claude/skills/` is included
 #: because those files are rules people follow, and a rule naming a file that
 #: does not exist is a rule that cannot be followed.
-DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data", "tools")
+DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data", "tools", ".github")
 
 #: A markdown link to something other than an absolute URL or a mail address.
 _LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)]+)\)")

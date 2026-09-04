@@ -1,0 +1,73 @@
+name: Classifier idea
+description: A pattern you think this project should detect
+labels: ["case"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A classifier cannot merge without a written hypothesis, a measured base
+        rate, and a stated risk-indicator source (constraint 6). The four
+        questions below are the gates from `.claude/skills/case-research`, and
+        they are asked here so an idea arrives already tested against them.
+
+        **Answering "I don't know" is fine.** It is a better outcome than a
+        confident guess, and the gate that stops an idea is useful information.
+  - type: textarea
+    id: claim
+    attributes:
+      label: The claim, in one falsifiable sentence
+      description: >-
+        "Contracts awarded fewer than N days after publication are anomalous
+        relative to their CPV category" is falsifiable. "Some awards look
+        rushed" is not.
+    validations:
+      required: true
+  - type: textarea
+    id: wrong-if
+    attributes:
+      label: This flag is wrong if…
+      description: >-
+        Complete the sentence. If it cannot be completed, what you have is a
+        narrative rather than a classifier — which is worth saying so the case
+        file can record it.
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Which structured fields it needs
+      description: >-
+        eForms element paths or BT codes. A signal that exists only in free
+        text fails constraint 5 — say so, and the case is parked with a note
+        about what field would unlock it rather than rejected.
+        `docs/field-usage.md` says which paths real notices actually populate.
+    validations:
+      required: true
+  - type: textarea
+    id: population
+    attributes:
+      label: Population and denominator
+      description: >-
+        Which notices does this apply to, and what is excluded? A base rate
+        cannot be measured without a denominator. If you cannot define one, say
+        that.
+    validations:
+      required: true
+  - type: textarea
+    id: legal
+    attributes:
+      label: Does detecting or publishing this need person-level data?
+      description: >-
+        Naming a natural person is an escalation, not a design choice. If the
+        pattern only works by identifying an individual, it may still pass by
+        aggregating one level up — say which.
+    validations:
+      required: true
+  - type: textarea
+    id: comparators
+    attributes:
+      label: Who already does this
+      description: >-
+        opentender.eu, DIGIWHIST, ARACHNE, Kingfisher, the ECA's reports. What
+        would be different here? Optional, but a case that has been compared is
+        a stronger case.

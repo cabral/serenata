@@ -1,0 +1,44 @@
+name: The pipeline produced wrong output
+description: A row, a figure, or a generated report that disagrees with its source
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a **published finding** that is wrong, use the correction template
+        instead — it has a different route and a different response time.
+
+        If the wrong output contains personal data, stop and report it
+        privately: [security advisory](https://github.com/cabral/serenata/security/advisories/new).
+  - type: textarea
+    id: what
+    attributes:
+      label: What the output says
+      description: The row, figure or file, and where it came from.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: What the source notice says
+      description: >-
+        A link to the notice on TED, and the element you read. Every row carries
+        `source_publication_id` for exactly this.
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: Which package, if you know it
+      description: >-
+        The archive filename, e.g. `202600157.tar.gz`. The generated reports
+        name the packages they measured with a SHA-256.
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: >-
+        The command you ran. The pipeline is deterministic, so the same package
+        and the same code should give you the same wrong answer twice — if it
+        does not, say that, because it is a more serious problem than the one
+        you came to report.

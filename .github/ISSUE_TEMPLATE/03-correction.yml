@@ -1,0 +1,54 @@
+name: A published finding or figure is wrong
+description: Something already published does not match its source
+labels: ["correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        [`docs/corrections-policy.md`](https://github.com/cabral/serenata/blob/main/docs/corrections-policy.md)
+        governs what happens next. In short: a finding that names an entity and
+        is wrong is withdrawn first and corrected after, and every correction is
+        recorded in `docs/corrections/`.
+
+        **Do not include personal data in this issue.** If that is the problem,
+        report it privately: [security advisory](https://github.com/cabral/serenata/security/advisories/new).
+  - type: input
+    id: where
+    attributes:
+      label: What is wrong
+      description: A link to the finding, dataset version, or report.
+    validations:
+      required: true
+  - type: textarea
+    id: published
+    attributes:
+      label: What it says now
+      description: Quote it, rather than paraphrasing.
+    validations:
+      required: true
+  - type: textarea
+    id: correct
+    attributes:
+      label: What is actually true
+      description: >-
+        With the source notice linked, if you have it. That is the fastest route
+        to a fix.
+    validations:
+      required: true
+  - type: dropdown
+    id: names
+    attributes:
+      label: Does the finding name a company or an institution?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: credit
+    attributes:
+      label: Credit
+      description: >-
+        How you would like to be named in the correction record, or "none".
+        Optional.
