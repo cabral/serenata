@@ -37,10 +37,11 @@ record of how each was built and what it corrected is in the
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Publication rule for unknown natural-person status | a decision, before the first finding |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in non-contact fields | counsel |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
+| [17](#17-build-the-first-classifier) | The first classifier | a hypothesis file, then code |
 
-Two of those six are engineering, and both are the same piece of work behind the
-same blocker. The other four are decisions, and three of them are not this
-project's to take alone.
+Two of those seven are engineering behind the same blocker, four are decisions —
+three of them not this project's to take alone — and one, 17, is the next thing
+to build.
 
 ## Everything, in order
 
@@ -62,6 +63,7 @@ project's to take alone.
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | scoped and measured, not built | [#33](https://github.com/cabral/serenata/issues/33) |
 
 **Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12, 13 and 16 are all done for
 eForms, and 12 turned records into a dataset, which closed 9 with it. 13 then
@@ -73,9 +75,10 @@ trust what it reads.
 **Milestone 1 is complete for eForms.** What is open is either a decision rather
 than a task (11, 14), a format this project has not measured (3, and the legacy
 half of 4), or filed so it is not discovered late (6). The next code is the
-first classifier, which milestone 2 owns and which constraint 6 governs: a
-written hypothesis citing its risk-indicator source, tests, and measured base
-rates on real historical data, before it merges.
+first classifier — item 17 — which milestone 2 owns and which constraint 6
+governs: a written hypothesis citing its risk-indicator source, tests, and
+measured base rates on real historical data, before it merges. The base rates
+are now measured; the hypothesis is not written.
 
 Every open item below has a GitHub issue mirroring it. Say there that you are
 taking something, so two people do not start the same thing.
@@ -417,3 +420,55 @@ gap from 143 of 215 blocks to 212 as a side effect.
 [Full record](decision-log.md#16-add-the-value-and-timing-columns-the-red-flag-literature-needs).
 
 ---
+
+---
+
+## 17. Build the first classifier
+
+**Scoped and measured; not built.** The two case files in
+[`cases/`](cases/) are constraint 6's first half done: the indicator argued
+before any code exists.
+
+[Case 001](cases/001-single-bid.md) took the most established red flag in the
+literature — a single bid on a competitive procedure — through the four intake
+gates and **rejected it at the base rate**. It fires on **36.8%** of competitive
+lot results with a published bid count, and 42.1% once framework agreements are
+excluded the way the Commission's own indicator excludes them. A flag on two in
+five contract awards is a description of the market, not an anomaly in it. The
+comparator scan says the same thing from the other side: opentender, DIGIWHIST
+and the Single Market Scoreboard already publish this number, so there is no
+delta either.
+
+[Case 002](cases/002-single-bid-against-its-segment.md) is the form that
+survives. Compare a lot against its own market — the buyer's country and the CPV
+division — rather than against a European average. Single-bid rates across the
+26 segments large enough to have a baseline run from 6.5% to 78.2%, so no flat
+threshold can be right in both tails; a rule keyed to the segment fires on
+**2.23%** of the population it covers, which is small enough to verify by hand.
+It passes all four gates.
+
+**What it needs**, in order:
+
+- **A hypothesis file** in [`hypotheses/`](hypotheses/), which is where the four
+  open design questions get settled: whether the baseline is computed from the
+  corpus or frozen to a reference period (this decides what determinism means
+  when the archive grows), whether (country, CPV division) is the right
+  grouping, what the threshold is on a bigger sample than 26 cells, and whether
+  the unit is the lot result or the notice.
+- **A flag record**, which the data model does not have. What a flag is, where
+  it is stored, and how it links to its source notice is a schema decision, so
+  an ADR rather than a patch.
+- **The classifier**, under `serenata/classify/`, deterministic and reading
+  structured fields only.
+- **Tests**, including the measured base rate as a regression: a classifier
+  whose firing rate silently moves is one nobody can trust.
+
+**Constraints.** Constraint 6 governs all of it. Constraint 4 binds the baseline
+question specifically. Nothing here is publishable until
+[#6](#6-handle-corrected-and-withdrawn-notices) settles what a flag on a
+superseded notice does and
+[#11](#11-decide-the-publication-rule-for-unknown-natural-person-status) settles
+who may be named — but the classifier can be built and measured before either.
+
+**Good entry point:** the hypothesis file. It is argument, not code, and both
+case files hand it the measurements.
