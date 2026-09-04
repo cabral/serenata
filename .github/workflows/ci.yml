@@ -11,8 +11,14 @@ jobs:
       matrix:
         python: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      # Both run on Node 24. They were on runtimes GitHub had already begun
+      # forcing onto it, so CI was green only because of that forcing.
+      # setup-uv is pinned to an exact version rather than a major because it
+      # stopped publishing a moving major tag after v7 — `@v10` resolves to
+      # nothing — which makes bumping it a deliberate step rather than a
+      # silent one.
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
