@@ -30,8 +30,7 @@ REPO = Path(__file__).resolve().parent.parent
 #: Everything a reader is expected to read. `.claude/skills/` is included
 #: because those files are rules people follow, and a rule naming a file that
 #: does not exist is a rule that cannot be followed.
-DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data")
-TOP_LEVEL = ("README.md", "CONTRIBUTING.md", "CLAUDE.md")
+DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data", "tools")
 
 #: A markdown link to something other than an absolute URL or a mail address.
 _LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)]+)\)")
@@ -62,8 +61,15 @@ _NOT_REPOSITORY_PATHS = (
 
 
 def documents() -> list[Path]:
-    """Every markdown file a reader of this repository is offered."""
-    found = [REPO / name for name in TOP_LEVEL]
+    """Every markdown file a reader of this repository is offered.
+
+    Top-level documents are *discovered* rather than listed. They were listed
+    once, and adding `SECURITY.md` proved the cost of that: it linked to a file
+    that did not exist and every check here passed, because the new document was
+    not among the three the tuple named. A gate that has to be told about a
+    document is a gate that silently stops covering the repository.
+    """
+    found = sorted((REPO).glob("*.md"))
     for root in DOCUMENT_ROOTS:
         found.extend(sorted((REPO / root).rglob("*.md")))
     return [path for path in found if path.is_file()]

@@ -208,6 +208,18 @@ the full reasoning, including what a sign-off here does and does not prove.
   `can_actually_fail` — because a fixture that quietly lost it would leave the
   assertion passing and meaningless.
 
+## Reporting rather than fixing
+
+Not every problem is a pull request.
+
+- **Personal data in published output, or any security problem** —
+  [`SECURITY.md`](SECURITY.md). Report it privately; do not paste the data into
+  a public issue.
+- **A published finding or figure that is wrong** —
+  [`docs/corrections-policy.md`](docs/corrections-policy.md). Corrections are
+  made in place with a dated note, and every one is recorded in
+  [`docs/corrections/`](docs/corrections/).
+
 ## Picking something up
 
 [`docs/open-work.md`](docs/open-work.md) says what is open, what each item
