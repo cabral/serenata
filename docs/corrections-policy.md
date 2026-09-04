@@ -1,13 +1,11 @@
 # Corrections policy
 
-**Nothing has been published yet.** This exists before the first finding rather
-than after the first mistake, because a policy written while something is going
-wrong is worth very little, and because deciding in advance how to be wrong is
-part of deserving to be believed.
+This policy applies to everything the project publishes: findings, datasets and
+generated reports. Nothing has been published yet; it is in force from the first
+publication.
 
 The project publishes statistical anomalies drawn from public procurement
-notices. Some of them will be wrong. The question that matters is not whether
-that happens but what happens next.
+notices. Some of them will be wrong. What follows is what happens then.
 
 ## The commitment
 
@@ -68,9 +66,8 @@ an institution. The cost of a claim standing an extra week while someone checks
 it is borne by the named party; the cost of taking it down early is borne by the
 project. That asymmetry decides the order.
 
-One person maintains this, unpaid, so those are honest aims and not guarantees.
-If you hear nothing in five working days the report did not arrive — send it
-again.
+If you hear nothing within five working days, the report did not arrive — send
+it again.
 
 ## Findings and datasets are corrected differently
 
@@ -114,8 +111,10 @@ the underlying notice needs fixing, that is the Publications Office's to do.
 
 ## The corrections log
 
-Every correction is recorded in `docs/corrections/`, one file per correction,
-with the date, what was claimed, what was actually true, and what changed as a
-result. That directory does not exist yet because nothing has been published
-yet. It will be created by the first correction, and if it stays empty for a
-suspiciously long time, that is itself worth noticing.
+Every correction is recorded in [`docs/corrections/`](corrections/), one file
+per correction: the date, what was claimed, what is actually true, why it
+happened, and what changed as a result.
+
+A correction is not finished until it records a cause. "A classifier defect" is
+not a cause; "the rule read the awarded amount without checking its status, so a
+withheld value of `-1` was treated as a price" is.

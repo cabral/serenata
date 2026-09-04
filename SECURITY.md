@@ -12,14 +12,12 @@ Use GitHub's private vulnerability reporting:
 It is private to the maintainer until an advisory is published, so nothing is
 disclosed by the act of reporting it.
 
-**Please do not open a public issue** for a security report, and in particular
-do not paste the personal data you found into one — that publishes it a second
-time, to a wider audience. Describe where it is; that is enough to find it.
+**Do not open a public issue** for a security report, and do not paste the
+personal data you found into one — that publishes it a second time, to a wider
+audience. Describe where it is; that is enough to find it.
 
-If you have no GitHub account, there is currently no other route, which is a
-real gap and is recorded as such rather than glossed over. Until the project has
-a domain of its own, GitHub is the only channel that does not mean publishing a
-personal address.
+GitHub is currently the only reporting channel. A route that does not require an
+account will be added when the project has a domain of its own.
 
 ## What counts, in priority order
 
@@ -38,9 +36,8 @@ Known and already recorded: the drop list matches element *paths*, so it cannot
 catch a publisher who types a contact address into a field that is not a contact
 field. 46 such values were measured in one publication day. That gap is
 [open work](docs/open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields)
-awaiting counsel, so a report of that specific shape confirms a known problem
-rather than uncovering a new one — still worth sending, and it will be answered
-with what is already known.
+awaiting counsel. Report it anyway: a confirmed instance is evidence about how
+often it happens, and it will be answered with what is already known.
 
 **2. A way to make the pipeline produce wrong output.** A crafted notice that
 causes a wrong flag, a mis-parse, or output that disagrees with its source. The
@@ -54,20 +51,18 @@ XML entity expansion is already refused
 runs offline downstream of fetch — but if either of those turns out not to hold,
 that is exactly the report worth having.
 
-## What to expect
+## Response
 
-One person maintains this, unpaid. So, honestly:
+- Reports are acknowledged **within five working days**. If you have not heard
+  back by then, the report did not arrive — send it again.
+- Personal data in output is withdrawn or regenerated **as soon as it is
+  confirmed**, before any analysis of cause.
+- Everything else receives a fix, or a written explanation of why it is not one,
+  and an advisory where warranted.
+- Reporters are credited in the advisory and the changelog on request.
 
-- An acknowledgement **within five working days**. If you have not heard back,
-  the report did not arrive — send it again rather than assuming it was ignored.
-- For personal data in output: the output is withdrawn or regenerated **as soon
-  as it is confirmed**, before any analysis of cause.
-- For everything else: a fix or a written explanation of why not, and an advisory
-  if one is warranted.
-- Credit in the advisory and the changelog if you want it, and none if you do not.
-
-There is **no bug bounty**. The project has no money. Nothing here is an
-invitation to test against live systems.
+There is **no bug bounty**. Nothing here is an invitation to test against live
+systems.
 
 ## Out of scope
 
@@ -84,6 +79,5 @@ invitation to test against live systems.
 
 Report a problem you found while reading the code, running the pipeline on your
 own machine, or reading published output, and this project will not pursue you
-for it. That is a statement of intent from a one-person project, not a legal
-safe-harbour instrument — if you need a formal one, ask before you start and it
-can be discussed.
+for it. This is a statement of intent, not a legal safe-harbour instrument. If
+you need a formal one, ask before you start.

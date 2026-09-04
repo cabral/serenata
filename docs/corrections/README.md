@@ -1,15 +1,14 @@
 # Corrections
 
-One file per correction, named `YYYY-MM-DD-slug.md`. Empty, because nothing has
-been published yet and so nothing has been wrong yet.
+One file per correction, named `YYYY-MM-DD-slug.md`. Empty: nothing has been
+published yet.
 
 [`corrections-policy.md`](../corrections-policy.md) is the policy this directory
-implements. The short version: errors are corrected in place with a dated note,
-and nothing is quietly deleted.
+implements. Errors are corrected in place with a dated note, and nothing is
+quietly deleted.
 
-Keeping the record here rather than only in the corrected page is the point. A
-reader can see every correction the project has ever made in one place, which is
-a stronger claim to being trustworthy than never appearing to be wrong.
+Every correction is recorded here as well as on the corrected page, so the whole
+record is readable in one place.
 
 ## Template
 
