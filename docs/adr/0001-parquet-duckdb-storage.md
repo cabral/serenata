@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-12
+- Enforced by: `tests/test_normalise_dataset.py::TestRerunIdentity`, `tests/test_normalise_dataset.py::TestDuckDBCanQueryIt`
 
 ## Context
 

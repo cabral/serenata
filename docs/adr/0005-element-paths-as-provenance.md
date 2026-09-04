@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-02
+- Enforced by: `tests/test_data_model.py::TestEveryColumnTracesToAMeasuredField`
 
 ## Context
 

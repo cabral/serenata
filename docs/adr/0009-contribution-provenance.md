@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-03
+- Enforced by: `.github/workflows/dco.yml`
 
 ## Context
 

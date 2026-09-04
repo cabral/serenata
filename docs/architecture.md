@@ -131,7 +131,10 @@ are produced from checksummed archives and reproduce byte for byte. A number in
 those files is a measurement anyone can rerun, not a sentence someone wrote once.
 
 **Decisions with expiry conditions.** Every ADR ends with what would make us
-revisit it. That section is the useful one two years later.
+revisit it — the section that is useful two years later — and begins with an
+`Enforced by:` line naming the test that keeps it true. `tests/test_adr.py`
+checks those names still resolve, so a decision cannot quietly lose the
+guarantee it claims.
 
 ## What is deliberately not here
 

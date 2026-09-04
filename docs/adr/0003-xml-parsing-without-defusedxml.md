@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-01
+- Enforced by: `tests/test_survey.py::TestDoctypeIsRefused`
 - Amended: 2026-09-02 — see [Amendment](#amendment-2026-09-02-the-refusal-had-to-cover-the-whole-prolog)
 
 ## Context

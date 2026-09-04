@@ -63,7 +63,13 @@ def measured_paths() -> set[str]:
 
 
 class TestEveryColumnTracesToAMeasuredField:
-    """A column whose source path no notice carries is untraceable."""
+    """A column whose source path no notice carries is untraceable.
+
+    This is what holds [ADR-0005](../docs/adr/0005-element-paths-as-provenance.md)
+    true. Provenance there is the *element path* rather than the eForms BT code,
+    which is only worth anything if every path a column claims was observed in a
+    real notice — otherwise the model cites a field that may not exist.
+    """
 
     def test_every_cited_path_was_actually_measured(self) -> None:
         measured = measured_paths()
