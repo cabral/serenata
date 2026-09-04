@@ -18,7 +18,7 @@ jobs:
   sign-off:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The check compares the base against the head, so it needs both.
           fetch-depth: 0

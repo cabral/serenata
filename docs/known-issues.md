@@ -321,9 +321,3 @@ They are all by the maintainer, who holds the copyright in them, so the
 provenance question they leave open is narrow. Anyone auditing licensing should
 read the sign-off record as starting on 2026-09-03 rather than covering the
 project.
-
-## CI runs on deprecated action runtimes
-
-`actions/checkout@v4` and `astral-sh/setup-uv@v6` target Node 20, which GitHub
-now forces onto Node 24. CI is green and will break when that forcing stops.
-Tracked as [issue #3](https://github.com/cabral/serenata/issues/3).
