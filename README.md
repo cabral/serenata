@@ -95,23 +95,35 @@ withheld value turned out to be published as `-1` rather than omitted. Each
 correction is in [`docs/data-model.md`](docs/data-model.md) with the
 measurement behind it.
 
-The first classifier is scoped rather than built. Two case files in
+**The first classifier exists.** Two case files in
 [`docs/cases/`](docs/cases/) take the best-established red flag in the
 literature — a single bid on a competitive procedure — through the project's
 intake gates and **reject it**: it fires on 36.8% of competitive lot outcomes,
-which describes the market rather than flagging anything in it. What survives is
-the comparative form, measured at 2.23%. Rejected cases keep their file here,
-because what a project declined to publish is part of its method.
+which describes the market rather than flagging anything in it. Rejected cases
+keep their file here, because what a project declined to publish is part of its
+method.
 
-**There is still no classifier and no flag.** Legacy pre-2024 TED notices are
-refused rather than parsed, because the mapping for them has never been
-measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
+What survives is the comparative form, and it is built:
+[`single_bid_in_segment`](docs/hypotheses/single_bid_in_segment.md) flags a lot
+that drew one bid in a market where single bids are rare. Single-bid rates run
+from 6.5% to 78.2% across markets, so the distance from a lot's own market is
+what carries information. Over five publication days it produces **96 flags from
+8,159 lot outcomes**, byte-identical when the run is repeated, and every flag
+carries the baseline it was measured against so a reader can disagree with it
+without rerunning anything ([ADR-0011](docs/adr/0011-flags-carry-their-own-baseline.md)).
+
+**No flag has been published, and none may be yet.** A flag on a notice that was
+later corrected is a flag on something that no longer stands, and whether an
+entity may be named at all when its natural-person status is unknown is an open
+question. Both gate publication rather than computation. Legacy pre-2024 TED
+notices are refused rather than parsed, because the mapping for them has never
+been measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
 what the pipeline does not do, or does incompletely. The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
 | 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | in progress |
-| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | not started |
+| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | in progress — one rule |
 | 3 | Entity resolution against open national company registers | not started |
 | 4 | Public API and versioned bulk data releases | not started |
 | 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |

@@ -17,14 +17,14 @@ TED  ──fetch──▶  raw archive  ──parse──▶  records  ──nor
                                   data
 ```
 
-Five stages, each a module that runs and is tested on its own. Three exist.
+Five stages, each a module that runs and is tested on its own. Four exist.
 
 | Stage | Reads | Writes | Networked | Built |
 |---|---|---|---|---|
 | `fetch` | TED's API and daily packages | `data/raw/…tar.gz` + manifest | **yes, only here** | ✅ |
 | `parse` | an archived package | typed records, in memory | no | ✅ eForms only |
 | `normalise` | records | Parquet, partitioned by year | no | ✅ |
-| `classify` | Parquet | flag rows | no | ❌ |
+| `classify` | Parquet | flag rows, partitioned by year | no | ✅ one rule |
 | `publish` | flags | API, verification interface | — | ❌ |
 
 `survey` sits beside them rather than in the chain: it measures archived

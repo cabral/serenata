@@ -9,12 +9,28 @@ the code. [`open-work.md`](open-work.md) is the companion — what is being buil
 and what each piece needs — and every open item there has an issue mirroring it.
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) is how to work on any of it.
 
-## The pipeline stops after normalise
+## One classifier exists, and nothing it produces may be published
 
-There is **no classifier and no flag**. `fetch` archives packages, `parse` turns
-them into typed records, `normalise` writes those as Parquet, and nothing yet
-evaluates anything. Statements in this repository about what the data shows are
-measurements of the archive, not findings.
+`classify` runs, and it runs one rule:
+[`single_bid_in_segment`](hypotheses/single_bid_in_segment.md), which flags a
+lot that drew a single bid in a market where single bids are rare. Over the five
+archived publication days it produces **96 flags from 8,159 lot outcomes**.
+
+**No flag has been published, and none may be yet.** Two things gate that, and
+neither is a code change:
+
+- A flag on a notice later corrected or withdrawn is a flag on something that
+  no longer stands, and the pipeline records the corrigendum link without
+  acting on it — [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
+- Whether an entity may be named at all when its natural-person status is
+  unknown is [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status).
+
+The flag's false-positive profile is **predicted, not observed**: the hypothesis
+lists what the design says will go wrong, and one flag has been re-derived from
+its raw archived notice. That is one, out of 96.
+
+Statements in this repository about what the data shows remain measurements of
+the archive, not findings.
 
 Tracked as milestone 2 in the [README](../README.md).
 

@@ -37,7 +37,7 @@ record of how each was built and what it corrected is in the
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Publication rule for unknown natural-person status | a decision, before the first finding |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in non-contact fields | counsel |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
-| [17](#17-build-the-first-classifier) | The first classifier | a hypothesis file, then code |
+| [17](#17-build-the-first-classifier) | Publishing what the first classifier finds | blocked on 6 and 11 |
 
 Two of those seven are engineering behind the same blocker, four are decisions —
 three of them not this project's to take alone — and one, 17, is the next thing
@@ -63,7 +63,7 @@ to build.
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
-| 17 | [Build the first classifier](#17-build-the-first-classifier) | scoped and measured, not built | [#33](https://github.com/cabral/serenata/issues/33) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | **built**; publishing is blocked | [#33](https://github.com/cabral/serenata/issues/33) |
 
 **Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12, 13 and 16 are all done for
 eForms, and 12 turned records into a dataset, which closed 9 with it. 13 then
@@ -425,7 +425,25 @@ gap from 143 of 215 blocks to 212 as a side effect.
 
 ## 17. Build the first classifier
 
-**Scoped and measured; not built.** The two case files in
+**Built.** `serenata classify` runs
+[`single_bid_in_segment`](hypotheses/single_bid_in_segment.md) over the
+normalised dataset and writes flags as Parquet. Over five publication days it
+produces **96 flags from 8,159 lot outcomes**, byte-identical on rerun, each
+carrying the baseline it was measured against
+([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). The implementation
+and the hypothesis's published query agree on real data, and a test runs both
+over one dataset so they cannot drift.
+
+**What is still open is publishing any of it**, and neither blocker is code:
+[#6](#6-handle-corrected-and-withdrawn-notices) — a flag on a corrected notice
+— and [#11](#11-decide-the-publication-rule-for-unknown-natural-person-status)
+— whether the entity may be named. The false-positive profile is also predicted
+rather than observed: one flag of the 96 has been re-derived from its raw
+archived notice, which is a start and not a verification pass.
+
+The record of how it was argued follows.
+
+The two case files in
 [`cases/`](cases/) are constraint 6's first half done: the indicator argued
 before any code exists.
 
@@ -447,21 +465,23 @@ threshold can be right in both tails; a rule keyed to the segment fires on
 **2.23%** of the population it covers, which is small enough to verify by hand.
 It passes all four gates.
 
-**What it needs**, in order:
+**What it needed**, and what each answer was:
 
-- **A hypothesis file** in [`hypotheses/`](hypotheses/), which is where the four
-  open design questions get settled: whether the baseline is computed from the
-  corpus or frozen to a reference period (this decides what determinism means
-  when the archive grows), whether (country, CPV division) is the right
-  grouping, what the threshold is on a bigger sample than 26 cells, and whether
-  the unit is the lot result or the notice.
-- **A flag record**, which the data model does not have. What a flag is, where
-  it is stored, and how it links to its source notice is a schema decision, so
-  an ADR rather than a patch.
-- **The classifier**, under `serenata/classify/`, deterministic and reading
-  structured fields only.
-- **Tests**, including the measured base rate as a regression: a classifier
-  whose firing rate silently moves is one nobody can trust.
+- **A hypothesis file**, which is where the four open design questions got
+  settled. The baseline is computed from the corpus rather than frozen, and
+  every flag carries it, so the corpus dependence is visible in the row instead
+  of argued away. The grouping is country and CPV division, with the
+  falsification test written down. The threshold is 15% in a market of at least
+  50, chosen after a sweep the file records — including that the sample cannot
+  tell 15% from 20%. The unit is the lot result.
+- **A flag record**, which the data model did not have.
+  [ADR-0011](adr/0011-flags-carry-their-own-baseline.md).
+- **The classifier**, `serenata/classify/single_bid_in_segment.py`: a pure
+  function over rows, no clock, no network, no free text.
+- **Tests.** The rule over rows built by hand, including every way it declines
+  to fire; the reader against a dataset whose four excluded cases are there to
+  be excluded; the rerun-identity check on the flag files; and the published
+  query run against the code's own so the two definitions cannot drift.
 
 **Constraints.** Constraint 6 governs all of it. Constraint 4 binds the baseline
 question specifically. Nothing here is publishable until
@@ -470,5 +490,6 @@ superseded notice does and
 [#11](#11-decide-the-publication-rule-for-unknown-natural-person-status) settles
 who may be named — but the classifier can be built and measured before either.
 
-**Good entry point:** the hypothesis file. It is argument, not code, and both
-case files hand it the measurements.
+**Good entry point now:** verifying flags. The profile in the hypothesis is
+what the design predicts; walking real flags through the verification protocol
+is what would replace prediction with evidence, and it needs no code at all.

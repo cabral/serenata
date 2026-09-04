@@ -332,6 +332,14 @@ class TestClassifierHypotheses:
     done.
 
     Hypothesis files are named after their module, per docs/hypotheses/README.md.
+
+    **What counts as a classifier** is the contract a rule keeps, read from the
+    source rather than by importing it: a module-level ``RULE`` and a ``flags``
+    function. The package also holds modules that are not classifiers — the
+    records, the reader and writer — and requiring a hypothesis for those would
+    teach people to write empty ones. A module that keeps half the contract is
+    caught by `test_a_rule_is_either_a_classifier_or_not_one`, so the loophole
+    is a rule that declares nothing, and such a module cannot be in `RULES`.
     """
 
     REQUIRED_SECTIONS = (
@@ -345,9 +353,58 @@ class TestClassifierHypotheses:
     )
     ALLOWED_STATUS = frozenset({"scoped", "measured", "building", "live", "rejected"})
     PLACEHOLDERS = ("TODO", "TBD", "[", "XXX")
+    #: What a classifier module declares. All of it, or none of it.
+    CONTRACT = ("RULE", "RULE_VERSION", "flags")
+
+    @staticmethod
+    def declared(path: Path) -> set[str]:
+        """The contract names this module defines at module level."""
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        names: set[str] = set()
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                names.add(node.name)
+            elif isinstance(node, ast.Assign):
+                names.update(
+                    target.id for target in node.targets if isinstance(target, ast.Name)
+                )
+        return names
 
     def classifier_modules(self) -> list[Path]:
-        return [path for path in python_files("classify") if path.name != "__init__.py"]
+        return [
+            path
+            for path in python_files("classify")
+            if path.name != "__init__.py" and set(self.CONTRACT) <= self.declared(path)
+        ]
+
+    def test_a_rule_is_either_a_classifier_or_not_one(self) -> None:
+        half = [
+            f"{path.stem} declares {sorted(set(self.CONTRACT) & self.declared(path))}"
+            for path in python_files("classify")
+            if path.name != "__init__.py"
+            and set(self.CONTRACT) & self.declared(path)
+            and not set(self.CONTRACT) <= self.declared(path)
+        ]
+        assert not half, (
+            f"modules keeping half a classifier's contract: {half}. A module "
+            f"declares all of {list(self.CONTRACT)} or none of them, because "
+            "the gates below find classifiers by that contract and a partial "
+            "one would slip past them."
+        )
+
+    def test_every_classifier_is_registered_to_run(self) -> None:
+        registered = (PACKAGE_ROOT / "classify" / "__init__.py").read_text(
+            encoding="utf-8"
+        )
+        unregistered = [
+            path.stem
+            for path in self.classifier_modules()
+            if path.stem not in registered
+        ]
+        assert not unregistered, (
+            f"classifiers missing from serenata.classify.RULES: {unregistered}. "
+            "A rule nobody runs is a hypothesis nobody tests."
+        )
 
     def test_every_classifier_has_a_hypothesis_file(self) -> None:
         missing = [

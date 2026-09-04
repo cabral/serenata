@@ -1,0 +1,168 @@
+# Single bid in a segment where single bids are rare
+
+Status: building
+
+The classifier exists and runs, and its measured base rate reproduces: over the
+five archived publication days it produces 96 flags from 8,159 lot outcomes,
+the same numbers the query below reports. It is not `live`, because nothing it
+produces may be published yet — see the legal check.
+
+Governs `serenata/classify/single_bid_in_segment.py`. The argument that produced
+it is [case 002](../cases/002-single-bid-against-its-segment.md); the form this
+replaces, and why it was rejected, is [case 001](../cases/001-single-bid.md).
+
+## Claim
+
+A competitive procurement lot that receives exactly one bid, in a market where
+comparable lots usually draw several, is anomalous relative to that market —
+and more informative than a single bid measured against a European average,
+because single bidding varies from 6.5% to 78.2% across markets and an average
+describes none of them.
+
+"Market" is the buyer's country and the lot's CPV division. The comparison is
+against lots in the same market in the same dataset.
+
+This is a statistical anomaly with ordinary explanations, not a finding about
+anyone. A single bid is lawful, common, and usually means what it looks like:
+one supplier wanted the work.
+
+## This flag is wrong if...
+
+- **the segment does not predict competition** — if country plus CPV division is
+  the wrong grouping, too coarse to separate a specialist market from a
+  commodity one, or too fine to be stable. Testable: regroup by NUTS region or
+  by CPV group and see whether the same lots are flagged.
+- **a low-single-bid segment is low for a reason unrelated to the flagged lot**,
+  such as one large buyer publishing most of its lots.
+- **the bid count does not mean what it says** — bids recorded under another
+  statistics code, competition that happened at a framework call-off rather
+  than at award, or a count published under a privacy declaration.
+- **the notice was corrected or withdrawn** after publication, in which case the
+  flag is about something that no longer stands.
+
+## Fields used
+
+All structured, all already in the normalised model. No free text is read.
+
+| Field | eForms | Model |
+|---|---|---|
+| Bids received | BT-759 `ReceivedSubmissionsCount`, with BT-760 `ReceivedSubmissionsType` = `tenders` | `lot_result_statistic.statistic_value` where `statistic_kind = 'received_submissions'` |
+| Procedure type | BT-105 | `procedure.procedure_code` |
+| Contracting system | BT-765 | `lot.contracting_system_codes` |
+| Classification | BT-262 | `lot.cpv_code` |
+| Buyer country | BT-514 | `organisation.country_code` via `organisation_role.role = 'buyer'` |
+| Lot outcome identity | — | `lot_result.ordinal`, `lot_result.lot_ref` |
+
+`lot.title` and `lot.description` are **not** read. Constraint 5 keeps the
+classifier on structured fields, and the descriptions are carried as provenance
+for a human verifier.
+
+## Population and denominator
+
+One row per lot result, included when all of these hold:
+
+- the lot result carries a `received_submissions` statistic with code `tenders`,
+  its value status is `present`, and the value is **at least 1**. A withheld
+  count is excluded rather than read as a number, and a count of zero is a
+  different fact from a count of one.
+- the procedure code is present and competitive: `open`, `restricted`,
+  `comp-dial`, `comp-tend`, `innovation` or `neg-w-call`. Negotiation without a
+  prior call is excluded — a single bid there is the procedure working.
+- the lot is **not** a framework agreement or dynamic purchasing system
+  (`fa-wo-rc`, `fa-w-rc`, `fa-mix`, `dps-list`, `dps-nlist`). Competition in a
+  framework happens at call-off, which the award notice does not report. The
+  Commission's own single-bidder indicator excludes them for the same reason.
+- the buyer country and the lot's CPV code are both present, since they define
+  the segment.
+
+A lot result is **flagged** when its bid count is exactly 1, its segment holds
+at least **50** lot results in the dataset, and that segment's single-bid rate
+is below **15%**.
+
+Both parameters were chosen after measuring, not before. A floor of 50 is the
+smallest segment where a rate is worth comparing against — at 50 observations a
+15% rate carries a standard error of about 5 points — and dropping the floor to
+30 admits noisier segments and 22% more flags. The 15% cutoff is roughly a third
+of the population's own single-bid rate. **The sample cannot distinguish 15%
+from 20%**: no segment in it has a rate between the two, so the lower, more
+conservative number is used, and this is the parameter most likely to move when
+the dataset grows.
+
+## Base rate
+
+Measured 2026-09-04 against five archived publication days of 2026 — OJ S 52,
+94, 113, 157 and 168, 19,180 notices. The query is `single_bid_in_segment.sql`
+beside this file.
+
+- **Population**: 8,159 lot results, from 3,790 notices.
+- **Single bid anywhere in it**: 3,435, or 42.1%. That is the rate case 001 was
+  rejected on: a flag firing on two in five awards describes the market.
+- **Segments with at least 50 lot results**: 26, covering 4,299 of the
+  population. Their single-bid rates run from 6.5% to 78.2%, median 35.2%.
+- **Flags**: **96, in 71 notices — 2.23% of the population the rule can speak
+  about**, and 1.18% of the whole population.
+
+Sensitivity, same dataset, flags at each parameter pair:
+
+| Segment floor | Segments | Covered | <10% | <15% | <20% | <25% |
+|---:|---:|---:|---:|---:|---:|---:|
+| 30 | 47 | 5,051 | 33 | 117 | 123 | 160 |
+| 50 | 26 | 4,299 | 26 | 96 | 96 | 133 |
+| 75 | 11 | 3,409 | 20 | 76 | 76 | 76 |
+| 100 | 8 | 3,155 | 20 | 64 | 64 | 64 |
+
+**What the rule cannot speak about is most of it.** 3,860 of the 8,159 lot
+results sit in segments too small to have a baseline, and the honest output
+there is silence, not a flag.
+
+**Known false-positive profile.** Not yet verified case by case — no finding has
+been through the verification protocol, so the profile below is what the design
+predicts rather than what has been observed:
+
+- CPV misclassification puts a lot in the wrong segment. The CPV is the buyer's
+  own and nothing validates it. Unmitigated.
+- An emergency or otherwise justified procedure that is nonetheless coded
+  competitive will be flagged; `procedure.process_reason_codes` is where a
+  verifier looks.
+- A corrected or withdrawn notice will still be flagged, because the pipeline
+  records the corrigendum link and acts on nothing yet. This is the one that
+  must be closed before publication.
+- A segment dominated by one buyer makes its rate a fact about that buyer.
+  Unmitigated, and the reason the flag carries its segment's size.
+
+## Comparators
+
+The indicator is well covered: opentender.eu and the DIGIWHIST work compute
+single-bidder rates across 35 jurisdictions, the Commission's Single Market
+Scoreboard publishes them per member state, and ARACHNE is a Commission-internal
+risk tool. Case 001 rejected the standalone form partly for that reason.
+
+The delta claimed here is form rather than arithmetic. Those sources publish
+**rates**, per country and per period. None hands a reader an individual lot
+outcome with the comparison that produced it, a link to the source document, and
+a rerunnable query. Each flag this classifier emits carries its own segment, the
+segment's size and rate, and the notice it came from.
+
+That is a claim about usefulness, and it is unproven until someone verifies a
+flag end to end.
+
+## Legal check
+
+- **No person-level data.** Counts, a procedure code, a contracting-system code,
+  a CPV code, a country code, and identifiers scoped to a notice. Nothing read
+  here can name a natural person, and nothing is joined that could reconstruct
+  one.
+- **Naming.** A flag names a buyer by implication, through the notice it links
+  to. Whether a flag may be published about an entity whose natural-person
+  status is unknown is [open-work #11](../open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status),
+  unanswered, and it gates publication rather than computation.
+- **Segment size and identifiability.** A segment small enough to name its
+  participants is not a baseline. The floor of 50 is a statistical requirement
+  first and this property second.
+- **Framing.** Constraint 3: the flag is an anomaly with innocent explanations,
+  and every user-facing string says so.
+
+**Nothing computed by this classifier may be published** until
+[open-work #6](../open-work.md#6-handle-corrected-and-withdrawn-notices)
+settles what a flag on a superseded notice does, and #11 settles who may be
+named. Building and measuring it does not wait on either.
