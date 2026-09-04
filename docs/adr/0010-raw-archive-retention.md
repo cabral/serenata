@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-09-03
+- Enforced by: nothing mechanical — it is a policy. The measurement it rests on is
+  `tests/test_dropped.py::TestItsOneClaim`
 
 ## Context
 

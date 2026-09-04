@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-03
+- Enforced by: `tests/test_normalise_privacy.py::TestTheVendoredTable`, `tests/test_normalise_privacy.py::TestWhatItRefuses`
 
 ## Context
 

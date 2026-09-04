@@ -70,7 +70,15 @@ class TestWhatItCounts:
 
 
 class TestItsOneClaim:
-    """No dropped path is a modelled column — and the check can say otherwise."""
+    """No dropped path is a modelled column — and the check can say otherwise.
+
+    [ADR-0010](../docs/adr/0010-raw-archive-retention.md) rests on this. Its
+    argument for keeping the drop at ingestion is not that holding personal data
+    downstream would be risky but that no purpose is served by it, which is what
+    data minimisation actually asks — and that argument only stands while no
+    dropped path is something a classifier reads. The ADR is a policy and cannot
+    itself be tested; this is the measurement underneath it.
+    """
 
     def test_no_dropped_path_is_a_modelled_column(self, measured: Dropped) -> None:
         assert measured.collisions_with_the_model() == []

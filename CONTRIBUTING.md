@@ -7,6 +7,13 @@ reading the whole repository first.
 applies to humans too, despite the name. Where this page and that one disagree,
 that one wins and this page is what needs fixing.
 
+**If you have not read the code yet**, two documents will save you most of the
+time you would otherwise spend reconstructing it:
+[`docs/architecture.md`](docs/architecture.md) for the stages and why the
+boundaries sit where they do, and [`docs/glossary.md`](docs/glossary.md) for the
+vocabulary — a lot, a lot result and a lot tender are three different things,
+and mixing them up is the most common way to misread the dataset.
+
 ## Getting set up
 
 Python 3.12+ and [uv](https://docs.astral.sh/uv/).
@@ -200,6 +207,18 @@ the full reasoning, including what a sign-off here does and does not prove.
   their own fixture still carries the thing they are checking for — search for
   `can_actually_fail` — because a fixture that quietly lost it would leave the
   assertion passing and meaningless.
+
+## Reporting rather than fixing
+
+Not every problem is a pull request.
+
+- **Personal data in published output, or any security problem** —
+  [`SECURITY.md`](SECURITY.md). Report it privately; do not paste the data into
+  a public issue.
+- **A published finding or figure that is wrong** —
+  [`docs/corrections-policy.md`](docs/corrections-policy.md). Corrections are
+  made in place with a dated note, and every one is recorded in
+  [`docs/corrections/`](docs/corrections/).
 
 ## Picking something up
 

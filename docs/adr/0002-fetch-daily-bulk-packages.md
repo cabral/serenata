@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-01
+- Enforced by: `tests/test_constraints.py::TestNetworkIsolation`, `tests/test_ted_contract.py::TestTheDailyPackage`
 
 ## Context
 
