@@ -1,8 +1,12 @@
 # Cases
 
 One file per detection idea, `NNN-slug.md`, with a status line: idea, scoped,
-measured, building, live, or rejected. There are no cases yet; the first
-classifier has not been scoped.
+measured, building, live, or rejected.
+
+| # | Case | Status |
+|---|---|---|
+| [001](001-single-bid.md) | Single bid on a competitive procedure | **rejected** at the base-rate gate — it fires on 36.8% of the population |
+| [002](002-single-bid-against-its-segment.md) | A single bid where single bids are rare | **measured** — passes four gates, 2.23% of the population it covers |
 
 A case file is where an idea is argued **before** it becomes code. The four
 intake gates it has to pass — the signal exists as a structured field, the legal

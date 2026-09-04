@@ -189,7 +189,7 @@ class TestWhatItRefuses:
     def test_a_predicate_that_mattered_is_refused(self, code: str) -> None:
         # Both are `cac:ProcessJustification/cbc:ProcessReasonCode`, told apart
         # only by `@listName`. This model's paths carry no predicates, so acting
-        # on either would mark `procedure.process_reason_code` on a coin toss.
+        # on either would mark `procedure.process_reason_codes` on a coin toss.
         assert code not in RECORD_TARGETS
         assert code not in BLOCK_TARGETS
         assert "predicate" in UNUSABLE[code]

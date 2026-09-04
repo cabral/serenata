@@ -37,10 +37,11 @@ record of how each was built and what it corrected is in the
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Publication rule for unknown natural-person status | a decision, before the first finding |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in non-contact fields | counsel |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
+| [17](#17-build-the-first-classifier) | The first classifier | a hypothesis file, then code |
 
-Two of those six are engineering, and both are the same piece of work behind the
-same blocker. The other four are decisions, and three of them are not this
-project's to take alone.
+Two of those seven are engineering behind the same blocker, four are decisions —
+three of them not this project's to take alone — and one, 17, is the next thing
+to build.
 
 ## Everything, in order
 
@@ -62,6 +63,7 @@ project's to take alone.
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | scoped and measured, not built | [#33](https://github.com/cabral/serenata/issues/33) |
 
 **Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12, 13 and 16 are all done for
 eForms, and 12 turned records into a dataset, which closed 9 with it. 13 then
@@ -73,9 +75,10 @@ trust what it reads.
 **Milestone 1 is complete for eForms.** What is open is either a decision rather
 than a task (11, 14), a format this project has not measured (3, and the legacy
 half of 4), or filed so it is not discovered late (6). The next code is the
-first classifier, which milestone 2 owns and which constraint 6 governs: a
-written hypothesis citing its risk-indicator source, tests, and measured base
-rates on real historical data, before it merges.
+first classifier — item 17 — which milestone 2 owns and which constraint 6
+governs: a written hypothesis citing its risk-indicator source, tests, and
+measured base rates on real historical data, before it merges. The base rates
+are now measured; the hypothesis is not written.
 
 Every open item below has a GitHub issue mirroring it. Say there that you are
 taking something, so two people do not start the same thing.
@@ -97,8 +100,9 @@ three times.
 
 ## 2. Survey which eForms fields notices actually populate
 
-**Done.** [`field-usage.md`](field-usage.md) reports 3,190 notices from OJ S
-157/2026: 456 element paths carry a value, 296 are containers or blank. It also
+**Done.** [`field-usage.md`](field-usage.md) reports 19,180 notices from five
+publication days of 2026: 497 element paths carry a value, 323 are containers
+or blank. It also
 reports how often a path repeats inside one record, which is what stopped a
 scalar column being given to a path that repeats.
 
@@ -113,10 +117,13 @@ scalar column being given to a path that repeats.
 notices rather than read off the specification, and executable as
 `serenata/parse/personal_data.py` with a test that fails if the two disagree.
 
-**What is still open.** OJ S 157/2026 contains zero legacy-schema notices, so
-there is no measured basis for that half, and this project does not publish
-spec-read lists as though they were measured. Until it exists, parse refuses a
-legacy notice rather than guessing which of its fields can name a person.
+**What is still open.** The five 2026 packages now measured — spanning March to
+September — contain **zero legacy-schema notices between them**, so there is no
+measured basis for that half, and this project does not publish spec-read lists
+as though they were measured. Until it exists, parse refuses a legacy notice
+rather than guessing which of its fields can name a person. Five days spread
+across six months finding none is also evidence about how the blocker lifts: it
+will not lift by fetching more recent days.
 
 Fetching a pre-2024 package is one command against an already-built stage —
 though whether TED still serves daily packages that far back is unverified, and
@@ -131,8 +138,9 @@ Full record of the eForms half:
 
 **eForms done; legacy notices are refused rather than guessed at.**
 `serenata/parse/` reads archived notices into typed intermediate records,
-dropping person-carrying fields as it reads. All 3,190 notices of one
-publication day parse into 46,223 records with no failures.
+dropping person-carrying fields as it reads. All 19,180 notices of five
+publication days parse with no failures; the first of them produced 46,223
+records.
 
 **What is still open** is the same blocker as
 [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person): a legacy
@@ -281,7 +289,8 @@ this blocks milestone 2, not milestone 1.
 
 **Done.** `serenata/normalise/` writes the model as Parquet. All 3,190 notices
 of one publication day become **98,629 rows across twelve tables**, byte-identical
-on rerun. Building it corrected the data model three times.
+on rerun; five days are 632,068 rows. Building it corrected the data model three
+times, and widening the evidence to five days corrected it a fourth.
 
 [Full record](decision-log.md#12-build-the-normalise-stage).
 
@@ -305,11 +314,16 @@ Constraint 2's drop list is structural: it rejects any path through
 That is the right shape for the rule, and it cannot catch a publisher who types
 a contact address into a field that is not a contact field.
 
-They do. Scanning the normalised package finds **46 email-shaped values in 7
-columns** — city, registration number, street, website, title, description —
-and **13 of them are shaped like a person's own address**
-(`firstname.lastname@`). The drop list is not wrong; the data arrived in a field
-it has no reason to reject.
+They do. Scanning five normalised packages finds **427 email-shaped values in 7
+columns** — city, registration number, street, website, name, description — and
+**139 of them are shaped like a person's own address** (`firstname.lastname@`).
+The drop list is not wrong; the data arrived in a field it has no reason to
+reject.
+
+**359 of the 427 are in the two description columns.** One publication day
+suggested the problem was scattered across identity fields; five days say it is
+overwhelmingly free text, which narrows the decision below to fields no
+classifier reads and a published dataset would still carry.
 
 **What to decide.** A value-level rule is a different kind of rule from a
 path-level one, and the options lose different things:
@@ -320,7 +334,8 @@ path-level one, and the options lose different things:
   dataset contains partially rewritten source values, which the project has so
   far never done.
 - **Flag the row for review** and publish nothing until a human looks. Does not
-  scale, but the counts are small — 46 values in 98,629 rows.
+  scale — 427 values in 632,068 rows is small as a share and not small as a
+  queue.
 
 Whichever is chosen, [`personal-data.md`](personal-data.md) gains a section, the
 rule becomes executable beside `is_dropped()`, and the decision needs an ADR
@@ -405,3 +420,55 @@ gap from 143 of 215 blocks to 212 as a side effect.
 [Full record](decision-log.md#16-add-the-value-and-timing-columns-the-red-flag-literature-needs).
 
 ---
+
+---
+
+## 17. Build the first classifier
+
+**Scoped and measured; not built.** The two case files in
+[`cases/`](cases/) are constraint 6's first half done: the indicator argued
+before any code exists.
+
+[Case 001](cases/001-single-bid.md) took the most established red flag in the
+literature — a single bid on a competitive procedure — through the four intake
+gates and **rejected it at the base rate**. It fires on **36.8%** of competitive
+lot results with a published bid count, and 42.1% once framework agreements are
+excluded the way the Commission's own indicator excludes them. A flag on two in
+five contract awards is a description of the market, not an anomaly in it. The
+comparator scan says the same thing from the other side: opentender, DIGIWHIST
+and the Single Market Scoreboard already publish this number, so there is no
+delta either.
+
+[Case 002](cases/002-single-bid-against-its-segment.md) is the form that
+survives. Compare a lot against its own market — the buyer's country and the CPV
+division — rather than against a European average. Single-bid rates across the
+26 segments large enough to have a baseline run from 6.5% to 78.2%, so no flat
+threshold can be right in both tails; a rule keyed to the segment fires on
+**2.23%** of the population it covers, which is small enough to verify by hand.
+It passes all four gates.
+
+**What it needs**, in order:
+
+- **A hypothesis file** in [`hypotheses/`](hypotheses/), which is where the four
+  open design questions get settled: whether the baseline is computed from the
+  corpus or frozen to a reference period (this decides what determinism means
+  when the archive grows), whether (country, CPV division) is the right
+  grouping, what the threshold is on a bigger sample than 26 cells, and whether
+  the unit is the lot result or the notice.
+- **A flag record**, which the data model does not have. What a flag is, where
+  it is stored, and how it links to its source notice is a schema decision, so
+  an ADR rather than a patch.
+- **The classifier**, under `serenata/classify/`, deterministic and reading
+  structured fields only.
+- **Tests**, including the measured base rate as a regression: a classifier
+  whose firing rate silently moves is one nobody can trust.
+
+**Constraints.** Constraint 6 governs all of it. Constraint 4 binds the baseline
+question specifically. Nothing here is publishable until
+[#6](#6-handle-corrected-and-withdrawn-notices) settles what a flag on a
+superseded notice does and
+[#11](#11-decide-the-publication-rule-for-unknown-natural-person-status) settles
+who may be named — but the classifier can be built and measured before either.
+
+**Good entry point:** the hypothesis file. It is argument, not code, and both
+case files hand it the measurements.

@@ -26,12 +26,19 @@ wherever they appear. That is the right shape for the rule and it cannot catch a
 publisher who types a contact address into a field that is not one.
 
 They do. [`dataset-shape.md`](dataset-shape.md) counts it, regenerated from the
-archive rather than remembered: **46 address-shaped values in 7 columns** that
-should hold a city, a registration number, a street, a website or a description
-— and **13 shaped like a person's own address** (`firstname.lastname@`), which
-is personal data landing in the dataset through a field the drop list has no
-reason to reject. That report carries counts and never values, for the same
-reason this entry does.
+archive rather than remembered: across five publication days, **427
+address-shaped values in 7 columns** that should hold a city, a registration
+number, a street, a website or a description — and **139 shaped like a person's
+own address** (`firstname.lastname@`), which is personal data landing in the
+dataset through a field the drop list has no reason to reject. That report
+carries counts and never values, for the same reason this entry does.
+
+**Widening the evidence changed where the problem is.** One day suggested a
+scattering across identity columns; five days put **359 of the 427 in
+`lot.description` and `procedure.description`** — free text, where a buyer
+writes "questions to firstname.lastname@example.org". Those two columns are
+carried as provenance and no classifier reads them (constraint 5), which bounds
+the exposure but does not remove it: they would be in a published dataset.
 
 Nothing is published yet, so this is not yet an exposure; it is one before the
 first dataset release. It also cannot be fixed by adding paths to the list,
@@ -49,10 +56,14 @@ UUIDs each appear twice in OJ S 157/2026**, published the same day under
 different notice numbers, with the same contract folder, issue date and
 subtype — one notice published twice.
 
+Nor is it a same-day artefact. Across the five days now measured, **six UUIDs
+carry two publications each, and one of those six spans two different
+publication dates** — so a date does not disambiguate them either.
+
 Every table is therefore keyed on `source_publication_id`, which is unique
-across all 3,190. `source_notice_id` is kept on every row because it is what
-links a corrigendum to what it corrects, and **anything joining on it may match
-more rows than it means to**.
+across all 19,180 notices measured. `source_notice_id` is kept on every row
+because it is what links a corrigendum to what it corrects, and **anything
+joining on it may match more rows than it means to**.
 
 ## Legacy TED notices are refused, not parsed
 
@@ -123,7 +134,7 @@ the parser and appears in **no notice measured**: zero blank leaves among all
 with an absent one would be silently wrong and costs nothing to avoid, not
 because this package shows it happening.
 
-Related: [`field-usage.md`](field-usage.md) reports 296 paths appearing "only as
+Related: [`field-usage.md`](field-usage.md) reports 323 paths appearing "only as
 containers or blank elements". The survey cannot tell those apart; parse can,
 and all of them are containers. The report's wording is hedged rather than
 wrong, and its numbers are unaffected.

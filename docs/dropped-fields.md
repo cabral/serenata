@@ -10,58 +10,70 @@
 
 ## What was measured
 
-- **3,190 eForms notices** from 1 package(s)
+- **19,180 eForms notices** from 5 package(s)
+  - `202600052.tar.gz` — `sha256:d9880b96cc2b20831b43dd1077724bea624b08582c275c4f7855f170b55ef035`
+  - `202600094.tar.gz` — `sha256:395c45325072b72bc8d902f508c7416619076290ef3e5fc677ea00ccfa389db7`
+  - `202600113.tar.gz` — `sha256:92aca3765e1bad95385e3525c47228383789fee8dfa87abf2110353855c61076`
   - `202600157.tar.gz` — `sha256:c90b2b7411bde50143e39ce57376442abc6880777b1fda70c54f7daac396d146`
+  - `202600168.tar.gz` — `sha256:537a6c7830d224f26cce54457b4bce3bcab46210bc60c402e47d3bfc6679bf4c`
 
-**32,135 of 897,471 leaf elements (3.6%) are dropped before they reach a record.**
+**197,625 of 5,603,500 leaf elements (3.5%) are dropped before they reach a record.**
 
 ## By the rule that rejected them
 
 | Rule | Leaves removed |
 |---|---:|
-| `cac:Contact` | 30,557 |
-| `efac:UltimateBeneficialOwner` | 1,486 |
-| `efac:FieldsPrivacy/efbc:ReasonDescription` | 85 |
-| `cac:TechnicalCommitteePerson` | 7 |
+| `cac:Contact` | 188,420 |
+| `efac:UltimateBeneficialOwner` | 8,337 |
+| `efac:FieldsPrivacy/efbc:ReasonDescription` | 825 |
+| `cac:TechnicalCommitteePerson` | 43 |
 
 ## What this costs the analysis
 
 **No dropped path is a column of the normalised model.** Every removal is a contact block, a beneficial owner, a named committee member, or a free-text privacy reason — never an amount, a date, a code, a bid count or a company identifier. Core classifiers read structured fields only (constraint 5), so a pipeline that kept this data would compute the same flags from it.
 
-**The exception worth naming: 1,486 of the removals are `efac:UltimateBeneficialOwner`.** Beneficial ownership is genuinely analysable — shell structures and conflicts of interest are read from it — and it is genuinely gone. A beneficial owner is a natural person by definition, so this is a capability the project has traded away deliberately rather than a gap to be closed by a schema change. `open-work.md` carries it as a decision for counsel.
+**The exception worth naming: 8,337 of the removals are `efac:UltimateBeneficialOwner`.** Beneficial ownership is genuinely analysable — shell structures and conflicts of interest are read from it — and it is genuinely gone. A beneficial owner is a natural person by definition, so this is a capability the project has traded away deliberately rather than a gap to be closed by a schema change. `open-work.md` carries it as a decision for counsel.
 
 ## Every dropped path
 
 | Leaves | Path |
 |---:|---|
-| 11,640 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:ElectronicMail` |
-| 11,540 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telephone` |
-| 4,071 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Name` |
-| 2,877 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telefax` |
-| 446 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:ID` |
-| 437 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:UltimateBeneficialOwner/cbc:ID` |
-| 390 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/efac:Nationality/cbc:NationalityID` |
-| 160 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ElectronicMail` |
-| 112 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telephone` |
-| 89 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:JobTitle` |
-| 63 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 41 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telefax` |
-| 35 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FamilyName` |
-| 28 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cac:Country/cbc:IdentificationCode` |
-| 27 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CountrySubentityCode` |
-| 26 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CityName` |
-| 26 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:PostalZone` |
-| 23 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:ElectronicMail` |
-| 23 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:StreetName` |
-| 17 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Name` |
-| 15 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telephone` |
-| 11 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 10 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 8 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telefax` |
-| 7 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:TechnicalCommitteePerson/cbc:FamilyName` |
-| 7 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Department` |
-| 2 | `notice/cac:SenderParty/cac:Contact/cbc:ElectronicMail` |
-| 2 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FirstName` |
-| 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:ReasonDescription` |
-| 1 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ID` |
+| 71,387 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:ElectronicMail` |
+| 70,647 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telephone` |
+| 27,214 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Name` |
+| 16,138 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Telefax` |
+| 2,498 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:ID` |
+| 2,466 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:UltimateBeneficialOwner/cbc:ID` |
+| 2,164 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/efac:Nationality/cbc:NationalityID` |
+| 1,176 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ElectronicMail` |
+| 787 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telephone` |
+| 539 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:JobTitle` |
+| 304 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 258 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FamilyName` |
+| 231 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Telefax` |
+| 210 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:Name` |
+| 180 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 178 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 173 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cac:Country/cbc:IdentificationCode` |
+| 130 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CountrySubentityCode` |
+| 130 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:PostalZone` |
+| 128 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:CityName` |
+| 122 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:ResidenceAddress/cbc:StreetName` |
+| 116 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:ElectronicMail` |
+| 88 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telephone` |
+| 84 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 72 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:Company/cac:Contact/cbc:Department` |
+| 51 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cac:Contact/cbc:Telefax` |
+| 27 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 24 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 22 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:TechnicalCommitteePerson/cbc:FirstName` |
+| 21 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:TechnicalCommitteePerson/cbc:FamilyName` |
+| 14 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AwardingTerms/cac:AwardingCriterion/cac:SubordinateAwardingCriterion/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:AwardCriterionParameter/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 13 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:Organization/efac:TouchPoint/cac:Contact/cbc:ID` |
+| 13 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:Organizations/efac:UltimateBeneficialOwner/cbc:FirstName` |
+| 6 | `notice/cac:SenderParty/cac:Contact/cbc:ElectronicMail` |
+| 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 4 | `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 3 | `notice/cac:TenderingProcess/cac:ProcessJustification/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:ReasonDescription` |
+| 3 | `notice/cac:TenderingProcess/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension/efac:FieldsPrivacy/efbc:ReasonDescription` |
 

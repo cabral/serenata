@@ -66,13 +66,20 @@ dropping the fields that can name a person as it reads, and
 [`serenata.normalise`](serenata/normalise/) writes those records as the
 documented model in Parquet.
 
-Against a real publication day, all 3,190 notices parse and become **98,629
-rows across twelve tables** — 4.2 MB, twelve seconds, and byte-identical when
-the run is repeated, which is the determinism the project's whole credibility
-rests on and is now a test rather than an intention. 3.6% of every leaf element
-in the package — the contact details, beneficial owners and named evaluators
+Against five real publication days spanning March to September 2026, all
+**19,180 notices parse and become 632,068 rows across twelve tables**,
+byte-identical when a run is repeated — the determinism the project's whole
+credibility rests on, and now a test rather than an intention. **3.5% of every
+leaf element** — the contact details, beneficial owners and named evaluators
 listed in [`docs/personal-data.md`](docs/personal-data.md) — is dropped before
 it reaches a record.
+
+Widening the evidence from one day to five is also how the model gets corrected:
+five notices turned out to state two legal grounds for their procedure where the
+first day's 3,190 never stated more than one, and they failed to normalise
+rather than silently storing one of the two. `procedure.process_reason_codes` is
+a set now. The design that makes that a visible failure instead of an arbitrary
+value is [ADR-0007](docs/adr/0007-repeated-values-are-carried-not-resolved.md).
 
 What that dataset looks like — rows per table, how populated every column is,
 how many withheld sentinels it carries — is
@@ -87,6 +94,14 @@ UUID turned out not to be unique, most columns turned out to repeat, and a
 withheld value turned out to be published as `-1` rather than omitted. Each
 correction is in [`docs/data-model.md`](docs/data-model.md) with the
 measurement behind it.
+
+The first classifier is scoped rather than built. Two case files in
+[`docs/cases/`](docs/cases/) take the best-established red flag in the
+literature — a single bid on a competitive procedure — through the project's
+intake gates and **reject it**: it fires on 36.8% of competitive lot outcomes,
+which describes the market rather than flagging anything in it. What survives is
+the comparative form, measured at 2.23%. Rejected cases keep their file here,
+because what a project declined to publish is part of its method.
 
 **There is still no classifier and no flag.** Legacy pre-2024 TED notices are
 refused rather than parsed, because the mapping for them has never been
