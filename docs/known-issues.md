@@ -69,19 +69,6 @@ of the historical record.
 Tracked as [open-work #3](open-work.md#3-document-and-drop-the-fields-that-can-name-a-natural-person)
 and issue [#13](https://github.com/cabral/serenata/issues/13).
 
-## The survey and the parse stage disagree on what a notice is
-
-`serenata.survey` decides a member is eForms from its **filename** — eight
-digits and a year — while `serenata.parse` decides from the **root element's
-namespace**. An eForms document delivered under a legacy-style filename is
-counted by the survey as a skipped legacy notice and parsed by parse.
-
-In the surveyed package this changes nothing: it contains 3,190 eForms notices
-and zero legacy ones, and every filename matches its content. But
-[`field-usage.md`](field-usage.md)'s counts rest on the filename heuristic, so
-the figure to quote is "eForms-named notices", not "eForms notices". Parse's
-test is the better one and the survey should adopt it — issue [#18](https://github.com/cabral/serenata/issues/18).
-
 ## Two thirds of withheld fields are marked; the rest are named, not marked
 
 A publisher may withhold a field through `efac:FieldsPrivacy`, and eForms

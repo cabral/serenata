@@ -32,8 +32,10 @@ from serenata.eforms import (
     EFORMS_PREFIXES,
     HEADER_BYTES,
     ROOT,
+    NotEForms,
     NoticeRejected,
     PrologGuard,
+    accept_eforms_root,
     qualified_name,
     stream_elements,
 )
@@ -48,6 +50,7 @@ __all__ = [
     "EFORMS_PREFIXES",
     "HEADER_BYTES",
     "ROOT",
+    "NotEForms",
     "NoticeRejected",
     "NoticeShape",
     "PrologGuard",
@@ -83,6 +86,10 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
     document. The walk itself is `serenata.eforms.stream_elements`, shared with
     the parse stage; what is counted here is this module's own.
 
+    Raises `NotEForms` for a document whose root says it is not an eForms
+    notice — the same test the parse stage applies, so a member cannot be a
+    notice to one stage and not to the other.
+
     Two things are counted. **Presence** — which paths carry a value — is what
     the data model was first written against. **Cardinality** is what it turned
     out to need as well: how many times a path occurs inside a single record,
@@ -113,6 +120,15 @@ def read_notice(source: IO[bytes]) -> NoticeShape:
     for event, name, element in stream_elements(source):
         if event == "start":
             if root_type is None:
+                accept_eforms_root(
+                    element.tag,
+                    because=(
+                        "the paths this survey counts are the eForms "
+                        "vocabulary, so measuring another format against them "
+                        "would report field usage for fields that are not the "
+                        "ones being counted (open-work #3)"
+                    ),
+                )
                 root_type = name
             step = ROOT if not joined else name
             here = f"{joined[-1]}/{step}" if joined else step

@@ -14,12 +14,12 @@ from pathlib import Path
 from xml.etree.ElementTree import ParseError
 
 from serenata.packages import notice_members
-from serenata.survey.paths import NoticeRejected, NoticeShape, read_notice
-
-#: eForms notice filenames carry eight digits and a year; legacy TED schema
-#: notices carry six. This survey covers eForms only, and counts the rest rather
-#: than quietly dropping them.
-EFORMS_DIGITS = 8
+from serenata.survey.paths import (
+    NotEForms,
+    NoticeRejected,
+    NoticeShape,
+    read_notice,
+)
 
 #: Reuse of TED data is conditioned on acknowledging the source (Commission
 #: Decision 2011/833/EU). Generated into every report rather than pasted into
@@ -53,7 +53,14 @@ class Survey:
     """Counts accumulated over every notice surveyed."""
 
     notices: int = 0
+    #: Members whose root element is the legacy TED one. A format this survey
+    #: has no vocabulary for, not a document it failed to read.
     skipped_legacy: int = 0
+    #: Members that are neither: XML in the package that no reader here claims.
+    #: Kept apart from the legacy count because the two ask for different work
+    #: — one is open-work #3, the other is a package carrying something nobody
+    #: expected.
+    not_notices: int = 0
     unreadable: int = 0
     packages: list[str] = field(default_factory=list)
     root_types: Counter[str] = field(default_factory=Counter)
@@ -90,14 +97,15 @@ class Survey:
         return self.valued[path] / self.notices if self.notices else 0.0
 
 
-def is_eforms(member_name: str) -> bool:
-    """eForms notices are named with eight digits and the year."""
-    stem = Path(member_name).name.split("_")[0]
-    return stem.isdigit() and len(stem) == EFORMS_DIGITS
-
-
 def survey_package(package: Path, into: Survey | None = None) -> Survey:
     """Read every eForms notice in an archived daily package.
+
+    Which members those are is decided by `read_notice`, from the root element
+    each document declares — the parse stage's test, adopted here so the two
+    readers of a package cannot disagree about what it contains. This used to
+    be read off the filename, and a filename is a claim: an eForms notice
+    delivered under a legacy-style name was parsed by one stage and counted as
+    skipped by the other.
 
     Members are streamed out of the tarball rather than extracted to disk; a
     package holds a few thousand notices and roughly 200 MB uncompressed.
@@ -105,13 +113,18 @@ def survey_package(package: Path, into: Survey | None = None) -> Survey:
     survey = into if into is not None else Survey()
     survey.packages.append(package.name)
 
-    for name, handle in notice_members(package):
-        if not is_eforms(name):
-            survey.skipped_legacy += 1
-            continue
+    for _name, handle in notice_members(package):
         try:
             # Streamed, not read whole: one notice in this package is 40 MB.
             survey.add(read_notice(handle))
+        except NotEForms as rejected:
+            # A format rather than a failure, and a cheap one to find: the
+            # refusal lands on the first start event, so a member in another
+            # format costs one read rather than a walk through its elements.
+            if rejected.legacy:
+                survey.skipped_legacy += 1
+            else:
+                survey.not_notices += 1
         except (ParseError, NoticeRejected):
             # Counted and reported rather than aborting a 3,000-notice run
             # on one bad document. render() surfaces the count.
@@ -158,6 +171,11 @@ def render(survey: Survey) -> str:
         add(
             f"- {survey.skipped_legacy:,} legacy TED schema notices skipped — "
             "this survey covers eForms only"
+        )
+    if survey.not_notices:
+        add(
+            f"- {survey.not_notices:,} members skipped — XML whose root element "
+            "is neither an eForms notice nor a legacy TED one"
         )
     if survey.unreadable:
         add(f"- {survey.unreadable:,} members could not be read")

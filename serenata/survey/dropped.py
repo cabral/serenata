@@ -38,10 +38,10 @@ from typing import IO
 from xml.etree.ElementTree import ParseError
 
 from serenata.eforms import (
-    LEGACY_ROOT,
     ROOT,
+    NotEForms,
     NoticeRejected,
-    is_eforms_root,
+    accept_eforms_root,
     stream_elements,
 )
 from serenata.normalise.model import (
@@ -172,8 +172,8 @@ def _count_notice(handle: IO[bytes], into: Dropped) -> None:
     matches against — rather than at the document's own root element, so a
     contract notice and an award notice report the same path for the same field.
 
-    Raises `NoticeRejected` for a format whose drop list does not exist, which
-    is the legacy TED case. Counting zero removals for a legacy notice would
+    Raises `NotEForms` for a format whose drop list does not exist, which is
+    the legacy TED case. Counting zero removals for a legacy notice would
     report the drop list as complete over data it has never been written for.
     """
     stack: list[str] = [ROOT]
@@ -185,13 +185,13 @@ def _count_notice(handle: IO[bytes], into: Dropped) -> None:
                 # The document's own root stands in for `ROOT`, so a contract
                 # notice and an award notice report the same path for a field.
                 root_seen = True
-                name = element.tag.rpartition("}")[2]
-                if not is_eforms_root(element.tag):
-                    raise NoticeRejected(
-                        f"{'legacy TED' if name == LEGACY_ROOT else name} notice: "
+                accept_eforms_root(
+                    element.tag,
+                    because=(
                         "no drop list has been written for this format, so "
                         "nothing here can be measured (open-work #3)"
-                    )
+                    ),
+                )
                 continue
             children[-1] += 1
             stack.append(qname)
@@ -216,10 +216,14 @@ def dropped_package(package: Path, into: Dropped | None = None) -> Dropped:
     for _name, handle in notice_members(package):
         try:
             _count_notice(handle, found)
-        except NoticeRejected:
+        except NotEForms:
+            # A format with no drop list, which is a different thing from a
+            # document that could not be read: one is open-work #3, the other
+            # is a broken or unsafe notice. Folding them together would report
+            # a package of legacy notices as damaged.
             found.unmeasured += 1
             continue
-        except ParseError:
+        except (NoticeRejected, ParseError):
             found.unreadable += 1
             continue
         found.notices += 1
