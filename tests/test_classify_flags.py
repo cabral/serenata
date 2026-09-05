@@ -26,7 +26,7 @@ from serenata.classify.records import FLAG_COLUMNS, Flag, notice_url
 from serenata.classify.single_bid_in_segment import RULE, RULE_VERSION, flags
 from serenata.normalise import PARTITION
 
-from .test_classify_single_bid import market
+from .test_classify_single_bid import CUTOFF, market
 
 
 def written(root: Path) -> dict[str, str]:
@@ -50,7 +50,12 @@ class TestAFlagCarriesItsEvidence:
     def test_it_names_the_rule_and_its_version(self) -> None:
         flag = flags(market(100, 1))[0]
         assert (flag.rule, flag.rule_version) == (RULE, RULE_VERSION)
-        assert RULE_VERSION == 2
+        assert RULE_VERSION == 3
+
+    def test_it_carries_the_corpus_its_supersession_check_saw(self) -> None:
+        """Without it the row cannot say which corrections it could have seen."""
+        flag = flags(market(100, 1))[0]
+        assert flag.correction_cutoff == CUTOFF
 
     def test_it_carries_the_values_the_rule_read(self) -> None:
         flag = flags(market(100, 1))[0]

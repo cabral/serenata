@@ -74,9 +74,9 @@ new version**, not its historical record. Keep that record labelled with its
 measured version, set status to `building` and current measurement to `pending`,
 then remeasure **before merge**, not merely before release. Do not relabel
 historical counts as new evidence. The single-bid rule went through this cycle
-for version 2: its 96 flags from 8,159 eligible lot outcomes are recorded as a
-version-2 measurement because version 2 was rerun to produce them, not because
-version 1 had measured the same numbers.
+for versions 2 and 3: its 96 flags are recorded as a version-3 measurement
+because version 3 was rerun to produce them, not because an earlier version had
+measured something close.
 
 **This gate checks metadata sanity, not truth or approval.** It does not read
 real data, rerun SQL, verify that a Git revision contains the claimed query,

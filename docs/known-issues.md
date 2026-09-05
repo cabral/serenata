@@ -14,31 +14,32 @@ and what each piece needs — and every open item there has an issue mirroring i
 `classify` runs, and it runs one rule:
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md), which flags a
 lot that drew a single bid in a market where single bids are rare. The measured
-run over five archived publication days produces **96 flags from 8,159 lot
-outcomes**. Eligible segments cover 4,299 outcomes (52.7%); 3,860 (47.3%) are
+run over five archived publication days produces **96 flags from 8,157 lot
+outcomes**. Eligible segments cover 4,299 outcomes (52.7%); 3,858 (47.3%) are
 below the segment-size floor. These are base-rate and coverage measurements, not
 empirical error rates.
 
-**Version 2 is implemented and measured.** It rejects duplicate structural/join
-keys, ambiguous and fractional tender counts, requires a present statistic code
-and requires every buyer reference to resolve to a present, agreed country. The
-writer stages replacements and removes stale rule files on success; multi-year
-replacement is not transactional. On this archive version 2 admits exactly what
-version 1 admitted, so the counts above hold for both — that is a fact about
-this corpus, not a guarantee about a larger one. The mandatory CI
+**Version 3 is implemented and measured.** It rejects duplicate structural/join
+keys, ambiguous and fractional tender counts, requires a present statistic code,
+requires every buyer reference to resolve to a present, agreed country, and
+excludes notices another notice in the corpus corrects (ADR-0013). The writer
+stages replacements and removes stale rule files on success; multi-year
+replacement is not transactional. The supersession exclusion removes two lot
+outcomes here, both below the segment floor, so the flags are unchanged — a
+fact about this corpus, not a guarantee about a larger one. The mandatory CI
 `--require-current-measurements` check passes; passing it is metadata sanity,
 not proof of the measurement. Any further real-data measurement still needs the
 unresolved processing review.
 
 **No flag has been published, and release remains blocked.** Open gates include:
 
-- A flag on a notice later corrected or withdrawn is a flag on something that
-  no longer stands, and the pipeline records the corrigendum link without
-  acting on it. The structure is now measured
-  ([correction-links.md](correction-links.md)) and the mapping proposed
-  ([ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)); deterministic
-  code and tests are still needed, and withdrawals remain undesignable until the
-  change reason is measured —
+- A flag on a notice later **withdrawn** is a flag on something that no longer
+  stands, and withdrawals are not handled: nothing measured distinguishes one
+  from a correction, because the change reason is not in the model. Corrections
+  are handled — version 3 excludes notices another notice in the corpus corrects
+  ([ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)) — but only 1.6%
+  of links resolve within a five-day archive, so a corrected notice whose
+  corrigendum was published on an unheld day is still classified as live —
   [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
 - Whether an entity may be named at all when its natural-person status is
   unknown, and whether current processing is permitted —

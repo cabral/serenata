@@ -8,11 +8,10 @@
 -- directly rather than through a database keeps this rerunnable by anyone who
 -- has the archive: same packages in, same numbers out (ADR-0001).
 --
--- Counts below are VERSION 2, measured 2026-09-05 over OJ S 52, 94, 113, 157
--- and 168 of 2026 (19,180 notices). Duplicate key validation, unanimous buyer
--- country, statistic-code status and exact whole-count validation define this
--- population; on this archive they admit exactly what version 1 admitted, so
--- the version-1 counts reproduce here unchanged.
+-- Counts below are VERSION 3, measured 2026-09-05 over OJ S 52, 94, 113, 157
+-- and 168 of 2026 (19,180 notices). Version 3 adds the ADR-0013 supersession
+-- exclusion to version 2's duplicate key validation, unanimous buyer country,
+-- statistic-code status and exact whole-count validation.
 
 CREATE OR REPLACE VIEW lot_result_statistic AS
   SELECT * FROM read_parquet('data/normalised/lot_result_statistic/**/*.parquet',
@@ -32,6 +31,28 @@ CREATE OR REPLACE VIEW organisation AS
 CREATE OR REPLACE VIEW organisation_role AS
   SELECT * FROM read_parquet('data/normalised/organisation_role/**/*.parquet',
                              hive_partitioning = true);
+CREATE OR REPLACE VIEW notice AS
+  SELECT * FROM read_parquet('data/normalised/notice/**/*.parquet',
+                             hive_partitioning = true);
+
+-- A notice another notice in this corpus corrects (ADR-0013). Matching is on
+-- the target identifier alone: 28 of the 46 resolvable links in the measured
+-- archive name a version other than the one held, and a link naming version 02
+-- is evidence that a version 02 exists, which the copy held at version 01 is
+-- already behind. Excluding only exact version matches would keep 28 notices
+-- measurably stale. The notice identifier is not unique — the same notice is
+-- published twice under different numbers — so one corrector may exclude both
+-- copies, which is the intent: both are that notice.
+CREATE OR REPLACE VIEW superseded AS
+SELECT t.source_publication_id,
+       count(*) FILTER (WHERE c.changed_notice_version = t.version_id)
+         AS corrected_at_this_version,
+       count(*) AS correctors
+FROM notice t
+JOIN notice c
+  ON c.changed_notice_namespace = 'eforms'
+ AND c.changed_notice_target = t.source_notice_id
+GROUP BY 1;
 
 -- Fail closed before the population is read. Do not deduplicate identical rows
 -- or choose among conflicting rows, even across years. Errors expose no record
@@ -176,7 +197,8 @@ WHERE s.statistic_kind = 'received_submissions'
                            'innovation', 'neg-w-call')
   AND l.cpv_code_status = 'present'
   AND NOT list_has_any(l.contracting_system_codes,
-                       ['fa-wo-rc', 'fa-w-rc', 'fa-mix', 'dps-list', 'dps-nlist']);
+                       ['fa-wo-rc', 'fa-w-rc', 'fa-mix', 'dps-list', 'dps-nlist'])
+  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM superseded);
 
 -- The segment baseline: buyer country and CPV division, over this dataset.
 CREATE OR REPLACE VIEW segment AS

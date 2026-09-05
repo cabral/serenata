@@ -114,6 +114,7 @@ def _duplicate_query(root: Path) -> str:
     by carrying the very duplicate organisations that would exclude it.
     """
     inputs = {
+        "notice",
         "procedure",
         "lot",
         "lot_result",
@@ -178,6 +179,27 @@ WITH counted_statistics AS (
                 THEN TRY_CAST(split_part(statistic_value, '.', 1) AS BIGINT)
            END AS bids
     FROM {_table(root, "lot_result_statistic")}
+), superseded AS (
+    -- A notice another notice in this corpus corrects (ADR-0013). Matching is
+    -- on the target identifier alone, not the target identifier and version:
+    -- 28 of the 46 resolvable links in the measured archive name a version
+    -- other than the one held, and a link naming version 02 is evidence that a
+    -- version 02 exists, which the copy held at version 01 is already behind.
+    -- Excluding only exact version matches would keep 28 notices measurably
+    -- stale, so both cases leave the population, for reasons kept apart here.
+    -- The notice identifier is not unique — the same notice is published twice
+    -- under different numbers — so one corrector may exclude both copies. That
+    -- is the intent: both are that notice.
+    SELECT t.source_publication_id,
+           count(*) FILTER (
+               WHERE c.changed_notice_version = t.version_id
+           ) AS corrected_at_this_version,
+           count(*) AS correctors
+    FROM {_table(root, "notice")} t
+    JOIN {_table(root, "notice")} c
+      ON c.changed_notice_namespace = 'eforms'
+     AND c.changed_notice_target = t.source_notice_id
+    GROUP BY 1
 ), buyer_country AS (
     SELECT r.source_publication_id,
            min(o.country_code) AS country
@@ -200,7 +222,13 @@ SELECT s.source_publication_id,
        lr.lot_ref,
          s.bids,
        b.country,
-       substr(l.cpv_code, 1, 2) AS cpv_division
+       substr(l.cpv_code, 1, 2) AS cpv_division,
+       -- The corpus supersession was evaluated against, from the data and
+       -- never the clock. A reader knows corrections published after this day
+       -- are not reflected, which a flag cannot otherwise say.
+       (SELECT max(substr(publication_date, 1, 10))
+          FROM {_table(root, "notice")}
+         WHERE publication_date_status = 'present') AS correction_cutoff
 FROM counted_statistics s
 JOIN {_table(root, "lot_result")} lr
   ON lr.source_publication_id = s.source_publication_id
@@ -221,6 +249,7 @@ WHERE s.statistic_kind = 'received_submissions'
   AND p.procedure_code IN ({procedures})
   AND l.cpv_code_status = 'present'
   AND NOT list_has_any(l.contracting_system_codes, [{systems}])
+  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM superseded)
 ORDER BY s.source_publication_id, s.lot_result_ordinal
 """
 
@@ -250,8 +279,19 @@ def read_outcomes(root: Path) -> list[LotOutcome]:
             bids=int(bids),
             country=str(country),
             cpv_division=str(division),
+            correction_cutoff=str(cutoff),
         )
-        for publication, notice, year, ordinal, lot_ref, bids, country, division in rows
+        for (
+            publication,
+            notice,
+            year,
+            ordinal,
+            lot_ref,
+            bids,
+            country,
+            division,
+            cutoff,
+        ) in rows
     ]
 
 

@@ -4,7 +4,8 @@
   reason is measured
 - Date: 2026-09-05
 - Enforced by: `tests/test_normalise_corrections.py::TestTheColumnsTheModelBuilds`
-  for the link parts. Supersession is not implemented, and no test claims it is;
+  for the link parts and `tests/test_classify_corrections.py` for supersession.
+  Withdrawals are not implemented and no test claims they are;
   [`docs/correction-links.sql`](../correction-links.sql) reproduces the measurement
 
 ## Context
@@ -52,9 +53,16 @@ requires "not provided" and "not applicable" to stay distinct; "present but not
 resolvable here" is a third state and gets its own value.
 
 **A notice is superseded when another notice in the same corpus targets its
-identifier and version.** Precedence follows a total order derived from the
-data — publication date, then package, then notice identifier — never arrival
-order and never the clock.
+identifier.** Not its identifier *and* version, which is what this decision
+first said: 28 of the archive's 46 resolvable links name a version other than
+the one held, and a link naming version 02 is evidence that a version 02 exists,
+which the copy held at version 01 is already behind. Matching exactly on version
+would keep those 28 notices in the population while knowing they are stale. The
+version each link names is still recorded, so the two cases stay distinguishable.
+
+The notice identifier is not unique — the model already documents the same
+notice published twice under different numbers — so one corrector can exclude
+both copies. That is the intent: both are that notice.
 
 **Where the data does not decide, the pipeline refuses rather than picks.** Two
 notices correcting one target make that target `ambiguous`. A link that resolves
@@ -92,16 +100,20 @@ corpus, adopting this changes no flag today. That is the absence of evidence of
 staleness, not evidence of currency, and it is why this is a release blocker
 rather than a completed item.
 
-Acceptance tests, all on synthetic fixtures, before any claim that this is
-implemented: original → correction → later correction; withdrawal once
-detectable; superseded notices; duplicate, missing, ambiguous and cyclic links;
-out-of-order arrivals; stable precedence and cutoff semantics with no double
-counting; explicit hold where current state cannot be resolved; changed
-eligibility and segment membership with recomputed baselines, including notices
-that gain or lose a flag without themselves changing; rule-version and evidence
-mismatch rejection; replacement of stale output including empty results and
-cross-year partitions; byte-identical reruns and input-order invariance, with
-materially changed inputs changing expected outputs.
+Implemented in `RULE_VERSION` 3, which removes two lot outcomes from the
+archive's population of 8,159 — both in segments below the size floor, so
+coverage, the segment rates and the 96 flags are unchanged.
+
+Acceptance tests cover, on synthetic fixtures: a corrected notice leaving the
+population while its corrector stays; a link naming another version; a link
+naming the version held; two correctors excluding one target once; a chain; a
+self-reference terminating; and, excluding nothing, a link out of the corpus, a
+legacy link, an unrecognised shape and no link at all. The cutoff travels to
+every outcome and every flag, reruns are byte-identical, and a correction
+arriving changes the population rather than being asserted vacuously.
+
+Withdrawals have **no** test, because they have no behaviour: a test here would
+be inventing the feature it checks.
 
 ## Revisit triggers
 

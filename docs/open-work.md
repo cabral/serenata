@@ -59,7 +59,7 @@ before publication.
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | eForms structural drops built; privacy gaps and legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | **done** | [#17](https://github.com/cabral/serenata/issues/17) |
-| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | measured and designed (ADR-0013 proposed); code and tests pending; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | corrections implemented (ADR-0013); withdrawals blocked on measuring the change reason; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
@@ -212,10 +212,15 @@ the mapping from it. What the measurement changed about the design:
   correction. The change reason is not in the model and the path survey records
   presence, not values.
 
-**Done when** deterministic code applies the ADR's mapping to the population and
-affected flags, with the synthetic acceptance tests the ADR lists, a
-`RULE_VERSION` bump and a current-version remeasurement. A written policy, a
-proposed ADR or an unused link is not an implementation.
+**Corrections are implemented; withdrawals are not.** `RULE_VERSION` 3 excludes
+notices another notice in the corpus corrects, every flag carries the
+`correction_cutoff` its check saw, and the rule is remeasured at version 3:
+8,157 lot outcomes, the same 96 flags. Two outcomes leave, both below the
+segment floor.
+
+**Done when** withdrawals are handled too, which needs the change reason
+measured first — it is not in the model, and the path survey records presence
+rather than values. Until then a withdrawn notice is treated as a live one.
 
 **Release blocker.** Adopting ADR-0013 changes no flag today — none of the 96
 sits on a notice corrected within the corpus — which is the absence of evidence
@@ -462,19 +467,19 @@ gap from 143 of 215 blocks to 212 as a side effect.
 **Version 2 built and measured.** `serenata classify` runs
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md) over the
 normalised dataset and writes flags as Parquet. The measured run over five
-publication days produces **96 flags from 8,159 lot outcomes**, byte-identical
+publication days produces **96 flags from 8,157 lot outcomes**, byte-identical
 on rerun, each carrying the baseline it was measured against
 ([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). Eligible segments
-cover 4,299 outcomes (52.7%), excluding 3,860 (47.3%) below the size floor.
+cover 4,299 outcomes (52.7%), excluding 3,858 (47.3%) below the size floor.
 These are coverage and base-rate figures, not empirical error rates.
 
 Version 2 rejects duplicate structural/join keys, ambiguous and fractional
 tender counts, requires a present statistic code and resolves every buyer
 reference to a present, agreed country. Output is staged before replacement and
 stale rule files are removed on success; a multi-year replacement is not
-transactional. On this archive version 2 admits exactly what version 1
-admitted, so the figures above are the remeasured ones; that is a fact about
-this corpus and not a general one. CI's `--require-current-measurements` gate
+transactional. Version 3 adds the ADR-0013 supersession exclusion, which
+removes two lot outcomes here, both below the segment floor; that is a fact
+about this corpus and not a general one. CI's `--require-current-measurements` gate
 passes, which is metadata sanity rather than proof of the measurement, and
 default local tests do not clear it. Any further real-data measurement depends
 on the unresolved processing review below.

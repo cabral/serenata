@@ -53,6 +53,10 @@ class LotOutcome:
     #: The market this outcome is compared against.
     country: str
     cpv_division: str
+    #: The latest publication day in the corpus supersession was evaluated
+    #: against (ADR-0013). Corrections published after it are not reflected,
+    #: and a flag that did not say so would overstate how current it is.
+    correction_cutoff: str
 
     @property
     def segment(self) -> tuple[str, str]:
@@ -85,6 +89,10 @@ class Flag:
     segment_cpv_division: str
     segment_size: int
     segment_single_bids: int
+    #: The corpus this flag's supersession check saw, carried for the same
+    #: reason as the baseline beside it: a reader can tell what it could and
+    #: could not have known (ADR-0011, ADR-0013).
+    correction_cutoff: str
 
     @property
     def sort_key(self) -> tuple[str, int]:
