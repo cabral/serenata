@@ -3,19 +3,21 @@
 Status: building
 
 The classifier exists and runs, and its measured base rate reproduces: over
-the five archived publication days, version 3 produces 96 flags from 8,157 lot
+the five archived publication days, version 4 produces 96 flags from 8,132 lot
 outcomes, the same numbers the [query](single_bid_in_segment.sql) beside this
 file reports.
 
-Version 3 excludes notices another notice in the corpus corrects
-([ADR-0013](../adr/0013-correction-and-withdrawal-semantics.md)), which removes
-**two lot outcomes** from version 2's population of 8,159. Both sat in segments
-below the size floor, so coverage, the segment rates and the flags are
-unchanged. Version 2 in turn tightened population integrity and three
-exclusions and measured identically to version 1. Each of those is a statement
-about this corpus, not a general one: the rules are guarantees about what the
-population may contain, and on a corpus where they bind they will move the
-numbers.
+Versions 3 and 4 apply [ADR-0013](../adr/0013-correction-and-withdrawal-semantics.md):
+version 3 excludes notices another notice in the corpus corrects, removing two
+lot outcomes from version 2's 8,159; version 4 also excludes notices announcing
+that their own procurement is cancelled, intended to be cancelled, or suspended
+pending review, removing a further 25 from 5 notices. **The flags are unchanged
+at 96 through both**, because none of the excluded outcomes was flagged.
+Coverage moves slightly, from 4,299 to 4,283. Version 2 in turn tightened
+population integrity and three exclusions and measured identically to version 1.
+Each of those is a statement about this corpus, not a general one: the rules are
+guarantees about what the population may contain, and on a corpus where they
+bind they will move the numbers.
 
 It is not `live`, because nothing it produces may be published yet — see the
 legal check.
@@ -72,6 +74,15 @@ for a human verifier.
 
 ## Population and denominator
 
+A notice **announcing that its own procurement is not proceeding normally is
+excluded entirely**, with its lot results: change reason `cancel`,
+`cancel-intent` or `susp-review` from the eForms `change-corrig-justification`
+list. `cancel` is terminal; the other two announce an intention and a
+suspension. Treating all three alike is a judgement, not a reading of the code
+list — each means the outcome is unsettled, and silence is the honest output.
+Measured here: 14, 18 and 9 notices. The other five codes are corrections and
+exclude nothing on their own.
+
 A notice **another notice in this corpus corrects is excluded entirely**, with
 its lot results. Matching is on the target identifier alone, not the identifier
 and version: 28 of the 46 resolvable links in this archive name a version other
@@ -79,8 +90,12 @@ than the one held, and a link naming version 02 is evidence a version 02 exists,
 which the copy held at version 01 is already behind. Excluding only exact
 version matches would keep notices measurably stale. A flag carries the
 `correction_cutoff` its check saw — the corpus's latest publication day — so a
-reader knows which corrections it could not have known about. Withdrawals are
-**not** handled: nothing measured distinguishes one from a correction.
+reader knows which corrections it could not have known about.
+
+**117 links carry no reason code**, and a reason may appear with no link, so the
+two are read independently and neither is inferred from the other. The
+free-text `efbc:ReasonDescription` is not ingested: it could carry a person's
+own words (constraint 2) and no classifier may read it (constraint 5).
 
 One row per lot result of a notice that survives that, included when all of
 these hold:
@@ -158,11 +173,11 @@ sanity, not the data, the query's results, or approval to release or publish.
 
 ```toml
 [admission]
-current_rule_version = 3
+current_rule_version = 4
 current_measurement = "measured"
 
 [measurement]
-rule_version = 3
+rule_version = 4
 measured_on = 2026-09-05
 period_start = 2026-01-01
 period_end = 2026-09-05
@@ -170,10 +185,10 @@ package_ids = ["202600052", "202600094", "202600113", "202600157", "202600168"]
 query_file = "single_bid_in_segment.sql"
 query_revision = "working-tree"
 notice_count = 19180
-population_count = 8157
-population_notice_count = 3788
-covered_count = 4299
-uncovered_count = 3858
+population_count = 8132
+population_notice_count = 3783
+covered_count = 4283
+uncovered_count = 3849
 flagged_count = 96
 flagged_notice_count = 71
 ```
@@ -183,31 +198,31 @@ beyond this archive, nor to publish anything computed from it.
 
 ## Base rate
 
-Measured 2026-09-05 under version 3, against five archived publication days of
+Measured 2026-09-05 under version 4, against five archived publication days of
 2026 — OJ S 52, 94, 113, 157 and 168, 19,180 notices. The query is
 `single_bid_in_segment.sql` beside this file, including its integrity gate and
-its supersession exclusion. Versions 1 and 2 measured 8,159 lot results on the
-same archive; the two the supersession exclusion removes are the difference.
+both ADR-0013 exclusions. Versions 1 and 2 measured 8,159 lot results on the
+same archive; supersession removes 2 and withdrawal a further 25.
 
-- **Population**: 8,157 lot results, from 3,788 notices.
-- **Single bid anywhere in it**: 3,434, or 42.1%. That is the rate case 001 was
+- **Population**: 8,132 lot results, from 3,783 notices.
+- **Single bid anywhere in it**: 3,423, or 42.1%. That is the rate case 001 was
   rejected on: a flag firing on two in five awards describes the market.
-- **Segments with at least 50 lot results**: 26, covering 4,299 of the
+- **Segments with at least 50 lot results**: 26, covering 4,283 of the
   population. Their single-bid rates run from 6.5% to 78.2%, median 35.2%.
-- **Flags**: **96, in 71 notices — 2.23% of the population the rule can speak
-  about**, and 1.18% of the whole population.
+- **Flags**: **96, in 71 notices — 2.24% of the population the rule can speak
+  about** — 96 of 4,283 — and 1.18% of the whole population.
 
 Sensitivity, same dataset, flags at each parameter pair:
 
 | Segment floor | Segments | Covered | <10% | <15% | <20% | <25% |
 |---:|---:|---:|---:|---:|---:|---:|
-| 30 | 47 | 5,051 | 33 | 117 | 123 | 160 |
-| 50 | 26 | 4,299 | 26 | 96 | 96 | 133 |
-| 75 | 11 | 3,409 | 20 | 76 | 76 | 76 |
-| 100 | 8 | 3,155 | 20 | 64 | 64 | 64 |
+| 30 | 47 | 5,027 | 33 | 117 | 123 | 160 |
+| 50 | 26 | 4,283 | 26 | 96 | 96 | 133 |
+| 75 | 11 | 3,393 | 20 | 76 | 76 | 76 |
+| 100 | 7 | 3,047 | 20 | 64 | 64 | 64 |
 
-**Coverage is a narrow majority, not a minority.** 4,299 of 8,157 lot results
-(52.7%) are in eligible segments; the other 3,858 (47.3%) sit in segments below
+**Coverage is a narrow majority, not a minority.** 4,283 of 8,132 lot results
+(52.7%) are in eligible segments; the other 3,849 (47.3%) sit in segments below
 the floor. The honest output there is silence, not a flag.
 
 **Anticipated false-positive profile.** Not yet verified case by case — no

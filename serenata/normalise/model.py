@@ -203,6 +203,15 @@ NOTICE_TABLE = Table(
         # types differ before any field is read.
         Column("root_element", kind=Kind.COMPUTED),
         Column("changed_notice_id", f"{EXT}/efac:Changes/efbc:ChangedNoticeIdentifier"),
+        # Why the notice was changed, from the eForms
+        # `change-corrig-justification` list. The free-text
+        # `efbc:ReasonDescription` beside it is deliberately not read: it is
+        # free text, so it could carry a person's words (constraint 2) and no
+        # classifier may read it anyway (constraint 5).
+        Column(
+            "change_reason_code",
+            f"{EXT}/efac:Changes/efac:ChangeReason/cbc:ReasonCode",
+        ),
         # The link parsed into its parts (ADR-0013). Two identifier namespaces
         # share the column, so which one a link used is recorded rather than
         # assumed, and an unrecognised shape is `unknown` rather than dropped.

@@ -44,7 +44,8 @@ record of how each was built and what it corrected is in the
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing and a publication rule |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
-| [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 6, 11 and 14 |
+| [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 11, 14 and 18 |
+| [18](#18-validate-correction-handling-against-a-continuous-archive) | A continuous archive, then remeasurement | blocked release; needs the ADR-0010 review |
 
 The eForms prototype and first classifier are built. Remaining work includes
 engineering, empirical measurement and legal decisions; it is not just paperwork
@@ -59,7 +60,7 @@ before publication.
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | eForms structural drops built; privacy gaps and legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | **done** | [#17](https://github.com/cabral/serenata/issues/17) |
-| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | corrections implemented (ADR-0013); withdrawals blocked on measuring the change reason; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | **done** — corrections and withdrawals implemented and measured (ADR-0013) | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
@@ -70,7 +71,8 @@ before publication.
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
-| 17 | [Build the first classifier](#17-build-the-first-classifier) | **v2 built and measured**; verification and release blocked | [#33](https://github.com/cabral/serenata/issues/33) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | **v4 built and measured**; verification and release blocked | [#33](https://github.com/cabral/serenata/issues/33) |
+| 18 | [Validate correction handling against a continuous archive](#18-validate-correction-handling-against-a-continuous-archive) | mechanism built; unexercised against real corrigenda at 1.6% link resolution; release blocker | — |
 
 **Order matters.** The field survey fed the model, then parsing, normalisation,
 privacy-status mapping and determinism tests made the eForms prototype usable
@@ -194,37 +196,33 @@ records, never rewriting an archived package. Constraint 4 still binds — the
 same archive and code produce the same flags, so "current state" must be derived
 from archived inputs, not from a live lookup at classify time.
 
-**Measured, then designed; not implemented.**
-[`correction-links.md`](correction-links.md) measures the structure over 19,180
-notices, and [ADR-0013](adr/0013-correction-and-withdrawal-semantics.md) proposes
-the mapping from it. What the measurement changed about the design:
+**Done, and measured first.** [`correction-links.md`](correction-links.md)
+measures the structure over 19,180 notices, and
+[ADR-0013](adr/0013-correction-and-withdrawal-semantics.md) is the mapping it
+produced. What the measurement changed about the design:
 
-- The link column is **polymorphic** — 61.7% an eForms notice UUID with a
-  version suffix, 38.3% a second namespace matching no identifier the model
-  carries. The namespace has to be recorded, not assumed.
+- The link column is **polymorphic** — 61.7% an eForms notice identifier with a
+  version suffix, 38.3% a legacy TED publication number no eForms notice
+  carries. The namespace is recorded, not assumed.
 - Links resolve **45 of 2,840** times, and only after the version suffix is
-  removed. That measures five sampled days, not the mapping: correction
-  handling cannot be demonstrated end to end without a continuous archive,
-  which the [ADR-0010](adr/0010-raw-archive-retention.md) review gates.
+  removed. Matching is therefore on identifier alone: 28 of the 46 name a
+  version other than the one held, and a link naming version 02 is evidence a
+  version 02 exists.
 - **7** targets are corrected by more than one notice, so ambiguity is real at
-  this sample size and the pipeline must refuse rather than pick.
-- **Withdrawals remain undesignable**: nothing measured distinguishes one from a
-  correction. The change reason is not in the model and the path survey records
-  presence, not values.
+  this sample size and the pipeline refuses rather than picks.
+- The change reason distinguishes a withdrawal from a correction: `cancel` 14,
+  `cancel-intent` 18, `susp-review` 9, against 2,682 correction reasons. **117
+  links carry no reason code**, so neither part implies the other.
 
-**Corrections are implemented; withdrawals are not.** `RULE_VERSION` 3 excludes
-notices another notice in the corpus corrects, every flag carries the
-`correction_cutoff` its check saw, and the rule is remeasured at version 3:
-8,157 lot outcomes, the same 96 flags. Two outcomes leave, both below the
-segment floor.
+`RULE_VERSION` 3 excludes notices another notice in the corpus corrects;
+version 4 also excludes notices announcing that their own procurement is
+cancelled, intended to be cancelled or suspended pending review. Every flag
+carries the `correction_cutoff` its check saw. Remeasured at version 4: 8,132
+lot outcomes, **the same 96 flags** — 27 outcomes leave across both exclusions
+and none of them was flagged.
 
-**Done when** withdrawals are handled too, which needs the change reason
-measured first — it is not in the model, and the path survey records presence
-rather than values. Until then a withdrawn notice is treated as a live one.
-
-**Release blocker.** Adopting ADR-0013 changes no flag today — none of the 96
-sits on a notice corrected within the corpus — which is the absence of evidence
-of staleness, not evidence of currency.
+**What remains is validation, not design**, and it moved to
+[#18](#18-validate-correction-handling-against-a-continuous-archive).
 
 
 ---
@@ -467,19 +465,19 @@ gap from 143 of 215 blocks to 212 as a side effect.
 **Version 2 built and measured.** `serenata classify` runs
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md) over the
 normalised dataset and writes flags as Parquet. The measured run over five
-publication days produces **96 flags from 8,157 lot outcomes**, byte-identical
+publication days produces **96 flags from 8,132 lot outcomes**, byte-identical
 on rerun, each carrying the baseline it was measured against
 ([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). Eligible segments
-cover 4,299 outcomes (52.7%), excluding 3,858 (47.3%) below the size floor.
+cover 4,283 outcomes (52.7%), excluding 3,849 (47.3%) below the size floor.
 These are coverage and base-rate figures, not empirical error rates.
 
 Version 2 rejects duplicate structural/join keys, ambiguous and fractional
 tender counts, requires a present statistic code and resolves every buyer
 reference to a present, agreed country. Output is staged before replacement and
 stale rule files are removed on success; a multi-year replacement is not
-transactional. Version 3 adds the ADR-0013 supersession exclusion, which
-removes two lot outcomes here, both below the segment floor; that is a fact
-about this corpus and not a general one. CI's `--require-current-measurements` gate
+transactional. Versions 3 and 4 add the ADR-0013 supersession and withdrawal
+exclusions, which remove 27 lot outcomes here and no flags; that is a fact about
+this corpus and not a general one. CI's `--require-current-measurements` gate
 passes, which is metadata sanity rather than proof of the measurement, and
 default local tests do not clear it. Any further real-data measurement depends
 on the unresolved processing review below.
@@ -512,7 +510,7 @@ delta either.
 survives. Compare a lot against its own market — the buyer's country and the CPV
 division — rather than against a European average. Single-bid rates across the
 26 measured segments large enough to have a baseline run from 6.5% to 78.2%,
-motivating segment-specific comparison; the rule fires on **2.23%** of the
+motivating segment-specific comparison; the rule fires on **2.24%** of the
 population it covers. The intake case
 supported building the rule, not release approval or a measured error rate.
 
@@ -543,3 +541,41 @@ can continue without claiming that processing real holdings is legally cleared.
 to an approved wider corpus, then verify flags under the full protocol. Record innocent
 explanations and empirical errors rather than treating arithmetic agreement as
 verification.
+
+---
+
+## 18. Validate correction handling against a continuous archive
+
+[#6](#6-handle-corrected-and-withdrawn-notices) built the mechanism and this
+exercises it. Both exclusions are implemented and tested on synthetic fixtures,
+and neither has been demonstrated against real corrigenda, because the archive
+cannot demonstrate it: **45 of 2,840 correction links resolve**, 1.6%, and the
+41 cancel-like notices name 41 targets of which **1** is held.
+
+That is a coverage limit, not a defect. A corrigendum published on one of five
+sampled days almost always corrects a notice published on a day the archive does
+not hold, so the join has almost nothing to join to. Until a continuous archive
+spans the corrected notices' publication dates, a green test suite is evidence
+about fixtures rather than about TED.
+
+**What this needs**, in order:
+
+- A continuous archive over a period long enough for corrigenda and their
+  targets to both be held. Fetching one is subject to the unresolved processing
+  review in [ADR-0010](adr/0010-raw-archive-retention.md); this item does not
+  authorize it.
+- Remeasurement of the resolution rate on that archive, replacing the 1.6% the
+  design was reasoned from.
+- Chains deeper than one, and targets corrected by notices in different
+  packages — neither observed here, both expected at scale, both already
+  handled in code and untested against reality.
+- A recount of how many flags actually move. On this archive the answer is zero
+  through two rule versions, which says nothing about a year of notices.
+
+**Done when** the resolution rate, chain depth and flag impact are measured on a
+continuous archive, and the exclusions are shown to fire on real corrigenda
+rather than on fixtures.
+
+**Release blocker.** A flag on a corrected or withdrawn notice is the one
+failure the project's promise cannot absorb, and the mechanism that prevents it
+is currently unexercised against real data.

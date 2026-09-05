@@ -134,9 +134,10 @@ resolve to a present, agreed country. The writer stages output before replacing
 files and removes stale files for that rule on success; replacement across years
 is not transactional.
 
-Version 3 also excludes notices another notice in the corpus corrects
-(ADR-0013), and a flag carries the `correction_cutoff` that check saw. Measured
-at version 3: **96 flags from 8,157 lot outcomes**. No empirical false-positive
+Version 4 also excludes notices another notice in the corpus corrects and
+notices announcing their own cancellation (ADR-0013), and a flag carries the
+`correction_cutoff` that check saw. Measured at version 4: **96 flags from
+8,132 lot outcomes**. No empirical false-positive
 rate is known, and no flag has completed verification.
 
 The eForms ingestion/normalisation prototype is built, not milestone 1 complete.

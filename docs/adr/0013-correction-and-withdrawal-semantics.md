@@ -1,7 +1,8 @@
 # ADR-0013: Derive supersession from the archive, and refuse to guess
 
-- Status: accepted — corrections only; withdrawals undesignable until the change
-  reason is measured
+- Status: accepted — corrections and withdrawals; end-to-end validation needs a
+  continuous archive
+- Amendment: 2026-09-05, withdrawals designed once the change reason was measured
 - Date: 2026-09-05
 - Enforced by: `tests/test_normalise_corrections.py::TestTheColumnsTheModelBuilds`
   for the link parts and `tests/test_classify_corrections.py` for supersession.
@@ -34,7 +35,12 @@ notices. Four findings constrain any design:
 - **7** targets are corrected by more than one notice. The data alone does not
   order them.
 
-Nothing measured distinguishes a correction from a withdrawal.
+The change reason was then measured too, over the same notices, from the eForms
+`change-corrig-justification` list: `update-add` 1,889, `cor-buy` 551,
+`cor-pub` 186, `info-release` 54, `cancel-intent` 18, `cancel` 14,
+`susp-review` 9, `cor-esen` 2. The last three separate a withdrawal from a
+correction, which nothing in the model could do before. **117 links carry no
+reason code**, so neither part implies the other.
 
 ## Decision
 
@@ -80,10 +86,21 @@ again. Old measurements are not relabelled.
 on 6.0% of notices, repeating up to 46 times in one notice. It stays out of this
 mapping.
 
-**Withdrawals are not implemented, because nothing measured detects one.**
-Distinguishing them needs the change reason, which the model does not carry and
-the path survey records only as presence. Until that is measured, this ADR
-covers corrections only, and the gap is stated rather than filled by assumption.
+**A notice announcing that its own procurement is not proceeding normally is
+excluded with its lot results**: reason `cancel`, `cancel-intent` or
+`susp-review`. Supersession already removes the notice such an announcement
+corrects; this removes the announcement, whose own lot results describe an
+outcome that may never have happened.
+
+Treating the three alike is a judgement, not a reading of the code list.
+`cancel` is terminal, `cancel-intent` announces an intention and `susp-review`
+suspends pending a challenge — all three leave the outcome unsettled, and
+silence is the honest output. The set is a named constant so it can be revisited
+against a corpus where the distinction bites.
+
+**The free-text reason description is not ingested.** It could carry a person's
+own words (constraint 2) and no classifier may read it (constraint 5). The code
+is a controlled vocabulary and carries the distinction on its own.
 
 ## Consequences
 
@@ -100,9 +117,12 @@ corpus, adopting this changes no flag today. That is the absence of evidence of
 staleness, not evidence of currency, and it is why this is a release blocker
 rather than a completed item.
 
-Implemented in `RULE_VERSION` 3, which removes two lot outcomes from the
-archive's population of 8,159 — both in segments below the size floor, so
-coverage, the segment rates and the 96 flags are unchanged.
+Implemented in `RULE_VERSION` 3 and 4. Supersession removes two lot outcomes
+from the archive's population of 8,159; the withdrawal exclusion removes a
+further 25, from 5 notices. **The 96 flags are unchanged through both** — none
+of the excluded outcomes was flagged — and coverage moves from 4,299 to 4,283.
+That the output did not move is a fact about this corpus, not evidence the
+exclusions are inert.
 
 Acceptance tests cover, on synthetic fixtures: a corrected notice leaving the
 population while its corrector stays; a link naming another version; a link
@@ -112,13 +132,16 @@ legacy link, an unrecognised shape and no link at all. The cutoff travels to
 every outcome and every flag, reruns are byte-identical, and a correction
 arriving changes the population rather than being asserted vacuously.
 
-Withdrawals have **no** test, because they have no behaviour: a test here would
-be inventing the feature it checks.
+Withdrawal tests cover each cancel-like reason excluding its own notice, each
+ordinary correction reason excluding nothing, both exclusions applying together,
+a reason without a link, and a link without a reason.
 
 ## Revisit triggers
 
-A continuous archive becoming available; the change reason being measured, which
-is what would let withdrawals be designed; the legacy namespace becoming
+A continuous archive becoming available, which is what would let either
+exclusion be validated end to end; a corpus where a cancel-like reason changes a
+flag, which would make the three-code set worth revisiting one by one; the
+legacy namespace becoming
 resolvable, which is the 38.3% of links that entity resolution
 in milestone 3 could resolve; observed chains deeper than one, or a target
 corrected by notices in different packages; any published finding, after which
