@@ -103,10 +103,9 @@ def iter_fetch_range(
             yield DayResult(publication_date=day, outcome=Outcome.NOT_PUBLISHED)
             continue
 
-        if archive.holds(issue):
-            # verify() raises on a checksum mismatch: an archived package that
-            # no longer matches its manifest is a fact for a human, not
-            # something to silently refetch over.
+        if archive.has_artifacts(issue):
+            # Even one artifact requires verification: an interrupted fetch
+            # must not silently overwrite bytes or provenance on the next run.
             manifest = archive.verify(issue)
             yield DayResult(
                 publication_date=day,

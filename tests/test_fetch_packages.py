@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 import httpx
 import pytest
@@ -104,6 +105,79 @@ class TestIdempotence:
 
             with pytest.raises(ArchiveConflict, match="immutable"):
                 run(client, archive, date(2026, 8, 17))
+
+    @pytest.mark.parametrize("dry_run", [False, True])
+    @pytest.mark.parametrize(
+        ("missing", "message"),
+        [("manifest", "no manifest"), ("package", "no package beside it")],
+    )
+    def test_an_incomplete_archive_is_not_downloaded_or_overwritten(
+        self, client_factory, ted_handler, tmp_path, missing, message, dry_run
+    ):
+        archive = RawArchive(tmp_path)
+        downloads = 0
+
+        def counting_handler(request: httpx.Request) -> httpx.Response:
+            nonlocal downloads
+            if "/packages/daily/" in request.url.path:
+                downloads += 1
+                if downloads > 1:
+                    return httpx.Response(200, content=b"replacement package bytes")
+            return ted_handler(request)
+
+        with client_factory(counting_handler) as client:
+            run(client, archive, date(2026, 8, 17))
+            paths = {
+                "manifest": archive.manifest_path(ISSUE),
+                "package": archive.package_path(ISSUE),
+            }
+            paths[missing].unlink()
+            before = {
+                path: path.read_bytes() for path in paths.values() if path.exists()
+            }
+
+            with pytest.raises(ArchiveConflict, match=message):
+                run(client, archive, date(2026, 8, 17), dry_run=dry_run)
+
+        assert downloads == 1, "neither incomplete state permits another download"
+        assert not paths[missing].exists()
+        assert {path: path.read_bytes() for path in before} == before
+        assert set(paths[missing].parent.iterdir()) == set(before)
+
+    def test_failed_manifest_publication_preserves_download_and_blocks_refetch(
+        self, client_factory, ted_handler, tmp_path, monkeypatch
+    ):
+        archive = RawArchive(tmp_path)
+        downloads = 0
+        replace = Path.replace
+
+        def counting_handler(request: httpx.Request) -> httpx.Response:
+            nonlocal downloads
+            if "/packages/daily/" in request.url.path:
+                downloads += 1
+            return ted_handler(request)
+
+        def fail_manifest_replace(source, destination):
+            if destination == archive.manifest_path(ISSUE):
+                raise OSError("manifest publication failed")
+            return replace(source, destination)
+
+        with client_factory(counting_handler) as client:
+            with monkeypatch.context() as patch:
+                patch.setattr(Path, "replace", fail_manifest_replace)
+                with pytest.raises(OSError, match="manifest publication failed"):
+                    run(client, archive, date(2026, 8, 17))
+
+            package = archive.package_path(ISSUE)
+            assert package.read_bytes() == make_package()
+            assert list(package.parent.iterdir()) == [package]
+
+            with pytest.raises(ArchiveConflict, match="no manifest"):
+                run(client, archive, date(2026, 8, 17))
+
+        assert downloads == 1
+        assert package.read_bytes() == make_package()
+        assert not archive.manifest_path(ISSUE).exists()
 
 
 class TestQuietDays:
