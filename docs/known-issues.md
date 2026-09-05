@@ -44,6 +44,10 @@ unresolved processing review.
 - Whether an entity may be named at all when its natural-person status is
   unknown, and whether current processing is permitted —
   [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status).
+  The question is drafted for counsel at
+  [`docs/counsel/11-natural-person-status.md`](counsel/11-natural-person-status.md),
+  which asks for the processing half to be answered first; it is not sent and
+  answers nothing yet.
 - Privacy remediation, rebuilding affected datasets, and counsel review of
   current raw and derived holdings —
   [open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields).

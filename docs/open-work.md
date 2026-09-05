@@ -40,7 +40,7 @@ record of how each was built and what it corrected is in the
 |---|------|---------------|
 | [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
-| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing and a publication rule |
+| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing, then a publication rule; [instruction drafted](counsel/11-natural-person-status.md) |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
 | [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 11, 14 and 18 |
@@ -64,7 +64,7 @@ before publication.
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
-| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | current processing and publication unresolved | [#14](https://github.com/cabral/serenata/issues/14) |
+| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | counsel instruction drafted, not sent; processing and publication unresolved | [#14](https://github.com/cabral/serenata/issues/14) |
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
@@ -271,31 +271,70 @@ than pasted, with a test asserting it.
 `efbc:NaturalPersonIndicator` can explicitly mark a natural person, and
 [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) suppresses
 specified identifying values when it is true. The problem is what the
-indicator does *not* say: it is **absent from about 90% of notices**, and under
-this project's own absence semantics absent is "not provided", never "false".
+indicator does *not* say: it is **absent from 96.6% of the organisation records
+measured**, and under this project's own absence semantics absent is "not
+provided", never "false".
 
 For an organisation without the indicator, whether it describes a legal person
 or an individual trading under their own name is unresolved by that field.
 Notice-level absence counts are not an organisation-level prevalence estimate.
 An official procurement notice does not make an entity institutional by default.
 
-**This is an ingestion and storage question as well as a publication question.**
-Source-linked opaque keys can remain indirectly identifying even when specified
-names and identifiers are suppressed. Counsel must assess current holdings and
-the permitted processing, not just the wording of future flags. No attempt to
-reconstruct a dropped identity is authorised.
+The question has been drafted for counsel:
+[`docs/counsel/11-natural-person-status.md`](counsel/11-natural-person-status.md).
+It is not sent and not answered, and it authorizes nothing.
+
+**This is two decisions, and they are not equally urgent.** Processing risk
+accrues every day the corpus is held; publication risk accrues only at
+publication, and publication is blocked by [#14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields),
+[#17](#17-build-the-first-classifier), [#18](#18-validate-correction-handling-against-a-continuous-archive)
+and [ADR-0010](adr/0010-raw-archive-retention.md) regardless of what is decided
+here. The title of this item names the second half. **The first half is the one
+with a clock on it**, and the counsel instruction asks for it to be answered
+first and separately.
+
+Part A also carries a deadlock worth naming: a corroboration threshold cannot be
+proposed without knowing how the indicator is distributed by role and member
+state, and measuring that is itself processing this item has not cleared. The
+instruction therefore asks for a bounded, counts-only measurement authorization
+rather than treating the evidence as free.
+
+**What the impact actually is.** Smaller than the item reads, because of two
+properties of what exists today:
+
+- The flag record ([`serenata/classify/records.py`](../serenata/classify/records.py))
+  carries **no organisation reference at all** — no buyer, no supplier, no name,
+  no identifier. A published flag would identify by its link to the source
+  notice, not by a stored value. That is not a claim that linking is safe; it is
+  a statement about what the decision is actually about.
+- The one classifier reads exactly one organisation field, the buyer's country,
+  and reads no supplier anywhere. So a rule that clears buyers and holds
+  suppliers costs **zero flags today** and constrains only milestone 3 work that
+  does not exist yet.
 
 **What to decide.**
 
+- Whether the project may continue to hold and query records of unknown status,
+  on what basis, for how long, and with what Article 14, DPIA, security and
+  rights handling. This is the ADR-0010 review, narrowed to this population.
 - Whether a flag may be published about an entity whose natural-person status is
   unknown, or only about one positively corroborated as an organisation.
-- What corroboration counts. `cac:PartyLegalEntity/cbc:CompanyID` is present in
-  99.9% of notices, but a registration number does not by itself prove the
-  registrant is not a natural person — in Sweden a sole trader's is their
-  personnummer. Milestone 3's entity resolution against national company
-  registers is the obvious source of a better answer, and is a long way off.
+- What corroboration counts. `cac:PartyLegalEntity/cbc:CompanyID` is present on
+  99.8% of organisation rows, but a registration number does not by itself prove
+  the registrant is not a natural person — in Sweden a sole trader's is their
+  personnummer. The instruction puts one proposal to counsel: that a **buyer**
+  is corroborated by the definition of a contracting authority in Directive
+  2014/24/EU Article 2(1)(1), which cannot include a natural person — a
+  definitional argument rather than an inference from a role code, with three
+  carve-outs (utilities, subsidised contracts, voluntary publication) named for
+  scoping. Milestone 3's entity resolution against national company registers
+  remains the rigorous answer for suppliers, and is a long way off.
 - Whether the answer differs for a buyer and for a supplier, without treating
   a role code as proof that a record cannot identify a natural person.
+- Whether an identifiability floor is needed on published aggregates. A small
+  country-and-CPV cell names a notice by elimination even with no entity field.
+  The classifier's `SEGMENT_FLOOR` of 50 was chosen as a statistical floor, not
+  as an anonymity control, and hand-written case tables have no floor at all.
 
 **Constraints.** The legal guardrails route anything identifying a natural
 person away from project channels entirely. Corroborating legal-person status
@@ -307,7 +346,6 @@ never an accusation.
 implemented and tested, and verification can justify the identity and data
 included in any proposed flag. Current holdings must be assessed under those
 rules. This remains a privacy and release gate, not a publication-only concern.
-
 
 ---
 
