@@ -56,6 +56,19 @@ COMPETITIVE_PROCEDURES = (
 #: same reason (BT-765).
 FRAMEWORK_SYSTEMS = ("fa-wo-rc", "fa-w-rc", "fa-mix", "dps-list", "dps-nlist")
 
+#: Change reasons that say this procurement is not proceeding normally, from
+#: the eForms `change-corrig-justification` list (ADR-0013). A notice carrying
+#: one is excluded along with the notice it corrects: its stated purpose is to
+#: stop or pause something, and an award flag raised from it would describe a
+#: procurement that may not have happened.
+#:
+#: `cancel` is terminal, `cancel-intent` announces the intention, and
+#: `susp-review` suspends pending a challenge. The last two are not
+#: cancellations, and including them is a judgement rather than a reading of
+#: the code list: all three mean the outcome is unsettled, and silence is the
+#: honest output there. Measured in the archive: 14, 18 and 9 notices.
+WITHDRAWING_REASONS = ("cancel", "cancel-intent", "susp-review")
+
 
 def _table(root: Path, name: str) -> str:
     path = str(root / name).replace("'", "''")
@@ -167,6 +180,7 @@ def population_query(root: Path) -> str:
     """
     procedures = ", ".join(f"'{code}'" for code in COMPETITIVE_PROCEDURES)
     systems = ", ".join(f"'{code}'" for code in FRAMEWORK_SYSTEMS)
+    withdrawing = ", ".join(f"'{code}'" for code in WITHDRAWING_REASONS)
     return f"""
 -- Numeric values remain strings; parse already strips outer whitespace.
 -- Accept optional +, ASCII digits and an optional dot with only zeros after it.
@@ -200,6 +214,15 @@ WITH counted_statistics AS (
       ON c.changed_notice_namespace = 'eforms'
      AND c.changed_notice_target = t.source_notice_id
     GROUP BY 1
+), withdrawing AS (
+    -- A notice announcing that its procurement is cancelled, intended to be
+    -- cancelled, or suspended pending review. Version 3 already dropped the
+    -- notice such a notice corrects; this drops the announcement itself, whose
+    -- own lot results describe an outcome that may never have happened.
+    SELECT source_publication_id
+    FROM {_table(root, "notice")}
+    WHERE change_reason_code_status = 'present'
+      AND change_reason_code IN ({withdrawing})
 ), buyer_country AS (
     SELECT r.source_publication_id,
            min(o.country_code) AS country
@@ -250,6 +273,7 @@ WHERE s.statistic_kind = 'received_submissions'
   AND l.cpv_code_status = 'present'
   AND NOT list_has_any(l.contracting_system_codes, [{systems}])
   AND s.source_publication_id NOT IN (SELECT source_publication_id FROM superseded)
+  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM withdrawing)
 ORDER BY s.source_publication_id, s.lot_result_ordinal
 """
 

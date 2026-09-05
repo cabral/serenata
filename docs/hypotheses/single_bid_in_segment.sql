@@ -8,10 +8,11 @@
 -- directly rather than through a database keeps this rerunnable by anyone who
 -- has the archive: same packages in, same numbers out (ADR-0001).
 --
--- Counts below are VERSION 3, measured 2026-09-05 over OJ S 52, 94, 113, 157
--- and 168 of 2026 (19,180 notices). Version 3 adds the ADR-0013 supersession
--- exclusion to version 2's duplicate key validation, unanimous buyer country,
--- statistic-code status and exact whole-count validation.
+-- Counts below are VERSION 4, measured 2026-09-05 over OJ S 52, 94, 113, 157
+-- and 168 of 2026 (19,180 notices). Version 4 adds the ADR-0013 withdrawal
+-- exclusion to version 3's supersession exclusion, and to version 2's
+-- duplicate key validation, unanimous buyer country, statistic-code status and
+-- exact whole-count validation.
 
 CREATE OR REPLACE VIEW lot_result_statistic AS
   SELECT * FROM read_parquet('data/normalised/lot_result_statistic/**/*.parquet',
@@ -134,6 +135,18 @@ GROUP BY source_publication_id, lot_result_ordinal HAVING count(*) > 1;
 SELECT CASE WHEN EXISTS (SELECT 1 FROM duplicate_input_keys)
             THEN error('duplicate classifier input keys') ELSE true END;
 
+-- A notice announcing that its procurement is cancelled, intended to be
+-- cancelled, or suspended pending review, from the eForms
+-- `change-corrig-justification` list (ADR-0013). Version 3 already dropped the
+-- notice such a notice corrects; this drops the announcement itself, whose own
+-- lot results describe an outcome that may never have happened. Measured in
+-- this archive: cancel 14, cancel-intent 18, susp-review 9.
+CREATE OR REPLACE VIEW withdrawing AS
+SELECT source_publication_id
+FROM notice
+WHERE change_reason_code_status = 'present'
+  AND change_reason_code IN ('cancel', 'cancel-intent', 'susp-review');
+
 -- The buyer's country. Organisation identifiers are scoped to their notice, so
 -- this join is within one publication and never across notices: cross-notice
 -- organisation identity is milestone 3 and is not assumed here. Every buyer
@@ -198,7 +211,8 @@ WHERE s.statistic_kind = 'received_submissions'
   AND l.cpv_code_status = 'present'
   AND NOT list_has_any(l.contracting_system_codes,
                        ['fa-wo-rc', 'fa-w-rc', 'fa-mix', 'dps-list', 'dps-nlist'])
-  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM superseded);
+  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM superseded)
+  AND s.source_publication_id NOT IN (SELECT source_publication_id FROM withdrawing);
 
 -- The segment baseline: buyer country and CPV division, over this dataset.
 CREATE OR REPLACE VIEW segment AS

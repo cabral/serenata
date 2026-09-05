@@ -165,6 +165,7 @@ the wrong one.
 | `contract_folder_id` | `notice/cbc:ContractFolderID` | 97.7% |
 | `root_element` | the notice's root element | 100.0% |
 | `changed_notice_id` | `<ext>/efac:Changes/efbc:ChangedNoticeIdentifier` | 14.8% |
+| `change_reason_code` | `<ext>/efac:Changes/efac:ChangeReason/cbc:ReasonCode` | 14.2% |
 | `changed_notice_namespace` | the link's identifier namespace | 14.8% |
 | `changed_notice_target` | the link without its version suffix | 14.8% |
 | `changed_notice_version` | the version the link names | 9.1% |
@@ -195,11 +196,23 @@ the namespace, but that status is reserved for the notice-subtype rules this
 pipeline does not carry (see [Absence](#absence)). The parts mirror the link's
 own status otherwise — a withheld link has withheld parts.
 
+`change_reason_code` says why, from the eForms `change-corrig-justification`
+list. Measured over the same 19,180 notices: `update-add` 1,889, `cor-buy` 551,
+`cor-pub` 186, `info-release` 54, `cancel-intent` 18, `cancel` 14,
+`susp-review` 9, `cor-esen` 2. The last three are what separates a withdrawal
+from a correction, which nothing in the model could distinguish before.
+
+**117 links carry no reason code**, so a present link does not imply a present
+reason. The two columns are read independently and neither is inferred from the
+other.
+
+The free-text `efbc:ReasonDescription` beside the code is deliberately not
+ingested. It is free text, so it could carry a person's own words (constraint 2)
+and no classifier may read it in any case (constraint 5).
+
 Whether a target is *in* the dataset is not asked here. Supersession is a
 question about the whole corpus, and one notice's rows cannot answer it;
-the classify stage derives it. Handling corrections end to end remains
-[#6](open-work.md#6-handle-corrected-and-withdrawn-notices), and withdrawals
-are not detectable from anything measured yet.
+the classify stage derives it.
 
 ### `procedure`
 

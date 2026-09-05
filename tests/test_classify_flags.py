@@ -50,7 +50,7 @@ class TestAFlagCarriesItsEvidence:
     def test_it_names_the_rule_and_its_version(self) -> None:
         flag = flags(market(100, 1))[0]
         assert (flag.rule, flag.rule_version) == (RULE, RULE_VERSION)
-        assert RULE_VERSION == 3
+        assert RULE_VERSION == 4
 
     def test_it_carries_the_corpus_its_supersession_check_saw(self) -> None:
         """Without it the row cannot say which corrections it could have seen."""

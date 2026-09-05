@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from serenata.classify import classify_dataset
 from serenata.classify.dataset import read_outcomes
 from serenata.normalise import normalise_package
@@ -28,12 +30,18 @@ def uuid_for(index: int) -> str:
     return f"00000000-0000-0000-0000-{index:012d}"
 
 
-def changes(link: str) -> str:
-    return (
-        "<efac:Changes>"
-        f"<efbc:ChangedNoticeIdentifier>{link}</efbc:ChangedNoticeIdentifier>"
-        "</efac:Changes>"
-    )
+def changes(link: str | None = None, reason: str | None = None) -> str:
+    """An `efac:Changes` block, with either part or both — TED publishes each."""
+    inner = ""
+    if link is not None:
+        inner += f"<efbc:ChangedNoticeIdentifier>{link}</efbc:ChangedNoticeIdentifier>"
+    if reason is not None:
+        inner += (
+            "<efac:ChangeReason>"
+            f'<cbc:ReasonCode listName="change-corrig-justification">{reason}'
+            "</cbc:ReasonCode></efac:ChangeReason>"
+        )
+    return f"<efac:Changes>{inner}</efac:Changes>"
 
 
 def award(
@@ -42,14 +50,15 @@ def award(
     bids: str = "1",
     corrects: str | None = None,
     version: str | None = None,
+    reason: str | None = None,
 ) -> bytes:
-    """An award notice that may correct another, and may name its own version."""
+    """An award notice that may correct another, and may say why."""
     notice_body = body(procedure="open", cpv="45000000", system="none")
     if version is not None:
         notice_body = f"<cbc:VersionID>{version}</cbc:VersionID>" + notice_body
     extension = ORGANISATIONS.format(country="SWE") + result(bids)
-    if corrects is not None:
-        extension += changes(corrects)
+    if corrects is not None or reason is not None:
+        extension += changes(corrects, reason)
     return notice_xml(
         root="ContractAwardNotice",
         notice_id=uuid_for(index),
@@ -178,6 +187,56 @@ class TestWhatDoesNotExclude:
     def test_no_link_excludes_nothing(self, tmp_path: Path) -> None:
         surviving = population({1: award(1), 2: award(2)}, tmp_path)
         assert surviving == {published(1), published(2)}
+
+
+class TestAWithdrawingNoticeLeavesToo:
+    """ADR-0013: the announcement goes, not only the notice it corrects."""
+
+    @pytest.mark.parametrize("reason", ["cancel", "cancel-intent", "susp-review"])
+    def test_a_cancel_like_reason_excludes_its_own_notice(
+        self, tmp_path: Path, reason: str
+    ) -> None:
+        surviving = population(
+            {1: award(1), 2: award(2, reason=reason)}, tmp_path / reason
+        )
+        assert surviving == {published(1)}
+
+    @pytest.mark.parametrize(
+        "reason", ["update-add", "cor-buy", "cor-pub", "info-release"]
+    )
+    def test_an_ordinary_correction_reason_excludes_nothing(
+        self, tmp_path: Path, reason: str
+    ) -> None:
+        """Most reasons are corrections; only the unsettled ones silence a lot."""
+        surviving = population(
+            {1: award(1), 2: award(2, reason=reason)}, tmp_path / reason
+        )
+        assert surviving == {published(1), published(2)}
+
+    def test_both_exclusions_apply_together(self, tmp_path: Path) -> None:
+        """The cancelling notice goes, and so does the notice it cancels."""
+        surviving = population(
+            {
+                1: award(1),
+                2: award(2, corrects=f"{uuid_for(1)}-01", reason="cancel"),
+                3: award(3),
+            },
+            tmp_path,
+        )
+        assert surviving == {published(3)}
+
+    def test_a_reason_without_a_link_still_excludes(self, tmp_path: Path) -> None:
+        """117 links carry no reason; a reason with no link is the mirror case."""
+        surviving = population({1: award(1), 2: award(2, reason="cancel")}, tmp_path)
+        assert surviving == {published(1)}
+
+    def test_a_link_without_a_reason_excludes_only_its_target(
+        self, tmp_path: Path
+    ) -> None:
+        surviving = population(
+            {1: award(1), 2: award(2, corrects=f"{uuid_for(1)}-01")}, tmp_path
+        )
+        assert surviving == {published(2)}
 
 
 class TestTheCutoffTravels:

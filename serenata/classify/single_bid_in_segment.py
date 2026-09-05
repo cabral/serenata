@@ -33,7 +33,7 @@ RULE = "single_bid_in_segment"
 #: Bumped whenever the logic below changes what it flags — a threshold, the
 #: segment definition, the population. Two runs that disagree can then be told
 #: apart from two rules that disagree (ADR-0011).
-RULE_VERSION = 3
+RULE_VERSION = 4
 
 #: The smallest market this rule will compare against. At 50 independent
 #: Bernoulli observations a 15% rate has a standard error of about 5 points.

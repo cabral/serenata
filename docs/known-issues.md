@@ -14,33 +14,33 @@ and what each piece needs — and every open item there has an issue mirroring i
 `classify` runs, and it runs one rule:
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md), which flags a
 lot that drew a single bid in a market where single bids are rare. The measured
-run over five archived publication days produces **96 flags from 8,157 lot
-outcomes**. Eligible segments cover 4,299 outcomes (52.7%); 3,858 (47.3%) are
+run over five archived publication days produces **96 flags from 8,132 lot
+outcomes**. Eligible segments cover 4,283 outcomes (52.7%); 3,849 (47.3%) are
 below the segment-size floor. These are base-rate and coverage measurements, not
 empirical error rates.
 
-**Version 3 is implemented and measured.** It rejects duplicate structural/join
+**Version 4 is implemented and measured.** It rejects duplicate structural/join
 keys, ambiguous and fractional tender counts, requires a present statistic code,
 requires every buyer reference to resolve to a present, agreed country, and
-excludes notices another notice in the corpus corrects (ADR-0013). The writer
-stages replacements and removes stale rule files on success; multi-year
-replacement is not transactional. The supersession exclusion removes two lot
-outcomes here, both below the segment floor, so the flags are unchanged — a
-fact about this corpus, not a guarantee about a larger one. The mandatory CI
+excludes both corrected notices and notices announcing their own cancellation
+(ADR-0013). The writer stages replacements and removes stale rule files on
+success; multi-year replacement is not transactional. The two exclusions remove
+27 lot outcomes here and no flags — a fact about this corpus, not a guarantee
+about a larger one. The mandatory CI
 `--require-current-measurements` check passes; passing it is metadata sanity,
 not proof of the measurement. Any further real-data measurement still needs the
 unresolved processing review.
 
 **No flag has been published, and release remains blocked.** Open gates include:
 
-- A flag on a notice later **withdrawn** is a flag on something that no longer
-  stands, and withdrawals are not handled: nothing measured distinguishes one
-  from a correction, because the change reason is not in the model. Corrections
-  are handled — version 3 excludes notices another notice in the corpus corrects
-  ([ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)) — but only 1.6%
-  of links resolve within a five-day archive, so a corrected notice whose
-  corrigendum was published on an unheld day is still classified as live —
-  [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
+- Corrections and withdrawals are handled — version 4 excludes notices another
+  notice in the corpus corrects, and notices announcing their own cancellation,
+  intended cancellation or suspension
+  ([ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)) — but the
+  mechanism is **unexercised against real corrigenda**: only 1.6% of links
+  resolve within a five-day archive, so a corrected notice whose corrigendum was
+  published on an unheld day is still classified as live —
+  [open-work #18](open-work.md#18-validate-correction-handling-against-a-continuous-archive).
 - Whether an entity may be named at all when its natural-person status is
   unknown, and whether current processing is permitted —
   [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status).
