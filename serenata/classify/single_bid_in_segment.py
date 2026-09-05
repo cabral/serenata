@@ -7,9 +7,9 @@ both numbers below were chosen after measuring, and the file records what the
 measurement could and could not distinguish.
 
 **Why not simply flag a single bid.** Because 42.1% of the competitive,
-non-framework lot results measured received exactly one, so a flag on that
-describes the European market rather than finding anything in it. Single-bid
-rates run from 6.5% to 78.2% across markets, and it is the distance from a
+non-framework lot results measured under version 1 received exactly one, so a
+flag on that describes the European market rather than finding anything in it.
+Single-bid rates ran from 6.5% to 78.2% across markets, and it is the distance from a
 lot's own market that carries information.
 
 **A flag is an anomaly, not an accusation** (constraint 3). A single bid is
@@ -33,12 +33,12 @@ RULE = "single_bid_in_segment"
 #: Bumped whenever the logic below changes what it flags — a threshold, the
 #: segment definition, the population. Two runs that disagree can then be told
 #: apart from two rules that disagree (ADR-0011).
-RULE_VERSION = 1
+RULE_VERSION = 2
 
-#: The smallest market this rule will compare against. At 50 observations a
-#: 15% rate carries a standard error of about 5 points; below that the rate is
-#: not a baseline, it is noise with a denominator. It is also the floor that
-#: keeps a "market" from being small enough to name its participants.
+#: The smallest market this rule will compare against. At 50 independent
+#: Bernoulli observations a 15% rate has a standard error of about 5 points.
+#: Lots may cluster within notices or buyers: this is a heuristic, not a
+#: precision or anonymity guarantee. Version-2 remeasurement is pending.
 SEGMENT_FLOOR = 50
 
 #: A market where fewer than this share of comparable lots drew a single bid.

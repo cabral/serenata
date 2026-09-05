@@ -13,6 +13,21 @@ from serenata.fetch.client import RetryPolicy, TedClient
 from .support import FakeClock, make_package, search_body
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--require-current-measurements",
+        action="store_true",
+        default=False,
+        help="Require version-matching classifier measurements before merge.",
+    )
+
+
+@pytest.fixture
+def require_current_measurements(pytestconfig: pytest.Config) -> bool:
+    """Keep local development possible; CI must enable the pre-merge gate."""
+    return pytestconfig.getoption("--require-current-measurements")
+
+
 @pytest.fixture(autouse=True)
 def no_network(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail any test that tries to open a socket.

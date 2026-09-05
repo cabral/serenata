@@ -15,9 +15,13 @@ statements of one definition drift, so both run here over the same dataset.
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
+from typing import Any
 
 import duckdb
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 
 from serenata.classify import classify_dataset
@@ -151,6 +155,264 @@ def dataset(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return root
 
 
+@pytest.fixture
+def mutable_dataset(dataset: Path, tmp_path: Path) -> Path:
+    """Copy only the synthetic fixture; never inspect the local data archive."""
+    return Path(shutil.copytree(dataset, tmp_path / "synthetic"))
+
+
+def table_rows(root: Path, table: str) -> tuple[Path, pa.Schema, list[dict[str, Any]]]:
+    path = next((root / table).rglob("*.parquet"))
+    arrow = pq.ParquetFile(path).read()
+    return path, arrow.schema, arrow.to_pylist()
+
+
+class TestPopulationIntegrity:
+    @pytest.mark.parametrize(
+        "table",
+        [
+            "procedure",
+            "lot",
+            "lot_result",
+            "organisation",
+            "organisation_role",
+            "lot_result_statistic",
+        ],
+    )
+    @pytest.mark.parametrize("across_years", [False, True])
+    def test_duplicate_table_keys_fail_closed(
+        self, mutable_dataset: Path, table: str, across_years: bool
+    ) -> None:
+        path, schema, rows = table_rows(mutable_dataset, table)
+        if across_years:
+            path = path.parent.parent / "publication_year=2025" / "duplicate.parquet"
+        else:
+            path = path.with_name("duplicate.parquet")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pq.write_table(pa.Table.from_pylist(rows[:1], schema=schema), path)
+        self.assert_duplicate_rejected(mutable_dataset)
+
+    @pytest.mark.parametrize(
+        ("table", "ordinal"),
+        [
+            ("lot", "ordinal"),
+            ("organisation", "ordinal"),
+            ("lot_result_statistic", "block_ordinal"),
+        ],
+    )
+    @pytest.mark.parametrize("conflicting", [False, True])
+    def test_distinct_rows_with_duplicate_join_or_tender_keys_fail_closed(
+        self, mutable_dataset: Path, table: str, ordinal: str, conflicting: bool
+    ) -> None:
+        path, schema, rows = table_rows(mutable_dataset, table)
+        duplicate = {**rows[0], ordinal: 999}
+        if conflicting:
+            field, value = {
+                "lot": ("cpv_code", "72000000"),
+                "organisation": ("country_code", "FIN"),
+                "lot_result_statistic": ("statistic_value", "9"),
+            }[table]
+            duplicate[field] = value
+        rows.append(duplicate)
+        pq.write_table(pa.Table.from_pylist(rows, schema=schema), path)
+        self.assert_duplicate_rejected(mutable_dataset)
+
+    @staticmethod
+    def assert_duplicate_rejected(dataset: Path) -> None:
+        with pytest.raises(ValueError, match=r"^duplicate classifier input keys$"):
+            read_outcomes(dataset)
+        sql = TestTheTwoStatementsOfThePopulationAgree.documented_population(dataset)
+        with (
+            duckdb.connect() as connection,
+            pytest.raises(duckdb.InvalidInputException) as error,
+        ):
+            connection.sql(sql).fetchall()
+        assert str(error.value) == (
+            "Invalid Input Error: duplicate classifier input keys"
+        )
+
+    @pytest.mark.parametrize("status", ["withheld", "absent", "empty"])
+    def test_a_nonpresent_statistic_code_is_excluded(
+        self, mutable_dataset: Path, status: str
+    ) -> None:
+        path, schema, rows = table_rows(mutable_dataset, "lot_result_statistic")
+        excluded = rows[0]["source_publication_id"]
+        rows[0]["statistic_code_status"] = status
+        pq.write_table(pa.Table.from_pylist(rows, schema=schema), path)
+
+        outcomes = read_outcomes(mutable_dataset)
+        assert len(outcomes) == 59
+        assert excluded not in {row.source_publication_id for row in outcomes}
+        TestTheTwoStatementsOfThePopulationAgree().test_they_select_the_same_lot_outcomes(
+            mutable_dataset
+        )
+
+    @pytest.mark.parametrize("reverse", [False, True])
+    @pytest.mark.parametrize(
+        ("country", "status", "role", "included"),
+        [
+            ("FIN", "present", "buyer", False),
+            ("SWE", "present", "buyer", True),
+            ("SWE", "withheld", "buyer", False),
+            (None, "absent", "buyer", False),
+            (None, "present", "buyer", False),
+            ("", "present", "buyer", False),
+            ("FIN", "present", "winner", True),
+        ],
+    )
+    def test_buyer_country_must_be_unambiguous(
+        self,
+        mutable_dataset: Path,
+        reverse: bool,
+        country: str | None,
+        status: str,
+        role: str,
+        included: bool,
+    ) -> None:
+        path, schema, rows = table_rows(mutable_dataset, "organisation")
+        publication = rows[0]["source_publication_id"]
+        rows.append(
+            {
+                **rows[0],
+                "ordinal": 999,
+                "org_local_id": "EXAMPLE-SECOND",
+                "country_code": country,
+                "country_code_status": status,
+            }
+        )
+        pq.write_table(
+            pa.Table.from_pylist(rows[::-1] if reverse else rows, schema=schema), path
+        )
+        path, schema, rows = table_rows(mutable_dataset, "organisation_role")
+        rows.append(
+            {**rows[0], "block_ordinal": 999, "role": role, "org_ref": "EXAMPLE-SECOND"}
+        )
+        pq.write_table(
+            pa.Table.from_pylist(rows[::-1] if reverse else rows, schema=schema), path
+        )
+
+        outcomes = read_outcomes(mutable_dataset)
+        assert len(outcomes) == (60 if included else 59)
+        publications = {row.source_publication_id for row in outcomes}
+        assert (publication in publications) is included
+        assert all(row.country == "SWE" for row in outcomes)
+        TestTheTwoStatementsOfThePopulationAgree().test_they_select_the_same_lot_outcomes(
+            mutable_dataset
+        )
+
+
+class TestExactCountValidation:
+    """Numeric strings must denote whole counts, not round to whole counts.
+
+    Normalisation retains numeric text; parse already strips outer whitespace.
+    Accept ASCII decimal whole counts with optional +, leading zeros and a dot
+    followed by zero or more zeros, within positive signed BIGINT range.
+    Exercise both SQL definitions independently, including malformed rows that
+    must be excluded without raising a conversion error.
+    """
+
+    @pytest.mark.parametrize("reader", ["classifier", "companion"])
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("1", 1),
+            ("4", 4),
+            ("001", 1),
+            ("+001", 1),
+            ("1.", 1),
+            ("1.0", 1),
+            ("+001.000", 1),
+            ("+1.", 1),
+            ("9007199254740993", 9007199254740993),
+            ("9007199254740993.0", 9007199254740993),
+            ("9223372036854775807", 9223372036854775807),
+            ("+009223372036854775807.000", 9223372036854775807),
+            pytest.param("0" * 80 + "1." + "0" * 80, 1, id="long-zero-padding"),
+            ("0", None),
+            ("+0.000", None),
+            ("-0", None),
+            ("-1", None),
+            ("-1.0", None),
+            ("0.6", None),
+            ("1.4", None),
+            ("1.5", None),
+            ("2.6", None),
+            (".6", None),
+            pytest.param("0." + "9" * 80, None, id="just-below-one"),
+            pytest.param("1." + "0" * 80 + "1", None, id="just-above-one"),
+            pytest.param("2." + "0" * 80 + "1", None, id="just-above-two"),
+            pytest.param(
+                "9223372036854775807." + "0" * 80,
+                9223372036854775807,
+                id="bigint-max-zero-fraction",
+            ),
+            pytest.param(
+                "9223372036854775807." + "0" * 80 + "1",
+                None,
+                id="bigint-max-nonzero-tail",
+            ),
+            ("9223372036854775808", None),
+            ("9223372036854775808.0", None),
+            ("-9223372036854775809", None),
+            pytest.param("9" * 100, None, id="far-beyond-bigint"),
+            ("1e0", None),
+            ("10e-1", None),
+            ("0x1", None),
+            ("1_0", None),
+            ("1,0", None),
+            ("1..0", None),
+            ("1.0.0", None),
+            ("++1", None),
+            ("+", None),
+            (".", None),
+            ("", None),
+            (None, None),
+            (" 1", None),
+            ("1 ", None),
+            ("\t1", None),
+            ("1\n", None),
+            ("1 0", None),
+            ("\u00a01", None),
+            ("\uff11", None),
+            ("\u0661", None),
+            ("NaN", None),
+            ("Infinity", None),
+            ("not-a-count", None),
+        ],
+    )
+    def test_only_exact_positive_whole_counts_enter_the_population(
+        self,
+        mutable_dataset: Path,
+        reader: str,
+        value: str | None,
+        expected: int | None,
+    ) -> None:
+        path, schema, rows = table_rows(mutable_dataset, "lot_result_statistic")
+        publication = rows[0]["source_publication_id"]
+        assert rows[0]["statistic_value"] == "1"
+        assert rows[0]["statistic_value_status"] == "present"
+        rows[0]["statistic_value"] = value
+        pq.write_table(pa.Table.from_pylist(rows, schema=schema), path)
+
+        if reader == "classifier":
+            counts = {
+                row.source_publication_id: row.bids
+                for row in read_outcomes(mutable_dataset)
+            }
+        else:
+            sql = TestTheTwoStatementsOfThePopulationAgree.documented_population(
+                mutable_dataset
+            )
+            with duckdb.connect() as connection:
+                counts = {row[0]: row[2] for row in connection.sql(sql).fetchall()}
+
+        assert counts.get(publication) == expected
+        assert (publication in counts) is (expected is not None)
+        assert len(counts) == (60 if expected is not None else 59)
+        # Replacing this one row cannot perturb the other valid counts.
+        assert sum(bids == 1 for key, bids in counts.items() if key != publication) == 2
+
+
 class TestWhatTheRuleIsGiven:
     def test_it_reads_one_outcome_per_lot_result(self, dataset: Path) -> None:
         outcomes = read_outcomes(dataset)
@@ -208,10 +470,14 @@ class TestTheTwoStatementsOfThePopulationAgree:
             connection.close()
 
         assert documented, "the fixture must exercise the query, not just parse it"
-        assert {(row[0], row[1]) for row in documented} == {
-            (outcome.source_publication_id, outcome.lot_result_ordinal)
-            for outcome in read_outcomes(dataset)
-        }
+        outcomes = read_outcomes(dataset)
+        assert len(documented) == len(outcomes)
+        for row, outcome in zip(sorted(documented), outcomes, strict=True):
+            assert row[0] == outcome.source_publication_id
+            assert row[1] == outcome.lot_result_ordinal
+            assert row[2] == outcome.bids
+            assert row[3] == outcome.country
+            assert row[4] == outcome.cpv_division
 
     @staticmethod
     def documented_population(dataset: Path) -> str:
@@ -226,7 +492,8 @@ class TestTheTwoStatementsOfThePopulationAgree:
         # of the population itself.
         views = sql.split("-- 1.")[0]
         return (
-            views + "SELECT source_publication_id, lot_result_ordinal FROM population"
+            views + "SELECT source_publication_id, lot_result_ordinal, bids, "
+            "country, division FROM population"
         )
 
 

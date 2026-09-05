@@ -15,13 +15,15 @@ only thing that can establish it.
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from pathlib import Path
 
 import pyarrow.parquet as pq
+import pytest
 
 from serenata.classify.dataset import flag_schema, write_flags
 from serenata.classify.records import FLAG_COLUMNS, Flag, notice_url
-from serenata.classify.single_bid_in_segment import RULE, flags
+from serenata.classify.single_bid_in_segment import RULE, RULE_VERSION, flags
 from serenata.normalise import PARTITION
 
 from .test_classify_single_bid import market
@@ -47,7 +49,8 @@ class TestAFlagCarriesItsEvidence:
 
     def test_it_names_the_rule_and_its_version(self) -> None:
         flag = flags(market(100, 1))[0]
-        assert (flag.rule, flag.rule_version) == (RULE, 1)
+        assert (flag.rule, flag.rule_version) == (RULE, RULE_VERSION)
+        assert RULE_VERSION == 2
 
     def test_it_carries_the_values_the_rule_read(self) -> None:
         flag = flags(market(100, 1))[0]
@@ -126,6 +129,110 @@ class TestTheFileItIsWrittenTo:
             f"{PARTITION}=2025",
             f"{PARTITION}=2026",
         }
+
+
+class TestRuleOwnedReconciliation:
+    @pytest.mark.parametrize("empty", [False, True])
+    def test_rerun_removes_only_obsolete_files_owned_by_the_rule(
+        self, tmp_path: Path, empty: bool
+    ) -> None:
+        found = flags(market(100, 2))
+        older = replace(found[0], publication_year="2025")
+        own = write_flags([older, found[1]], tmp_path, rule=RULE)
+        other_rule = RULE + "_other"
+        write_flags([replace(older, rule=other_rule)], tmp_path, rule=other_rule)
+        # Neither similarly named rules nor files outside direct year partitions
+        # belong to this writer's reconciliation.
+        unrelated = tmp_path / "flag" / "notes" / f"{RULE}.parquet"
+        unrelated.parent.mkdir()
+        unrelated.write_bytes(b"synthetic unrelated file")
+        protected = {
+            key: value
+            for key, value in written(tmp_path).items()
+            if tmp_path / key not in own
+        }
+
+        current = write_flags([] if empty else [found[1]], tmp_path, rule=RULE)
+
+        assert not own[0].exists()
+        assert own[1].exists() is not empty
+        assert current == ([] if empty else [own[1]])
+        after = written(tmp_path)
+        assert {key: after[key] for key in protected} == protected
+        assert set(after) == set(protected) | {
+            path.relative_to(tmp_path).as_posix() for path in current
+        }
+
+    def test_a_later_write_failure_preserves_all_previous_output(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        found = flags(market(100, 2))
+        write_flags(
+            [replace(found[0], publication_year="2024"), found[1]], tmp_path, rule=RULE
+        )
+        before = written(tmp_path)
+        write_table = pq.write_table
+        calls = 0
+
+        def fail_later(*args: object, **kwargs: object) -> None:
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                assert isinstance(args[1], Path)
+                args[1].write_bytes(b"partial synthetic output")
+                raise OSError("synthetic write failure")
+            write_table(*args, **kwargs)
+
+        monkeypatch.setattr(pq, "write_table", fail_later)
+        with pytest.raises(OSError, match="synthetic write failure"):
+            write_flags(
+                [found[0], replace(found[1], publication_year="2027")],
+                tmp_path,
+                rule=RULE,
+            )
+
+        assert calls == 2
+        assert written(tmp_path) == before
+        assert all(
+            path.suffix == ".parquet" for path in tmp_path.rglob("*") if path.is_file()
+        )
+        assert not list(tmp_path.glob(".flags-*"))
+
+    @pytest.mark.parametrize("rule", ["", "../other", "*", "rule/other"])
+    def test_invalid_rule_names_cannot_reconcile_other_files(
+        self, tmp_path: Path, rule: str
+    ) -> None:
+        write_flags(flags(market(100, 1)), tmp_path, rule=RULE)
+        before = written(tmp_path)
+        with pytest.raises(ValueError, match="invalid flag rule name"):
+            write_flags([], tmp_path, rule=rule)
+        assert written(tmp_path) == before
+
+    def test_mixed_rules_are_rejected_before_writing(self, tmp_path: Path) -> None:
+        found = flags(market(100, 1))
+        write_flags(found, tmp_path, rule=RULE)
+        before = written(tmp_path)
+        with pytest.raises(ValueError, match="flag rule does not match writer rule"):
+            write_flags([replace(found[0], rule="other")], tmp_path, rule=RULE)
+        assert written(tmp_path) == before
+
+    @pytest.mark.parametrize("year", ["", "../other", "2026/other"])
+    def test_invalid_years_are_rejected_before_writing(
+        self, tmp_path: Path, year: str
+    ) -> None:
+        found = flags(market(100, 1))
+        write_flags(found, tmp_path, rule=RULE)
+        before = written(tmp_path)
+        with pytest.raises(ValueError, match="invalid flag publication year"):
+            write_flags([replace(found[0], publication_year=year)], tmp_path, rule=RULE)
+        assert written(tmp_path) == before
+
+    def test_unknown_year_is_supported_and_reconciled(self, tmp_path: Path) -> None:
+        flag = replace(flags(market(100, 1))[0], publication_year="unknown")
+        paths = write_flags([flag], tmp_path, rule=RULE)
+        assert paths[0].parent.name == f"{PARTITION}=unknown"
+        assert write_flags([], tmp_path, rule=RULE) == []
+        assert not paths[0].exists()
 
 
 class TestRerunsAreIdentical:
