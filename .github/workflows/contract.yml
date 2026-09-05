@@ -2,8 +2,9 @@ name: Contract
 
 # TED can change without this repository changing, so a green build on the last
 # push says nothing about whether the fetch stage still works today. This is the
-# only workflow that reaches the network, and the only place the test suite's
-# offline promise is deliberately set aside — see tests/test_ted_contract.py.
+# only workflow selecting live TED tests, deliberately setting aside the test
+# suite's offline promise — see tests/test_ted_contract.py. Dependency installs
+# and vulnerability audits in other workflows also use the network.
 #
 # On a schedule rather than on push: the assumptions it watches change on TED's
 # timetable, not on ours, and asserting them on every commit would be a request
@@ -11,18 +12,23 @@ name: Contract
 # Both triggers only take effect once this file is on the default branch:
 # GitHub runs schedules from the default branch's copy, and `workflow_dispatch`
 # needs the workflow to exist there before it can be started by hand. Until then
-# the tests are run locally with `uv run pytest -m contract`.
+# the tests are run locally with `uv run --locked pytest -m contract --no-cov`.
 on:
   schedule:
     - cron: "0 7 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           python-version: "3.12"
           enable-cache: true
@@ -30,4 +36,4 @@ jobs:
         run: uv sync --locked
       # A handful of limit:1 requests and the first member of one package.
       - name: Assert TED's documented interfaces
-        run: uv run pytest -m contract --no-cov
+        run: uv run --locked pytest -m contract --no-cov

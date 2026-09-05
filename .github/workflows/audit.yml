@@ -1,23 +1,30 @@
 name: Audit
 
-# Vulnerability data changes independently of this repository, so a clean audit
-# on the last push says nothing about today. This runs on a schedule instead of
-# on push, and can be triggered by hand when a dependency changes.
+# Audit proposed dependencies on pull requests, without secrets or write access.
+# Do not use pull_request_target: installation can execute contributor code.
+# Vulnerability data also changes independently of this repository, so retain
+# weekly and manual checks. Installation and vulnerability queries are networked.
 on:
+  pull_request:
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           python-version: "3.12"
           enable-cache: true
       - name: Install
         run: uv sync --locked
       - name: Audit dependencies for known vulnerabilities
-        run: uv run pip-audit
+        run: uv run --locked pip-audit

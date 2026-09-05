@@ -14,34 +14,57 @@ name: DCO
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   sign-off:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           # The check compares the base against the head, so it needs both.
           fetch-depth: 0
       - name: Check every commit is signed off
+        shell: bash
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          # Merge commits carry no content of their own to certify, and a
-          # GitHub merge commit is created server-side where no hook runs.
-          unsigned=$(git log --no-merges \
-            --format='%H%x09%s%x09%(trailers:key=Signed-off-by,valueonly=true,separator=%x2C)' \
-            "$BASE..$HEAD" | awk -F'\t' '$3 == ""')
+          # BEGIN DCO CHECK (exercised by tests/test_workflows.py)
+          set -euo pipefail
 
-          if [ -z "$unsigned" ]; then
+          # Event values enter via env, never shell interpolation. Refuse
+          # malformed object IDs and fail closed if either commit is missing.
+          for sha in "$BASE" "$HEAD"; do
+            if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Invalid pull request commit ID."
+              exit 1
+            fi
+            git rev-parse --verify "$sha^{commit}" > /dev/null
+          done
+
+          # Preserve the project's merge-commit exemption; still check every
+          # non-merge commit introduced through either parent.
+          commits=$(git rev-list --no-merges "$BASE..$HEAD" --)
+          unsigned=0
+          for sha in $commits; do
+            # Do not parse or log subjects: tabs could spoof a column, and
+            # contributor text must not become runner workflow commands.
+            trailers=$(git show --no-patch \
+              --format='%(trailers:key=Signed-off-by,valueonly=true)' "$sha" --)
+            if [[ ! "$trailers" =~ [^[:space:]] ]]; then
+              printf 'Missing Signed-off-by trailer: %.10s\n' "$sha"
+              unsigned=1
+            fi
+          done
+
+          if [[ "$unsigned" == 0 ]]; then
             echo "Every commit in this pull request is signed off."
             exit 0
           fi
 
-          echo "These commits carry no Signed-off-by trailer:"
-          echo "$unsigned" | while IFS="$(printf '\t')" read -r sha subject _; do
-            echo "  $(printf '%.10s' "$sha")  $subject"
-          done
           cat <<'MESSAGE'
 
           The Developer Certificate of Origin (https://developercertificate.org)
@@ -59,3 +82,4 @@ jobs:
           reasoning.
           MESSAGE
           exit 1
+          # END DCO CHECK
