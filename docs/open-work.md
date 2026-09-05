@@ -40,7 +40,6 @@ record of how each was built and what it corrected is in the
 |---|------|---------------|
 | [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
-| [6](#6-handle-corrected-and-withdrawn-notices) | Corrected and withdrawn notices | design, deterministic code and tests |
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing and a publication rule |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
