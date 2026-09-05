@@ -112,7 +112,11 @@ The share of rows in each status (ADR-0006). `absent` is "not provided", never "
 | `lot_tender.tender_id` | 52,689 | 100.0% | — | — | — | — |
 | `lot_tender.tender_reference` | 52,689 | 100.0% | — | — | — | — |
 | `lot_tender.tendering_party_ref` | 52,689 | 100.0% | — | — | — | — |
+| `notice.change_reason_code` | 19,180 | 14.2% | — | 85.8% | — | — |
 | `notice.changed_notice_id` | 19,180 | 14.8% | — | 85.2% | — | — |
+| `notice.changed_notice_namespace` | 19,180 | 14.8% | — | 85.2% | — | — |
+| `notice.changed_notice_target` | 19,180 | 14.8% | — | 85.2% | — | — |
+| `notice.changed_notice_version` | 19,180 | 9.1% | — | 90.9% | — | — |
 | `notice.contract_folder_id` | 19,180 | 97.7% | — | 2.3% | — | — |
 | `notice.customization_id` | 19,180 | 100.0% | — | — | — | — |
 | `notice.gazette_id` | 19,180 | 100.0% | — | — | — | — |
