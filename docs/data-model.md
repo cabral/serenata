@@ -165,15 +165,41 @@ the wrong one.
 | `contract_folder_id` | `notice/cbc:ContractFolderID` | 97.7% |
 | `root_element` | the notice's root element | 100.0% |
 | `changed_notice_id` | `<ext>/efac:Changes/efbc:ChangedNoticeIdentifier` | 14.8% |
+| `changed_notice_namespace` | the link's identifier namespace | 14.8% |
+| `changed_notice_target` | the link without its version suffix | 14.8% |
+| `changed_notice_version` | the version the link names | 9.1% |
 
 `root_element` is not an element path — it is the document's root, which the
 survey records separately because notice types differ there
 (`ContractNotice` 1,608, `ContractAwardNotice` 1,522, `PriorInformationNotice`
 58, `BusinessRegistrationInformationNotice` 2).
 
-`changed_notice_id` is the corrigendum link. Handling corrections properly is
-[#6](open-work.md#6-handle-corrected-and-withdrawn-notices) and needs its own
-ADR; the column exists now so the fact is not lost at parse time.
+`changed_notice_id` is the corrigendum link, as TED published it.
+`changed_notice_namespace`, `changed_notice_target` and
+`changed_notice_version` are that value split into its parts by
+`serenata.normalise.corrections`, which is [ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)
+as code. They are not element paths.
+
+Two unrelated identifier namespaces share the published column, measured in
+[correction-links.md](correction-links.md): `eforms`, an eForms notice
+identifier with a two-digit version suffix (1,752 of 2,840 links), and
+`ted_legacy`, a legacy TED publication number and year (1,088). `unknown` is
+declared for a shape neither pattern matches and is not produced by the
+measured corpus. Only `eforms` targets can join `source_notice_id`, and only
+after the suffix is removed — with it attached, a link resolves against
+nothing.
+
+A `ted_legacy` link carries no version, so `changed_notice_version` records
+`absent` there rather than `not_applicable`: inapplicability is derivable from
+the namespace, but that status is reserved for the notice-subtype rules this
+pipeline does not carry (see [Absence](#absence)). The parts mirror the link's
+own status otherwise — a withheld link has withheld parts.
+
+Whether a target is *in* the dataset is not asked here. Supersession is a
+question about the whole corpus, and one notice's rows cannot answer it;
+the classify stage derives it. Handling corrections end to end remains
+[#6](open-work.md#6-handle-corrected-and-withdrawn-notices), and withdrawals
+are not detectable from anything measured yet.
 
 ### `procedure`
 

@@ -1,9 +1,11 @@
 # ADR-0013: Derive supersession from the archive, and refuse to guess
 
-- Status: proposed — measurement done, design unimplemented, withdrawals unresolved
+- Status: accepted — corrections only; withdrawals undesignable until the change
+  reason is measured
 - Date: 2026-09-05
-- Enforced by: nothing yet. [`docs/correction-links.sql`](../correction-links.sql)
-  reproduces the measurement below; the acceptance tests named here are not written
+- Enforced by: `tests/test_normalise_corrections.py::TestTheColumnsTheModelBuilds`
+  for the link parts. Supersession is not implemented, and no test claims it is;
+  [`docs/correction-links.sql`](../correction-links.sql) reproduces the measurement
 
 ## Context
 
@@ -23,8 +25,9 @@ notices. Four findings constrain any design:
 - **14.8%** of notices carry a correction link; **118** of them are award
   notices, which is what the single-bid rule reads.
 - The column is **polymorphic**: 61.7% hold an eForms notice UUID with a
-  two-digit version suffix, 38.3% hold a second namespace matching no
-  identifier the model carries.
+  two-digit version suffix, 38.3% hold a legacy TED publication number and
+  year — the numbering that preceded eForms, which no notice in an eForms
+  dataset carries.
 - Raw links resolve **0 of 2,840** times; **45** resolve after the version
   suffix is removed. The low rate measures the sampled archive, not the mapping.
 - **7** targets are corrected by more than one notice. The data alone does not
@@ -103,9 +106,9 @@ materially changed inputs changing expected outputs.
 ## Revisit triggers
 
 A continuous archive becoming available; the change reason being measured, which
-is what would let withdrawals be designed; the second identifier namespace being
-resolvable, or being identified as a legacy TED numbering that entity resolution
-in milestone 3 must handle; observed chains deeper than one, or a target
+is what would let withdrawals be designed; the legacy namespace becoming
+resolvable, which is the 38.3% of links that entity resolution
+in milestone 3 could resolve; observed chains deeper than one, or a target
 corrected by notices in different packages; any published finding, after which
 supersession stops being an internal question and
 [corrections-policy.md](../corrections-policy.md) governs the retraction.
