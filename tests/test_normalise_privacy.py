@@ -25,9 +25,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pyarrow.parquet as pq
 import pytest
 
-from serenata.normalise import Status, sdk_privacy
+from serenata.normalise import Status, normalise_package, sdk_privacy
 from serenata.normalise import privacy as privacy_module
 from serenata.normalise.model import TABLES, Kind, table
 from serenata.normalise.privacy import (
@@ -40,7 +41,9 @@ from serenata.normalise.privacy import (
 )
 from serenata.normalise.sdk_privacy import PRIVACY_FIELDS, SDK_VERSIONS, PrivacyField
 
+from .support import SYNTHETIC_NOTICE, make_notice_package
 from .test_normalise import ORGANISATIONS, rows
+from .test_personal_data import website_notice
 
 #: A lot result whose statistics block withholds only the count, not the code
 #: it counts. Real notices withhold both together — both blocks measured in
@@ -349,3 +352,48 @@ class TestTheRestOfTheDatasetIsUnaffected:
             "statistic_code_status",
             "total_amount_status",
         }
+
+
+@pytest.mark.parametrize(
+    ("indicator", "suppressed"),
+    [("true", True), ("1", True), ("false", False), ("0", False), (None, False)],
+)
+def test_natural_person_websites_do_not_reach_parquet(
+    tmp_path: Path, indicator: str | None, suppressed: bool
+) -> None:
+    source = tmp_path / "synthetic-websites.tar.gz"
+    source.write_bytes(
+        make_notice_package({SYNTHETIC_NOTICE: website_notice(indicator)})
+    )
+    root = tmp_path / "dataset"
+    result = normalise_package(source, root)
+    assert result.notices == 1
+    assert result.unparsed == result.unnormalised == ()
+    assert result.rows["organisation"] == 2
+    organisations = {
+        row["org_local_id"]: row
+        for row in pq.read_table(root / "organisation").to_pylist()
+    }
+    candidate = organisations["ORG-0001"]
+    assert candidate["website"] == (
+        None if suppressed else "https://synthetic-candidate.invalid/company"
+    )
+    assert candidate["website_status"] == (
+        Status.ABSENT if suppressed else Status.PRESENT
+    )
+    assert candidate["is_natural_person"] == indicator
+    assert candidate["is_natural_person_status"] == (
+        Status.ABSENT if indicator is None else Status.PRESENT
+    )
+    control = organisations["ORG-0002"]
+    assert control["website"] == "https://synthetic-control.invalid/company"
+    assert control["website_status"] == Status.PRESENT
+    if suppressed:
+        # Decode every table: a compressed-byte search cannot prove value absence.
+        for path in result.files:
+            assert "synthetic-candidate.invalid" not in repr(
+                pq.read_table(path).to_pylist()
+            )
+    before = {path: path.read_bytes() for path in result.files}
+    normalise_package(source, root)
+    assert {path: path.read_bytes() for path in result.files} == before

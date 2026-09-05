@@ -16,11 +16,13 @@ re-deciding anything field by field.
 
 ## How this list was produced
 
-The eForms half is **measured**, not read off the specification: every path
-below was observed in the 3,190 notices of OJ S 157/2026, the same package
+The original eForms list is **measured**, not read off the specification: its
+paths were observed in the 3,190 notices of OJ S 157/2026, the same package
 [`field-usage.md`](field-usage.md) reports on, and the percentages are that
-package's. Paths the schema permits but no notice used are noted as such rather
-than silently omitted.
+package's. The website suppression entries added below are verified by
+synthetic regression tests, not a new data survey; their frequencies are not
+measured here. Paths the schema permits but no notice used are noted as such
+rather than silently omitted.
 
 The legacy TED half is **not yet measured** — see [below](#legacy-ted-notices-not-yet-measured).
 
@@ -37,8 +39,9 @@ path; the code carries the full form.
    match rather than by an enumerated path list. A field TED adds inside one of
    them tomorrow is dropped without anyone noticing it arrived.
 2. **One case is conditional**: where an organisation is flagged as a natural
-   person, the values that identify it are suppressed too.
-3. Everything else is institutional and is kept.
+  person, the identifying values listed below are suppressed too.
+3. Other fields are kept by these rules. Retention is not proof that a value
+  is institutional or free of personal data; see the limits below.
 
 Err toward dropping. A dropped field that turns out to be safe costs a later
 change; a retained one that carries a name is a legal problem.
@@ -154,8 +157,10 @@ personal data:
 | `<org>/efac:Company/cac:PartyName/cbc:Name` | 99.9% | the person's own name |
 | `<org>/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` | 99.9% | **a national identity number** |
 | `<org>/efac:Company/cac:PostalAddress/**` | 92.4–99.9% | usually a home address |
-| `<org>/efac:TouchPoint/cac:PartyName/cbc:Name` | 6.8% | as above |
-| `<org>/efac:TouchPoint/cac:PostalAddress/**` | up to 6.5% | as above |
+| `<org>/efac:Company/cbc:WebsiteURI` | not measured here | a website that can identify the person |
+| `<org>/efac:TouchPoint/cac:PartyName/cbc:Name` | 6.8% | the person's own name |
+| `<org>/efac:TouchPoint/cac:PostalAddress/**` | up to 6.5% | a possible home address |
+| `<org>/efac:TouchPoint/cbc:WebsiteURI` | not measured here | another website that can identify the person |
 
 The registration identifier deserves the emphasis. In Sweden a sole trader's
 `organisationsnummer` **is** the owner's `personnummer` — the national identity
@@ -167,13 +172,29 @@ the answer.
 
 **The rule:** where an `efac:Organization` carries `efbc:NaturalPersonIndicator`
 = true, the identifying values in that organisation's record are suppressed at
-parse — name, registration identifier and postal addresses.
+parse — name, registration identifier, postal addresses and Company/TouchPoint
+websites. The existing indicator policy also suppresses for `1` and unreadable
+present values (including empty ones); explicit `false` or `0` does not suppress.
+Whitespace and case are normalised when interpreting the indicator. An absent
+indicator still does not trigger suppression.
+
+The website fix is verified with an obviously synthetic notice using `.invalid`
+URLs, an explicit-natural-person organisation and an explicit-false control.
+Both Company and repeated TouchPoint websites are absent from the suppressed
+parsed record, even when the indicator follows them. `organisation.website`
+is null with status `absent` in newly generated Parquet; control websites remain
+parsed and the control's Company website remains in Parquet. TouchPoint websites
+have no column in the current model, so their parse-boundary test is essential.
+No real notices were inspected for this regression and no frequency is inferred
+from it. Existing derived files are not repaired by changing the parser: affected
+outputs need rebuilding before reuse or publication.
 
 **What is kept is the opaque key.** `<org>/efac:Company/cac:PartyIdentification/cbc:ID`
 is a notice-scoped token (`ORG-0001`) that links the organisation to its roles
-in that notice. It names nobody. Keeping it means the *structure* survives —
-a lot can still be counted and joined — while the identity does not. Suppression
-here anonymises a record; it does not delete it.
+in that notice. Keeping it means the *structure* survives — a lot can still be
+counted and joined. Suppressing these fields does not establish anonymity:
+source references remain, and identifiers or personal data elsewhere in a notice
+are not covered by this organisation-local rule.
 
 ### What is unresolved, and stated rather than hidden
 
@@ -190,10 +211,12 @@ This list does not resolve that, and no reading of the XML can. What it does:
   is the only in-band signal that exists and dropping it would remove the
   project's ability to comply at all.
 
-Whether a flag may be **published** about an entity whose natural-person status
-is unknown is a publication question, not an ingestion one. It is filed as
-[#11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status)
-and must be answered before the first finding, not before parse.
+Unknown natural-person status affects ingestion, storage and analysis as well
+as publication. [#11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status)
+tracks the naming decision; [ADR-0010](adr/0010-raw-archive-retention.md) records
+the unresolved processing review. This field guide does not authorize further
+real-data processing while that review remains open. Synthetic tests can
+continue without treating unknown status as a company classification.
 
 ## Kept, and why
 
@@ -201,17 +224,17 @@ Stated so the exclusions above are not read as covering them too.
 
 | Path | Present | Why it stays |
 |---|---:|---|
-| `<org>/efac:Company/cac:PartyName/cbc:Name` | 99.9% | who bought and who won; the dataset's core, institutional unless the indicator says otherwise |
+| `<org>/efac:Company/cac:PartyName/cbc:Name` | 99.9% | buyer/supplier name; retained unless suppression applies, but may identify a person |
 | `<org>/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` | 99.9% | national registration number; the key entity resolution (milestone 3) needs |
-| `<org>/efac:Company/cac:PartyIdentification/cbc:ID` | 99.9% | opaque intra-notice reference, names nobody |
+| `<org>/efac:Company/cac:PartyIdentification/cbc:ID` | 99.9% | opaque intra-notice reference; source linkage may still identify a person |
 | `<org>/efbc:NaturalPersonIndicator` | 9.5% | a boolean, and the signal the rule above depends on |
-| `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:Name` | 11.0% | a party to a tender, institutional on the same terms as any organisation name |
+| `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:Name` | 11.0% | tendering-party name; retention does not establish institutional status |
 | `<ext>/efac:NoticeResult/efac:SettledContract/cac:SignatoryParty/cac:PartyIdentification/cbc:ID` | 8.0% | despite the element name, an organisation reference, not a signatory's name |
 | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:EconomicOperatorShortList/cac:PreSelectedParty/cac:PartyName/cbc:Name` | <0.1% | an economic operator's name, same treatment as any other |
 
-Postal addresses of organisations are kept. An address is a contracting
-authority's or a supplier's place of business; it becomes personal only in the
-natural-person case handled above.
+Postal addresses and websites of organisations are kept unless the conditional
+rule applies. They can describe a contracting authority or supplier, but the
+indicator does not establish that every retained value is non-personal.
 
 ## Legacy TED notices: not yet measured
 
@@ -229,8 +252,9 @@ own structures — `CONTACT_DATA` blocks with elements for an attention-of perso
 e-mail and telephone, attached to `CONTRACTING_BODY` and to award records.
 Those are the obvious analogues of §1 above, and the same reasoning applies.
 
-**Before parse handles a legacy notice**, fetch a pre-2024 package and run the
-survey against it, then extend §§1–4 with measured paths the same way. It is one
+**Before parse handles a legacy notice**, resolve the processing review above,
+then obtain a pre-2024 package and survey it under the approved handling rules.
+Extend §§1–4 with measured paths the same way. The fetch interface is one
 command against an already-implemented stage:
 
 ```
@@ -256,9 +280,12 @@ containment tests on a path's segments, so a leaf TED adds inside `cac:Contact`
 next year is dropped on arrival rather than on discovery. That is the point of
 expressing them this way.
 
-**Dropping means never constructing.** A dropped field must not reach an
-intermediate record and then be removed. `personal_data.is_dropped()` is
-consulted before a value is read, not after.
+**Outright dropping means never constructing.** `personal_data.is_dropped()`
+is consulted before a value is read, not after. Conditional suppression differs:
+organisation fields are buffered so the indicator can be read regardless of
+element order, then identifying fields are removed before the final parsed
+record is returned. They do not reach normalisation or newly written Parquet;
+this does not mean their XML text was never materialised in memory.
 
 ## Re-verifying this list
 
@@ -300,8 +327,10 @@ A publisher can type a contact address into a field that is not a contact field.
 Scanning the normalised OJ S 157/2026 dataset finds **46 email-shaped values in
 7 columns** — a city, a registration number, a street, a website, a title, a
 description — and **13 of them are shaped like a person's own address**
-(`firstname.lastname@`). None of those paths is on this list, and none should
-be: the field is not a contact field, the data simply arrived in it.
+(`firstname.lastname@`). These are historical measurements, not re-run for the
+website fix. Those paths are not dropped outright: some are suppressed only
+within an organisation meeting the natural-person rule. Personal data misplaced
+in retained fields remains outside the structural rule.
 
 Fixing this needs a value-level rule, which is a different kind of rule from
 everything above, and the options — reject the value, redact the match, flag the

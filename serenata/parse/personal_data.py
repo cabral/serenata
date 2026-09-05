@@ -18,9 +18,10 @@ anyone re-reading the schema.
 person — a sole trader — and flags it with `efbc:NaturalPersonIndicator`. Where
 that flag is true, values that are ordinary company data for every other
 organisation become personal data: the name is the person's own, and the
-registration identifier can be their national identity number. Those values are
-suppressed while the organisation's opaque intra-notice key is kept, so the
-record is anonymised rather than deleted.
+registration identifier can be their national identity number. Names,
+registration identifiers, postal addresses and websites are suppressed while
+the organisation's opaque intra-notice key is kept. This preserves joinable
+structure, not a guarantee of anonymity.
 
 The indicator is absent from about 90% of notices, and absent is "not provided",
 not "false". That gap is real, is not resolvable from the XML, and is filed as
@@ -60,8 +61,10 @@ IDENTIFYING_ORGANISATION_PREFIXES = (
     "efac:Company/cac:PartyName",
     "efac:Company/cac:PartyLegalEntity",
     "efac:Company/cac:PostalAddress",
+    "efac:Company/cbc:WebsiteURI",
     "efac:TouchPoint/cac:PartyName",
     "efac:TouchPoint/cac:PostalAddress",
+    "efac:TouchPoint/cbc:WebsiteURI",
 )
 
 
