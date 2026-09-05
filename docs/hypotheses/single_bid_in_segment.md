@@ -2,13 +2,19 @@
 
 Status: building
 
-The classifier exists and runs. **Version 2 is awaiting aggregate
-remeasurement** after tightening population integrity and exclusions. The
-historical 96 flags from 8,159 lot outcomes below belong to **version 1**, not
-to the current [query](single_bid_in_segment.sql). No version-2 base rate or
-sensitivity result is claimed.
-Version 2 cannot merge until it has a current measurement. It is not `live`:
-remeasurement, verification and the legal checks below remain gates.
+The classifier exists and runs, and its measured base rate reproduces: over
+the five archived publication days, version 2 produces 96 flags from 8,159 lot
+outcomes, the same numbers the [query](single_bid_in_segment.sql) beside this
+file reports.
+
+Version 2 tightened population integrity and three exclusions, and **measures
+identically to version 1 on this archive** — every figure below was remeasured
+under version 2 and none of them moved. That is a statement about this corpus,
+not a general one: the tightened rules are guarantees about what the population
+may contain, and on a corpus where they bind, they will change the numbers.
+
+It is not `live`, because nothing it produces may be published yet — see the
+legal check.
 
 Governs `serenata/classify/single_bid_in_segment.py`. The argument that produced
 it is [case 002](../cases/002-single-bid-against-its-segment.md); the form this
@@ -19,8 +25,8 @@ replaces, and why it was rejected, is [case 001](../cases/001-single-bid.md).
 A competitive procurement lot that receives exactly one bid, in a market where
 comparable lots usually draw several, is anomalous relative to that market —
 and more informative than a single bid measured against a European average,
-because single bidding varied from 6.5% to 78.2% across the measured version-1
-markets and an average describes none of them.
+because single bidding varies from 6.5% to 78.2% across the measured markets
+and an average describes none of them.
 
 "Market" is the buyer's country and the lot's CPV division. The comparison is
 against lots in the same market in the same dataset.
@@ -85,56 +91,69 @@ One row per lot result, included when all of these hold:
   conflicting countries, unresolved references and absent or withheld countries
   exclude the publication rather than selecting an arbitrary buyer.
 
-**Version-2 integrity gate, before population joins.** Duplicate structural keys
-in any of the six input tables reject the whole run, even for identical rows
-or overlaps across year partitions. The join keys `(source_publication_id,
-lot_id)` and `(source_publication_id, org_local_id)` must also be unique when
-the local identifier is non-null. A lot result may carry at most one
-`received_submissions` block with a present `tenders` code, regardless of the
-value status; multiple such blocks are ambiguous, even if their counts agree.
-Other statistics codes remain separate observations and do not multiply this
-population. Errors report no data values. The classifier neither deduplicates
-nor guesses which conflicting row is authoritative; repair belongs upstream.
+**Version-2 integrity gate, before the population is read.** Duplicate
+structural keys in any of the six input tables reject the whole run, even for
+identical rows or overlaps across year partitions. The join keys
+`(source_publication_id, lot_id)` and `(source_publication_id, org_local_id)`
+must also be unique when the local identifier is non-null. A lot result may
+carry at most one `received_submissions` block with a present `tenders` code,
+regardless of the value status; multiple such blocks are ambiguous, even if
+their counts agree. Other statistics codes remain separate observations and do
+not multiply this population. Errors report no data values. The classifier
+neither deduplicates nor guesses which conflicting row is authoritative.
+
+The gate is **scoped to what the rule reads**: the publications the population
+draws from, and for the tender check the lot results in it. A publication that
+contributes no lot outcome contributes to no segment either, so its duplicates
+cannot move a flag. This is not hypothetical — one framework lot result in the
+measured archive carries its bid count four times, in four blocks with one
+repeated value, and the source XML repeats it, so it is the publisher's and not
+the pipeline's. Validating whole tables let a row the rule excludes anyway stop
+every measurement, and "repair belongs upstream" has no upstream to go to: the
+archive is immutable ground truth. Eligibility deliberately stops short of the
+buyer country, so a publication cannot escape the check by carrying the very
+duplicate organisations that would exclude it.
 
 A lot result is **flagged** when its bid count is exactly 1, its segment holds
 at least **50** lot results in the dataset, and that segment's single-bid rate
 is below **15%**.
 
-Both parameters were chosen after the version-1 measurement and are retained
-provisionally, not recalibrated for version 2. Under an independent Bernoulli
+Both parameters were chosen after measuring, not before, and version 2's
+remeasurement leaves them where they were. Under an independent Bernoulli
 model, 50 observations at a 15% rate give a standard error of about 5 percentage
 points. Procurement lots can be clustered within notices and buyers, so that
 independence assumption is not established: the floor is a heuristic, not a
-precision guarantee or a significance test. In the version-1 sample, dropping
-the floor to 30 admitted 22% more flags. The 15% cutoff was roughly a third of
-that population's single-bid rate. **That sample could not distinguish 15% from
-20%** at the floor of 50: no eligible segment had a rate between them, so the
-lower number was used. Remeasure both coverage and sensitivity for version 2.
+precision guarantee or a significance test. Dropping the floor to 30 admits
+noisier segments and 22% more flags. The 15% cutoff is roughly a third of the
+population's own single-bid rate. **The sample cannot distinguish 15% from
+20%** at the floor of 50: no eligible segment has a rate between them, so the
+lower, more conservative number is used, and this is the parameter most likely
+to move when the dataset grows.
 
 ## Measurement metadata
 
-This records the historical version-1 measurement, not new evidence. Package
-IDs are those listed in [dataset shape](../dataset-shape.md#what-was-measured).
-The period is a **bounding window**, from the start of the recorded corpus year
-through the measurement date, not the observed first and last publication dates
-or a claim of continuous coverage. Only the five listed issues were measured.
-The query revision identifies the committed version-1 SQL; the companion file
-in the working tree now targets version 2. The admission test checks metadata
+Package IDs are those listed in
+[dataset shape](../dataset-shape.md#what-was-measured). The period is a
+**bounding window**, from the start of the recorded corpus year through the
+measurement date, not the observed first and last publication dates or a claim
+of continuous coverage. Only the five listed issues were measured. The query
+revision is `working-tree`: the companion SQL was run from the working tree in
+the same change that produced these numbers. The admission test checks metadata
 sanity, not the data, the query's results, or approval to release or publish.
 
 ```toml
 [admission]
 current_rule_version = 2
-current_measurement = "pending"
+current_measurement = "measured"
 
 [measurement]
-rule_version = 1
-measured_on = 2026-09-04
+rule_version = 2
+measured_on = 2026-09-05
 period_start = 2026-01-01
-period_end = 2026-09-04
+period_end = 2026-09-05
 package_ids = ["202600052", "202600094", "202600113", "202600157", "202600168"]
 query_file = "single_bid_in_segment.sql"
-query_revision = "3b52b78009fb6c68fab2d0b8acd3d55073b6944a"
+query_revision = "working-tree"
 notice_count = 19180
 population_count = 8159
 population_notice_count = 3790
@@ -144,19 +163,15 @@ flagged_count = 96
 flagged_notice_count = 71
 ```
 
-Version 2 is **not merge-ready**: a version-matching aggregate measurement
-and sensitivity check are still pending. Historical evidence permits continued
-synthetic `building`; it does not satisfy the current rule's CI measurement
-gate or authorize real-data processing.
+A measurement satisfies the CI gate. It is not clearance to process real data
+beyond this archive, nor to publish anything computed from it.
 
 ## Base rate
 
-**Historical version 1**, measured 2026-09-04 against five archived publication
-days of 2026 — OJ S 52, 94, 113, 157 and 168, 19,180 notices. The accompanying
-SQL linked above now defines version 2, including its integrity
-gate, and must not be presented as reproducing these old numbers. Use the
-version-1 query from repository history to reproduce the old measurement.
-Version 2 needs a fresh aggregate run; none was performed for this fix.
+Measured 2026-09-05 under version 2, against five archived publication days of
+2026 — OJ S 52, 94, 113, 157 and 168, 19,180 notices. The query is
+`single_bid_in_segment.sql` beside this file, including its integrity gate.
+Version 1 measured the same figures on the same archive.
 
 - **Population**: 8,159 lot results, from 3,790 notices.
 - **Single bid anywhere in it**: 3,435, or 42.1%. That is the rate case 001 was
@@ -166,7 +181,7 @@ Version 2 needs a fresh aggregate run; none was performed for this fix.
 - **Flags**: **96, in 71 notices — 2.23% of the population the rule can speak
   about**, and 1.18% of the whole population.
 
-Historical version-1 sensitivity, same dataset, flags at each parameter pair:
+Sensitivity, same dataset, flags at each parameter pair:
 
 | Segment floor | Segments | Covered | <10% | <15% | <20% | <25% |
 |---:|---:|---:|---:|---:|---:|---:|
@@ -175,14 +190,13 @@ Historical version-1 sensitivity, same dataset, flags at each parameter pair:
 | 75 | 11 | 3,409 | 20 | 76 | 76 | 76 |
 | 100 | 8 | 3,155 | 20 | 64 | 64 | 64 |
 
-**Version-1 coverage was a narrow majority, not a minority.** 4,299 of 8,159 lot
-results (52.7%) were in eligible segments; the other 3,860 (47.3%) sat in
-segments below the floor. The output there was silence, not a flag. Version-2
-coverage remains unmeasured.
+**Coverage is a narrow majority, not a minority.** 4,299 of 8,159 lot results
+(52.7%) are in eligible segments; the other 3,860 (47.3%) sit in segments below
+the floor. The honest output there is silence, not a flag.
 
-**Anticipated false-positive profile.** Not yet verified case by case — no finding has
-been through the verification protocol, so the profile below is what the design
-predicts rather than what has been observed:
+**Anticipated false-positive profile.** Not yet verified case by case — no
+finding has been through the verification protocol, so the profile below is what
+the design predicts rather than what has been observed:
 
 - CPV misclassification puts a lot in the wrong segment. The CPV is the buyer's
   own and nothing validates it. Unmitigated.

@@ -44,7 +44,7 @@ record of how each was built and what it corrected is in the
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing and a publication rule |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
-| [17](#17-build-the-first-classifier) | Version-2 measurement and verification | blocked release; also needs 6, 11 and 14 |
+| [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 6, 11 and 14 |
 
 The eForms prototype and first classifier are built. Remaining work includes
 engineering, empirical measurement and legal decisions; it is not just paperwork
@@ -70,7 +70,7 @@ before publication.
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
-| 17 | [Build the first classifier](#17-build-the-first-classifier) | **v2 built**; measurement pending, merge and release blocked | [#33](https://github.com/cabral/serenata/issues/33) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | **v2 built and measured**; verification and release blocked | [#33](https://github.com/cabral/serenata/issues/33) |
 
 **Order matters.** The field survey fed the model, then parsing, normalisation,
 privacy-status mapping and determinism tests made the eForms prototype usable
@@ -78,9 +78,8 @@ for development. These do not close the remaining privacy or correction gaps.
 
 **Milestone 1 is not complete.** An eForms ingestion/normalisation prototype is
 built; legacy TED, privacy remediation and correction/withdrawal handling remain
-open. Milestone 2 has a written hypothesis and an implemented version-2 rule,
-but only version 1 has historical measurements. Version-2 base rates, coverage
-and sensitivity, empirical false-positive assessment and full verification are
+open. Milestone 2 has a written hypothesis and an implemented, measured
+version-2 rule. Empirical false-positive assessment and full verification are
 pending. No flag has completed the verification protocol.
 
 Every open item below has a GitHub issue mirroring it. Say there that you are
@@ -443,26 +442,25 @@ gap from 143 of 215 blocks to 212 as a side effect.
 
 ## 17. Build the first classifier
 
-**Version 2 built; measurement pending.** `serenata classify` runs
+**Version 2 built and measured.** `serenata classify` runs
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md) over the
-normalised dataset and writes flags as Parquet. The historical **version-1** run
-over five publication days produced **96 flags from 8,159 lot outcomes**,
-byte-identical on rerun, each
-carrying the baseline it was measured against
-([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). Version-1 eligible
-segments covered 4,299 outcomes (52.7%), excluding 3,860 (47.3%) below the size
-floor. These are coverage and base-rate figures, not empirical error rates.
+normalised dataset and writes flags as Parquet. The measured run over five
+publication days produces **96 flags from 8,159 lot outcomes**, byte-identical
+on rerun, each carrying the baseline it was measured against
+([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). Eligible segments
+cover 4,299 outcomes (52.7%), excluding 3,860 (47.3%) below the size floor.
+These are coverage and base-rate figures, not empirical error rates.
 
-Version 2 rejects duplicate structural/join keys, ambiguous and fractional tender counts,
-requires a present statistic code and resolves every buyer reference to a
-present, agreed country. Output is staged before replacement and stale rule
-files are removed on success; a multi-year replacement is not transactional.
-The current companion SQL targets v2. Fixture-based query/code agreement is not
-a version-2 historical measurement: base rates, coverage and sensitivity are
-still pending. **Merge is blocked** by CI's `--require-current-measurements`
-gate until current-version evidence is recorded and reviewed. Default local
-tests do not require new data processing; passing them does not clear this gate.
-Real-data remeasurement depends on the unresolved processing review below.
+Version 2 rejects duplicate structural/join keys, ambiguous and fractional
+tender counts, requires a present statistic code and resolves every buyer
+reference to a present, agreed country. Output is staged before replacement and
+stale rule files are removed on success; a multi-year replacement is not
+transactional. On this archive version 2 admits exactly what version 1
+admitted, so the figures above are the remeasured ones; that is a fact about
+this corpus and not a general one. CI's `--require-current-measurements` gate
+passes, which is metadata sanity rather than proof of the measurement, and
+default local tests do not clear it. Any further real-data measurement depends
+on the unresolved processing review below.
 
 **Release is blocked**, including on deterministic correction handling and tests
 in [#6](#6-handle-corrected-and-withdrawn-notices), identity rules in
@@ -491,9 +489,9 @@ delta either.
 [Case 002](cases/002-single-bid-against-its-segment.md) is the form that
 survives. Compare a lot against its own market — the buyer's country and the CPV
 division — rather than against a European average. Single-bid rates across the
-26 version-1 segments large enough to have a baseline ran from 6.5% to 78.2%,
-motivating segment-specific comparison; the rule fired on
-**2.23%** of the population it covers in that historical run. The intake case
+26 measured segments large enough to have a baseline run from 6.5% to 78.2%,
+motivating segment-specific comparison; the rule fires on **2.23%** of the
+population it covers. The intake case
 supported building the rule, not release approval or a measured error rate.
 
 **What it needed**, and what each answer was:
@@ -519,7 +517,7 @@ supported building the rule, not release approval or a measured error rate.
 4 binds baseline computation and correction handling. Synthetic-fixture work
 can continue without claiming that processing real holdings is legally cleared.
 
-**Next steps:** close the engineering and privacy gates, remeasure v2 on an
-approved corpus, then verify flags under the full protocol. Record innocent
+**Next steps:** close the engineering and privacy gates, extend the measurement
+to an approved wider corpus, then verify flags under the full protocol. Record innocent
 explanations and empirical errors rather than treating arithmetic agreement as
 verification.

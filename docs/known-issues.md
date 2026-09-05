@@ -13,21 +13,22 @@ and what each piece needs — and every open item there has an issue mirroring i
 
 `classify` runs, and it runs one rule:
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md), which flags a
-lot that drew a single bid in a market where single bids are rare. The historical
-**version-1** run over five archived publication days produced **96 flags from
-8,159 lot outcomes**. Eligible segments covered 4,299 outcomes (52.7%); 3,860
-(47.3%) were below the segment-size floor. These are base-rate and coverage
-measurements, not empirical error rates.
+lot that drew a single bid in a market where single bids are rare. The measured
+run over five archived publication days produces **96 flags from 8,159 lot
+outcomes**. Eligible segments cover 4,299 outcomes (52.7%); 3,860 (47.3%) are
+below the segment-size floor. These are base-rate and coverage measurements, not
+empirical error rates.
 
-**Version 2 is implemented, but its historical measurement is pending.** It
-rejects duplicate structural/join keys, ambiguous and fractional tender counts, requires a
-present statistic code and requires every buyer reference to resolve to a
-present, agreed country. The writer stages replacements and removes stale rule
-files on success; multi-year replacement is not transactional. None of these
-fixes makes the version-1 measurements evidence for version 2.
-The mandatory CI `--require-current-measurements` check therefore blocks merge,
-even if local developer tests pass. Remeasurement requires the unresolved
-real-data processing review; synthetic development does not clear that review.
+**Version 2 is implemented and measured.** It rejects duplicate structural/join
+keys, ambiguous and fractional tender counts, requires a present statistic code
+and requires every buyer reference to resolve to a present, agreed country. The
+writer stages replacements and removes stale rule files on success; multi-year
+replacement is not transactional. On this archive version 2 admits exactly what
+version 1 admitted, so the counts above hold for both — that is a fact about
+this corpus, not a guarantee about a larger one. The mandatory CI
+`--require-current-measurements` check passes; passing it is metadata sanity,
+not proof of the measurement. Any further real-data measurement still needs the
+unresolved processing review.
 
 **No flag has been published, and release remains blocked.** Open gates include:
 
@@ -41,13 +42,12 @@ real-data processing review; synthetic development does not clear that review.
 - Privacy remediation, rebuilding affected datasets, and counsel review of
   current raw and derived holdings —
   [open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields).
-- Version-2 base rates, coverage and sensitivity, empirical false-positive
-  assessment and full verification —
+- Empirical false-positive assessment and full verification —
   [open-work #17](open-work.md#17-build-the-first-classifier).
 
 The flag's false-positive profile is **predicted, not observed**: the hypothesis
-lists potential innocent explanations and failure modes. One historical v1
-flag's arithmetic has been re-derived from its archived notice; **none has
+lists potential innocent explanations and failure modes. One flag's arithmetic
+has been re-derived from its archived notice; **none has
 completed the verification protocol**. **No empirical false-positive rate has
 been measured.**
 

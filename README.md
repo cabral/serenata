@@ -120,32 +120,33 @@ method.
 
 What survives is the comparative form, and it is built:
 [`single_bid_in_segment`](docs/hypotheses/single_bid_in_segment.md) flags a lot
-that drew one bid in a market where single bids are rare. In the historical
-**version-1** measurement, single-bid rates ranged from 6.5% to 78.2% across
-eligible markets, motivating comparison with a lot's own market. That run over five publication
-days produced **96 flags from 8,159 lot outcomes**; eligible segments covered
-**52.7%** of that population and excluded **47.3%** below the segment-size floor.
-These are base-rate and coverage measurements, not empirical error rates.
-That run was byte-identical on repeat, and every flag
+that drew one bid in a market where single bids are rare. Single-bid rates range
+from 6.5% to 78.2% across eligible markets, which is what motivates comparing a
+lot with its own market rather than a European average. The measured run over
+five publication days produces **96 flags from 8,159 lot outcomes**; eligible
+segments cover **52.7%** of that population and exclude **47.3%** below the
+segment-size floor. These are base-rate and coverage measurements, not empirical
+error rates. The run is byte-identical on repeat, and every flag
 carries the baseline it was measured against so a reader can disagree with it
 without rerunning anything ([ADR-0011](docs/adr/0011-flags-carry-their-own-baseline.md)).
 
-**Version 2 is implemented; remeasurement is pending.** It rejects duplicate
-structural and join keys, ambiguous and fractional tender counts, requires a present statistic code, and
-requires every buyer reference to resolve to a present, agreed country. Its
-output writer stages replacements and removes stale files for that rule after
-a successful run, but a multi-year replacement is not transactional. The
-historical counts above do not describe this version. One historical flag has
-had its arithmetic re-derived; **none has completed the verification protocol**.
-Current-version measurement is a **pre-merge requirement**, enforced by CI's
-`--require-current-measurements` check. Passing local developer tests does not
-clear it; this version currently fails that gate. Real-data remeasurement must
-also respect the unresolved processing review below.
+**Version 2 is implemented and measured.** It rejects duplicate structural and
+join keys, ambiguous and fractional tender counts, requires a present statistic
+code, and requires every buyer reference to resolve to a present, agreed
+country. Its output writer stages replacements and removes stale files for that
+rule after a successful run, but a multi-year replacement is not transactional.
+On this archive version 2 admits exactly what version 1 admitted, so the counts
+above are the remeasured ones — a fact about this corpus, not a general
+guarantee. One flag has had its arithmetic re-derived; **none has completed the
+verification protocol**. Current-version measurement is a **pre-merge
+requirement**, enforced by CI's `--require-current-measurements` check; passing
+local developer tests does not clear it. Any further real-data measurement must
+respect the unresolved processing review below.
 
 **No flag has been published, and none may be yet.** Correction and withdrawal
 handling needs both a design and deterministic implementation and tests, not
-just an ADR. Publication also requires v2 remeasurement, verification, and a
-decision on unknown natural-person status. Counsel must review current private
+just an ADR. Publication also requires verification and a decision on unknown
+natural-person status. Counsel must review current private
 holdings as well as proposed releases: collection and storage are processing,
 even without publication. Lawful basis, retention, transparency obligations and
 whether a data protection impact assessment (DPIA) is required remain unresolved
@@ -158,7 +159,7 @@ what the pipeline does not do, or does incompletely. The milestone plan:
 | # | Milestone | Status |
 |---|-----------|--------|
 | 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | eForms prototype built; privacy and correction gaps open; legacy not built |
-| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built; v2 remeasurement and verification pending |
+| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built and measured; verification pending |
 | 3 | Entity resolution against open national company registers | not started |
 | 4 | Public API and versioned bulk data releases | not started |
 | 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |

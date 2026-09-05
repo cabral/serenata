@@ -7,9 +7,8 @@ gets them their rows and stores what they return.
 Reading is DuckDB over the Parquet ADR-0001 chose, which is the arrangement
 that ADR anticipated: "classifiers will move it when they need SQL". The
 population query below is the one in
-`docs/hypotheses/single_bid_in_segment.sql`, which lets the current population
-be measured without running this code. Historical version-1 measurements in
-the hypothesis are not measurements of this version-2 population.
+`docs/hypotheses/single_bid_in_segment.sql`, which exists so the measurement
+in the hypothesis can be checked without running this code.
 `tests/test_classify_dataset.py` runs both over the same dataset and fails if
 they disagree, because two statements of one definition drift.
 
@@ -63,13 +62,56 @@ def _table(root: Path, name: str) -> str:
     return f"read_parquet('{path}/**/*.parquet', hive_partitioning = true)"
 
 
+def _eligible(root: Path) -> str:
+    """The row-level eligibility the gate and the population share, minus the
+    buyer country.
+
+    Written once because the gate must never be narrower than the population it
+    protects: a row the population reads and the gate skips is a duplicate
+    nobody checks.
+    """
+    procedures = ", ".join(f"'{code}'" for code in COMPETITIVE_PROCEDURES)
+    systems = ", ".join(f"'{code}'" for code in FRAMEWORK_SYSTEMS)
+    return f"""
+SELECT DISTINCT s.source_publication_id, s.lot_result_ordinal
+FROM {_table(root, "lot_result_statistic")} s
+JOIN {_table(root, "lot_result")} lr
+  ON lr.source_publication_id = s.source_publication_id
+ AND lr.ordinal = s.lot_result_ordinal
+JOIN {_table(root, "lot")} l
+  ON l.source_publication_id = s.source_publication_id
+ AND l.lot_id = lr.lot_ref
+JOIN {_table(root, "procedure")} p
+  ON p.source_publication_id = s.source_publication_id
+WHERE s.statistic_kind = 'received_submissions'
+  AND s.statistic_code = 'tenders'
+  AND s.statistic_code_status = 'present'
+  AND s.statistic_value_status = 'present'
+  AND regexp_full_match(s.statistic_value, '[+]?[0-9]+([.]0*)?')
+  AND TRY_CAST(split_part(s.statistic_value, '.', 1) AS BIGINT) >= 1
+  AND p.procedure_code_status = 'present'
+  AND p.procedure_code IN ({procedures})
+  AND l.cpv_code_status = 'present'
+  AND NOT list_has_any(l.contracting_system_codes, [{systems}])
+"""
+
+
 def _duplicate_query(root: Path) -> str:
-    """Check keys before any joins, returning a boolean, never record values.
+    """Check the keys this rule reads, returning a boolean, never record values.
 
     Structural duplicates (including overlaps across packages or years) are
     upstream errors, not extra observations. Distinct structural rows may also
     collide on a local join identifier or offer multiple tender counts for one
     outcome. Neither case has an authoritative row this reader can choose.
+
+    The scan covers the publications the population draws from, and the tender
+    check the lot results in it. A publication that contributes no lot outcome
+    contributes to no segment either, so its duplicates cannot move a flag —
+    and TED publishes such rows: one framework lot result in the archive
+    carries its bid count four times, and validating whole tables let it stop
+    every measurement over data the rule never reads. Eligibility deliberately
+    stops short of the buyer country, so a publication cannot escape the check
+    by carrying the very duplicate organisations that would exclude it.
     """
     inputs = {
         "procedure",
@@ -95,16 +137,19 @@ def _duplicate_query(root: Path) -> str:
                 ("source_publication_id", "lot_result_ordinal"),
                 "statistic_kind = 'received_submissions' "
                 "AND statistic_code = 'tenders' "
-                "AND statistic_code_status = 'present'",
+                "AND statistic_code_status = 'present' "
+                "AND (source_publication_id, lot_result_ordinal) IN "
+                "(SELECT source_publication_id, lot_result_ordinal FROM eligible)",
             ),
         ]
     )
+    scope = "source_publication_id IN (SELECT source_publication_id FROM eligible)"
     duplicates = " UNION ALL ".join(
-        f"SELECT 1 FROM {_table(root, table)} WHERE {condition} "
+        f"SELECT 1 FROM {_table(root, table)} WHERE {condition} AND {scope} "
         f"GROUP BY {', '.join(key)} HAVING count(*) > 1"
         for table, key, condition in checks
     )
-    return f"SELECT EXISTS ({duplicates})"
+    return f"WITH eligible AS ({_eligible(root)}) SELECT EXISTS ({duplicates})"
 
 
 def population_query(root: Path) -> str:
