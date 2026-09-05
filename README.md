@@ -123,21 +123,24 @@ What survives is the comparative form, and it is built:
 that drew one bid in a market where single bids are rare. Single-bid rates range
 from 6.5% to 78.2% across eligible markets, which is what motivates comparing a
 lot with its own market rather than a European average. The measured run over
-five publication days produces **96 flags from 8,159 lot outcomes**; eligible
+five publication days produces **96 flags from 8,157 lot outcomes**; eligible
 segments cover **52.7%** of that population and exclude **47.3%** below the
 segment-size floor. These are base-rate and coverage measurements, not empirical
 error rates. The run is byte-identical on repeat, and every flag
 carries the baseline it was measured against so a reader can disagree with it
 without rerunning anything ([ADR-0011](docs/adr/0011-flags-carry-their-own-baseline.md)).
 
-**Version 2 is implemented and measured.** It rejects duplicate structural and
+**Version 3 is implemented and measured.** It rejects duplicate structural and
 join keys, ambiguous and fractional tender counts, requires a present statistic
-code, and requires every buyer reference to resolve to a present, agreed
-country. Its output writer stages replacements and removes stale files for that
-rule after a successful run, but a multi-year replacement is not transactional.
-On this archive version 2 admits exactly what version 1 admitted, so the counts
-above are the remeasured ones — a fact about this corpus, not a general
-guarantee. One flag has had its arithmetic re-derived; **none has completed the
+code, requires every buyer reference to resolve to a present, agreed country,
+and excludes notices another notice in the corpus corrects
+([ADR-0013](docs/adr/0013-correction-and-withdrawal-semantics.md)). Its output
+writer stages replacements and removes stale files for that rule after a
+successful run, but a multi-year replacement is not transactional. The
+supersession exclusion removes two lot outcomes from this archive, both in
+segments too small to have a baseline, so the flags are unchanged — a fact
+about this corpus, not a general guarantee. **Withdrawals are not handled**:
+nothing measured distinguishes one from a correction. One flag has had its arithmetic re-derived; **none has completed the
 verification protocol**. Current-version measurement is a **pre-merge
 requirement**, enforced by CI's `--require-current-measurements` check; passing
 local developer tests does not clear it. Any further real-data measurement must

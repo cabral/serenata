@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from typing import Any
 
+from serenata.normalise.corrections import parse_link
 from serenata.normalise.model import (
     FIELD_PRIVACY_TABLE,
     LOCATION_BLOCK,
@@ -198,6 +199,32 @@ def _computed(column: Column, value: Any, status: Status) -> dict[str, Any]:
     return {column.name: value, f"{column.name}_status": status.value}
 
 
+def _correction_part(column: Column, row: dict[str, Any]) -> dict[str, Any]:
+    """One part of the corrigendum link, split from the identifier (ADR-0013).
+
+    The parts mirror the link's own status: a withheld link has withheld parts,
+    an absent one absent parts. Nothing is invented where TED published nothing.
+
+    A legacy TED link carries no version, and that records `ABSENT` rather than
+    `NOT_APPLICABLE` — inapplicability here is derivable from the namespace, but
+    the model reserves that status for the notice-subtype rules it does not yet
+    carry, and understating what is known beats two meanings for one word.
+    """
+    link, status = row["changed_notice_id"], row["changed_notice_id_status"]
+    parsed = parse_link(link) if status == Status.PRESENT.value else None
+    if parsed is None:
+        return _computed(column, None, Status(status))
+    namespace, target, version = parsed
+    part = column.name.removeprefix("changed_notice_")
+    if part == "namespace":
+        return _computed(column, namespace.value, Status.PRESENT)
+    if part == "target":
+        return _computed(column, target, Status.PRESENT)
+    if version is None:
+        return _computed(column, None, Status.ABSENT)
+    return _computed(column, version, Status.PRESENT)
+
+
 def _identity_of(notice: ParsedNotice) -> dict[str, Any]:
     """What every row carries, whichever record it was built from."""
     return {
@@ -243,6 +270,8 @@ def _record_rows(
             if column.kind is Kind.COMPUTED:
                 if column.name == "root_element":
                     row |= _computed(column, notice.root_element, Status.PRESENT)
+                elif column.name.startswith("changed_notice_"):
+                    row |= _correction_part(column, row)
                 continue
             row |= _read(record, column, language)
             if column.name in withheld:

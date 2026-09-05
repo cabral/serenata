@@ -3,15 +3,19 @@
 Status: building
 
 The classifier exists and runs, and its measured base rate reproduces: over
-the five archived publication days, version 2 produces 96 flags from 8,159 lot
+the five archived publication days, version 3 produces 96 flags from 8,157 lot
 outcomes, the same numbers the [query](single_bid_in_segment.sql) beside this
 file reports.
 
-Version 2 tightened population integrity and three exclusions, and **measures
-identically to version 1 on this archive** — every figure below was remeasured
-under version 2 and none of them moved. That is a statement about this corpus,
-not a general one: the tightened rules are guarantees about what the population
-may contain, and on a corpus where they bind, they will change the numbers.
+Version 3 excludes notices another notice in the corpus corrects
+([ADR-0013](../adr/0013-correction-and-withdrawal-semantics.md)), which removes
+**two lot outcomes** from version 2's population of 8,159. Both sat in segments
+below the size floor, so coverage, the segment rates and the flags are
+unchanged. Version 2 in turn tightened population integrity and three
+exclusions and measured identically to version 1. Each of those is a statement
+about this corpus, not a general one: the rules are guarantees about what the
+population may contain, and on a corpus where they bind they will move the
+numbers.
 
 It is not `live`, because nothing it produces may be published yet — see the
 legal check.
@@ -68,7 +72,18 @@ for a human verifier.
 
 ## Population and denominator
 
-One row per lot result, included when all of these hold:
+A notice **another notice in this corpus corrects is excluded entirely**, with
+its lot results. Matching is on the target identifier alone, not the identifier
+and version: 28 of the 46 resolvable links in this archive name a version other
+than the one held, and a link naming version 02 is evidence a version 02 exists,
+which the copy held at version 01 is already behind. Excluding only exact
+version matches would keep notices measurably stale. A flag carries the
+`correction_cutoff` its check saw — the corpus's latest publication day — so a
+reader knows which corrections it could not have known about. Withdrawals are
+**not** handled: nothing measured distinguishes one from a correction.
+
+One row per lot result of a notice that survives that, included when all of
+these hold:
 
 - the lot result carries a `received_submissions` statistic with code `tenders`,
   both its code and value statuses are `present`, and the value is an **exact
@@ -143,11 +158,11 @@ sanity, not the data, the query's results, or approval to release or publish.
 
 ```toml
 [admission]
-current_rule_version = 2
+current_rule_version = 3
 current_measurement = "measured"
 
 [measurement]
-rule_version = 2
+rule_version = 3
 measured_on = 2026-09-05
 period_start = 2026-01-01
 period_end = 2026-09-05
@@ -155,10 +170,10 @@ package_ids = ["202600052", "202600094", "202600113", "202600157", "202600168"]
 query_file = "single_bid_in_segment.sql"
 query_revision = "working-tree"
 notice_count = 19180
-population_count = 8159
-population_notice_count = 3790
+population_count = 8157
+population_notice_count = 3788
 covered_count = 4299
-uncovered_count = 3860
+uncovered_count = 3858
 flagged_count = 96
 flagged_notice_count = 71
 ```
@@ -168,13 +183,14 @@ beyond this archive, nor to publish anything computed from it.
 
 ## Base rate
 
-Measured 2026-09-05 under version 2, against five archived publication days of
+Measured 2026-09-05 under version 3, against five archived publication days of
 2026 — OJ S 52, 94, 113, 157 and 168, 19,180 notices. The query is
-`single_bid_in_segment.sql` beside this file, including its integrity gate.
-Version 1 measured the same figures on the same archive.
+`single_bid_in_segment.sql` beside this file, including its integrity gate and
+its supersession exclusion. Versions 1 and 2 measured 8,159 lot results on the
+same archive; the two the supersession exclusion removes are the difference.
 
-- **Population**: 8,159 lot results, from 3,790 notices.
-- **Single bid anywhere in it**: 3,435, or 42.1%. That is the rate case 001 was
+- **Population**: 8,157 lot results, from 3,788 notices.
+- **Single bid anywhere in it**: 3,434, or 42.1%. That is the rate case 001 was
   rejected on: a flag firing on two in five awards describes the market.
 - **Segments with at least 50 lot results**: 26, covering 4,299 of the
   population. Their single-bid rates run from 6.5% to 78.2%, median 35.2%.
@@ -190,8 +206,8 @@ Sensitivity, same dataset, flags at each parameter pair:
 | 75 | 11 | 3,409 | 20 | 76 | 76 | 76 |
 | 100 | 8 | 3,155 | 20 | 64 | 64 | 64 |
 
-**Coverage is a narrow majority, not a minority.** 4,299 of 8,159 lot results
-(52.7%) are in eligible segments; the other 3,860 (47.3%) sit in segments below
+**Coverage is a narrow majority, not a minority.** 4,299 of 8,157 lot results
+(52.7%) are in eligible segments; the other 3,858 (47.3%) sit in segments below
 the floor. The honest output there is silence, not a flag.
 
 **Anticipated false-positive profile.** Not yet verified case by case — no

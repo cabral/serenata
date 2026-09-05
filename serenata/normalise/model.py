@@ -203,6 +203,12 @@ NOTICE_TABLE = Table(
         # types differ before any field is read.
         Column("root_element", kind=Kind.COMPUTED),
         Column("changed_notice_id", f"{EXT}/efac:Changes/efbc:ChangedNoticeIdentifier"),
+        # The link parsed into its parts (ADR-0013). Two identifier namespaces
+        # share the column, so which one a link used is recorded rather than
+        # assumed, and an unrecognised shape is `unknown` rather than dropped.
+        Column("changed_notice_namespace", kind=Kind.COMPUTED),
+        Column("changed_notice_target", kind=Kind.COMPUTED),
+        Column("changed_notice_version", kind=Kind.COMPUTED),
     ),
 )
 

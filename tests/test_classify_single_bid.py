@@ -23,6 +23,9 @@ from serenata.classify.single_bid_in_segment import (
     segment_counts,
 )
 
+#: The corpus a synthetic outcome was read under. Fixed, so a rerun matches.
+CUTOFF = "2026-08-17"
+
 
 def outcome(
     index: int,
@@ -41,6 +44,7 @@ def outcome(
         bids=bids,
         country=country,
         cpv_division=division,
+        correction_cutoff=CUTOFF,
     )
 
 
