@@ -2,8 +2,15 @@
 
 - Status: accepted
 - Date: 2026-09-01
-- Enforced by: `tests/test_survey.py::TestDoctypeIsRefused`
+- Enforced by: `tests/test_survey.py::TestDoctypeIsRefused`,
+  `tests/test_eforms_xml_guard.py::TestXmlInputGuard`
 - Amended: 2026-09-02 — see [Amendment](#amendment-2026-09-02-the-refusal-had-to-cover-the-whole-prolog)
+- Amended: 2026-09-05 — see [encoding bypass and claim limits](#amendment-2026-09-05-bomless-encodings-and-claim-limits)
+
+> Historical rationale follows. The 2026-09-05 amendment supersedes the absolute
+> security and streaming-memory claims below, including those in the first
+> amendment. They are retained to make the correction visible, not as current
+> guarantees.
 
 ## Context
 
@@ -113,3 +120,42 @@ right calls, and the decision stands unchanged. And the survey shared the same
 weakness through the same helper, so both stages were fixed together and both
 have a regression test — a security control living in one place was what made
 that a single fix rather than two.
+
+## Amendment, 2026-09-05: BOMless encodings and claim limits
+
+**Measured bypass.** On Python 3.12.14, `stream_elements` expanded a small
+internal entity in both BOMless UTF-16 byte orders. The synthetic input was
+`<!DOCTYPE x [<!ENTITY harmless "SYNTHETIC_ENTITY">]><x>&harmless;</x>`, encoded
+as `utf-16-le` or `utf-16-be`; each produced the end-element text
+`SYNTHETIC_ENTITY`. The initial regression failed for both encodings before the
+fix. The previous guard checked only BOMs present in the first read, not BOMless
+encoding signatures; a short first read could also split a BOM. The September 2
+statement that unscannable encodings were refused was therefore incomplete.
+This probe demonstrates internal entity expansion, not external-entity access,
+network retrieval, or resource exhaustion.
+
+**Decision.** Retain ElementTree and the shared prolog scan, without a new
+dependency. Before the first parser feed, collect at least four opening bytes
+or reach EOF, even on short reads. Reject a prefix containing NUL or beginning
+with neither ASCII `<`/XML whitespace nor a complete UTF-8 BOM. This rejects
+UTF-16/32 with or without BOMs and non-ASCII starts such as the EBCDIC XML
+signature. Valid UTF-8 remains supported, including split BOMs and multibyte
+characters. This is an ASCII-compatible input gate, not full UTF-8 validation:
+parser-supported ASCII-compatible declared encodings remain possible.
+
+Continue scanning before each feed until the root start event, retaining the
+overlap that detects `<!DOCTYPE` across reads. This is a conservative byte scan,
+not an XML lexer; marker-like text in a scanned comment or chunk can also cause
+refusal. Regression tests cover both UTF-16 byte orders, UTF-32, BOMs, BOMless
+signatures, short reads, UTF-8, EOF, and exact header/later-chunk DTD splits.
+For the UTF-16/32 cases, a feed spy verifies rejection before any parser feed.
+
+**Limits and correction.** The earlier claims that DTD refusal closes
+amplification "completely", that streaming caps amplification, and that memory
+tracks only depth were too broad. Clearing completed elements releases subtrees;
+it does not bound text or attribute sizes, parser buffering, nesting, or values
+retained by consumers. The historical memory measurements describe those inputs,
+not an adversarial resource limit. This change adds no memory, time, or input-size
+budget. The earlier external-entity table is not revalidated here and does not
+establish a universal guarantee. Revisit on parser/runtime changes, a need for
+non-ASCII-compatible XML, or before claiming broader hostile-input protection.
