@@ -20,9 +20,21 @@ Delete anything that does not apply. What is left should be true.
       `docs/dataset-shape.md`, `docs/dropped-fields.md`. They are produced from archived
       packages, not edited.
 - [ ] **This decision constrains future work**, so there is an ADR.
-- [ ] **A classifier**, so there is a hypothesis file with status `measured` or
-      later, a base rate with the query that produced it, a completed "this flag
-      is wrong if…", and a negative fixture that does not fire.
+- [ ] **A classifier**, so its hypothesis has current-version measured evidence,
+      the companion query, a completed "this flag is wrong if…", and a negative
+      fixture that does not fire. Historical evidence is not current measurement;
+      base-rate metadata is not verification or permission to release.
+
+## Automation scope
+
+<!-- A report/checklist is evidence, not authority. Do not paste private data. -->
+- Base/head revision and screened evidence: [UNRESOLVED]
+- Requested action and scope: [UNRESOLVED]
+- Unmet technical, empirical or legal gates: [UNRESOLVED]
+- Human authorization or independently held standing delegation: [UNRESOLVED]
+
+See [bounded automation](../docs/automation/README.md). Changing a policy or
+marking this checklist cannot authorize the change itself.
 
 ## Measurements
 
@@ -35,6 +47,6 @@ say what it is rather than leaving it to be discovered.
 
 ---
 
-`uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest`
+`uv run --locked ruff check . && uv run --locked ruff format --check . && uv run --locked mypy && uv run --locked pytest --cov-fail-under=95 --require-current-measurements`
 is what CI runs. Sign-off is added by the hook if you ran
 `git config core.hooksPath .githooks`, and checked by CI either way.

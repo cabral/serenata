@@ -34,6 +34,16 @@ def run(client, archive, start, end=None, **kwargs):
     )
 
 
+class TestPackageFixture:
+    def test_package_bytes_do_not_depend_on_the_gzip_clock(self, monkeypatch):
+        monkeypatch.setattr("gzip.time.time", lambda: 1000.0)
+        first = make_package()
+        monkeypatch.setattr("gzip.time.time", lambda: 2000.0)
+        assert make_package() == first
+        assert first[4:8] == b"\x00" * 4, "gzip mtime must be explicitly zero"
+        assert make_package(notices=("00000002_2026.xml",)) != first
+
+
 class TestFetchingADay:
     def test_it_archives_the_package_and_records_its_provenance(
         self, client_factory, ted_handler, tmp_path

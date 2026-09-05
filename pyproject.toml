@@ -63,7 +63,7 @@ select = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["serenata"]
+files = ["serenata", "tools/merge_guard.py"]
 
 # pyarrow ships no type information. The alternative to this override is an
 # ignore comment on every import of it, which says the same thing in more
@@ -86,7 +86,9 @@ testpaths = ["tests"]
 # suite's offline promise is enforced by a socket guard in tests/conftest.py,
 # and those tests are the one deliberate exception to it. Run them with
 # `uv run pytest -m contract`; CI runs them weekly, not on every push.
-addopts = "-ra --cov=serenata --cov-report=term-missing -m 'not contract'"
+# Include the standalone read-only controller; coverage is not evidence of
+# GitHub enforcement, real-data verification or a deployed security boundary.
+addopts = "-ra --cov=serenata --cov=tools.merge_guard --cov-report=term-missing -m 'not contract'"
 markers = [
     "contract: reaches the live TED service; excluded from the default run",
 ]

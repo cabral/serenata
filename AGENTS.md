@@ -35,3 +35,15 @@ Read the relevant skills before acting; more than one may apply:
   retention constraints.
 - These instructions and skills are textual guidance, not a security sandbox.
   They do not enforce permissions, prove privacy or replace human review.
+
+## Bounded automation
+
+Use [the automation operating procedure](docs/automation/README.md) and
+[role/evidence handoffs](docs/automation/handoffs.md) for repeated development.
+The profiles under [.github/agents/](.github/agents/) pin no model. Technical
+checks can run automatically; no model report grants authority. A future adopted,
+externally held standing delegation may authorize only its enumerated merges,
+without a new human click for each. The repository template is disabled, the ADR
+is proposed, and no such delegation is activated by these files. Models cannot
+edit, renew or expand the deployed controller or its authority. Processing,
+naming, publication and external messages remain separate actions.

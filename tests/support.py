@@ -25,7 +25,12 @@ def make_package(
 ) -> bytes:
     """A gzipped tar shaped like a TED daily package, with fake notices."""
     buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+    # Fix the gzip header too, not just each tar member's timestamp. Fetch
+    # tests compare separately built packages across arbitrary clock ticks.
+    with (
+        gzip.GzipFile(fileobj=buffer, mode="wb", mtime=0) as compressed,
+        tarfile.open(fileobj=compressed, mode="w") as archive,
+    ):
         for name in notices:
             body = (
                 '<?xml version="1.0" encoding="UTF-8"?>'
