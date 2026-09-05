@@ -9,12 +9,50 @@ the code. [`open-work.md`](open-work.md) is the companion — what is being buil
 and what each piece needs — and every open item there has an issue mirroring it.
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) is how to work on any of it.
 
-## The pipeline stops after normalise
+## One classifier exists, and nothing it produces may be published
 
-There is **no classifier and no flag**. `fetch` archives packages, `parse` turns
-them into typed records, `normalise` writes those as Parquet, and nothing yet
-evaluates anything. Statements in this repository about what the data shows are
-measurements of the archive, not findings.
+`classify` runs, and it runs one rule:
+[`single_bid_in_segment`](hypotheses/single_bid_in_segment.md), which flags a
+lot that drew a single bid in a market where single bids are rare. The measured
+run over five archived publication days produces **96 flags from 8,159 lot
+outcomes**. Eligible segments cover 4,299 outcomes (52.7%); 3,860 (47.3%) are
+below the segment-size floor. These are base-rate and coverage measurements, not
+empirical error rates.
+
+**Version 2 is implemented and measured.** It rejects duplicate structural/join
+keys, ambiguous and fractional tender counts, requires a present statistic code
+and requires every buyer reference to resolve to a present, agreed country. The
+writer stages replacements and removes stale rule files on success; multi-year
+replacement is not transactional. On this archive version 2 admits exactly what
+version 1 admitted, so the counts above hold for both — that is a fact about
+this corpus, not a guarantee about a larger one. The mandatory CI
+`--require-current-measurements` check passes; passing it is metadata sanity,
+not proof of the measurement. Any further real-data measurement still needs the
+unresolved processing review.
+
+**No flag has been published, and release remains blocked.** Open gates include:
+
+- A flag on a notice later corrected or withdrawn is a flag on something that
+  no longer stands, and the pipeline records the corrigendum link without
+  acting on it. Deterministic code and tests are needed, not just an ADR —
+  [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
+- Whether an entity may be named at all when its natural-person status is
+  unknown, and whether current processing is permitted —
+  [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status).
+- Privacy remediation, rebuilding affected datasets, and counsel review of
+  current raw and derived holdings —
+  [open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields).
+- Empirical false-positive assessment and full verification —
+  [open-work #17](open-work.md#17-build-the-first-classifier).
+
+The flag's false-positive profile is **predicted, not observed**: the hypothesis
+lists potential innocent explanations and failure modes. One flag's arithmetic
+has been re-derived from its archived notice; **none has
+completed the verification protocol**. **No empirical false-positive rate has
+been measured.**
+
+Statements in this repository about what the data shows remain measurements of
+the archive, not findings.
 
 Tracked as milestone 2 in the [README](../README.md).
 
@@ -22,23 +60,35 @@ Tracked as milestone 2 in the [README](../README.md).
 
 Constraint 2's drop list is **structural**: it rejects paths through
 `cac:Contact`, `efac:UltimateBeneficialOwner` and `cac:TechnicalCommitteePerson`
-wherever they appear. That is the right shape for the rule and it cannot catch a
+wherever they appear. It does not catch a
 publisher who types a contact address into a field that is not one.
 
 They do. [`dataset-shape.md`](dataset-shape.md) counts it, regenerated from the
-archive rather than remembered: **46 address-shaped values in 7 columns** that
-should hold a city, a registration number, a street, a website or a description
-— and **13 shaped like a person's own address** (`firstname.lastname@`), which
-is personal data landing in the dataset through a field the drop list has no
-reason to reject. That report carries counts and never values, for the same
-reason this entry does.
+archive rather than remembered: across five publication days, **427
+address-shaped values in 7 columns** that should hold a city, a registration
+number, a street, a website or a description — and **139 shaped like a person's
+own address** (`firstname.lastname@`). These pattern counts demonstrate a
+retained-field leakage problem, not a complete inventory or a legal
+classification of every value. That report carries counts, not the values.
 
-Nothing is published yet, so this is not yet an exposure; it is one before the
-first dataset release. It also cannot be fixed by adding paths to the list,
-because the problem is the value rather than the field. The options — reject the
-value, redact the match, or flag the row for review — differ in what they lose,
-and choosing changes what "dropped at ingestion" means, which is a decision for
-counsel rather than a regex added quietly. Tracked as
+**Widening the evidence changed where the problem is.** One day suggested a
+scattering across identity columns; five days put **359 of the 427 in
+`lot.description` and `procedure.description`** — free text, where a buyer
+writes "questions to firstname.lastname@example.org". Those two columns are
+carried as provenance and no classifier reads them (constraint 5), which bounds
+their use in classification but does not remove them from current storage.
+
+The explicit-natural-person Company/TouchPoint `WebsiteURI` suppression gap is
+now fixed in code. **Stored datasets have not been rebuilt**, and that fix does
+not address all retained-field leakage or unknown natural-person status.
+
+Nonpublication limits dissemination; it does not remove processing obligations
+or security risks. Collection and storage are processing under
+[GDPR Article 4(2)](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng).
+The value-level problem needs a counsel-reviewed policy, implementation, tests
+and remediation of existing copies. Rejecting values, redacting matches or
+holding rows for review have different consequences; neither a regex nor a
+successful rebuild proves anonymity. Tracked as
 [open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields)
 and issue [#22](https://github.com/cabral/serenata/issues/22).
 
@@ -49,10 +99,14 @@ UUIDs each appear twice in OJ S 157/2026**, published the same day under
 different notice numbers, with the same contract folder, issue date and
 subtype — one notice published twice.
 
+Nor is it a same-day artefact. Across the five days now measured, **six UUIDs
+carry two publications each, and one of those six spans two different
+publication dates** — so a date does not disambiguate them either.
+
 Every table is therefore keyed on `source_publication_id`, which is unique
-across all 3,190. `source_notice_id` is kept on every row because it is what
-links a corrigendum to what it corrects, and **anything joining on it may match
-more rows than it means to**.
+across all 19,180 notices measured. `source_notice_id` is kept on every row
+because it is what links a corrigendum to what it corrects, and **anything
+joining on it may match more rows than it means to**.
 
 ## Legacy TED notices are refused, not parsed
 
@@ -62,9 +116,9 @@ elements into the data model has never been measured, because no archived
 package contains a legacy notice, and guessing which of those fields can carry a
 person's name is the guess constraint 2 exists to forbid.
 
-Nothing is blocked by this today. It bounds the pipeline to notices from roughly
-late 2024 onward, which is most of what matters for current procurement and none
-of the historical record.
+The eForms prototype can run without legacy support, but the broader
+ingestion/normalisation milestone remains incomplete. Coverage is limited to
+eForms notices; it is not the full historical TED record.
 
 Tracked as [open-work #3](open-work.md#3-document-and-drop-the-fields-that-can-name-a-natural-person)
 and issue [#13](https://github.com/cabral/serenata/issues/13).
@@ -123,7 +177,7 @@ the parser and appears in **no notice measured**: zero blank leaves among all
 with an absent one would be silently wrong and costs nothing to avoid, not
 because this package shows it happening.
 
-Related: [`field-usage.md`](field-usage.md) reports 296 paths appearing "only as
+Related: [`field-usage.md`](field-usage.md) reports 323 paths appearing "only as
 containers or blank elements". The survey cannot tell those apart; parse can,
 and all of them are containers. The report's wording is hedged rather than
 wrong, and its numbers are unaffected.
@@ -156,20 +210,31 @@ saying what was published that day, which is correct as history and wrong as
 current state.
 
 This has to be settled before any finding is published, because a flag against a
-superseded notice is a flag against something that no longer stands. Tracked as
+superseded notice is a flag against something that no longer stands. An ADR
+alone is insufficient: deterministic code must apply correction/version links
+to the eligible population, baselines and affected flags. Tests must cover
+corrections, withdrawals, supersession, ambiguous/missing links, stale-output
+removal and rerun identity. Tracked as
 [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices) and issue [#15](https://github.com/cabral/serenata/issues/15).
 
 ## Whether an organisation is a person is often unknown
 
 `efbc:NaturalPersonIndicator` is **absent from about 90% of notices**, and absent
 is "not provided", never "false". Where it is present and true, the organisation's
-identifying values are suppressed. Where it is absent, the record is kept and
+specified identifying values are suppressed. Where it is absent, the record is kept and
 whether that organisation is a company or a private individual trading in their
 own name is not known from the notice.
 
-Ingestion cannot resolve this. Whether a flag may be *published* about such an
-entity is [open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status),
-and issue [#14](https://github.com/cabral/serenata/issues/14); it blocks the first finding rather than the pipeline.
+Even when names are suppressed, notice-scoped opaque keys and source links can
+identify people indirectly. Under GDPR Article 4(1) and Recital 26, removing a
+name is not sufficient where reasonably likely linkage identifies the person.
+The notice-level absence rate is not an organisation-level prevalence estimate.
+
+Current ingestion and storage require assessment, not just publication of a
+flag. Processing and publication rules remain
+[open-work #11](open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status)
+and issue [#14](https://github.com/cabral/serenata/issues/14). Neither official
+publication nor a role code proves that an entity is a legal person.
 
 ## What each stage costs, and how that was measured
 
@@ -234,8 +299,9 @@ last report.
 ## Which figures are generated, and which are not
 
 A claim about the data is only as good as the last time someone checked it, and
-this repository makes many. They fall in two groups, and only one of them is
-safe.
+this repository makes many. Generated measurements, manual measurements and
+classifier-version evidence have different limits; none is a privacy or legal
+certification.
 
 **Generated from the archive, and regenerable by anyone who has one.** Two
 documents, both produced by `python -m serenata.survey`, both byte-reproducible
@@ -250,18 +316,23 @@ SHA-256:
   column is, withheld sentinels, address-shaped values in columns that should
   not hold them, and whether any table has rows sharing a key.
 
-**Measured by hand, and not checked by anything.** What is left is the cost
-table above — wall clock, peak memory, bytes on disk — which cannot be
-byte-reproducible because it is a property of the machine as much as of the
-data. Each figure there was measured with a throwaway script, and the method is
-stated beside it so it can be reproduced rather than trusted.
+**Measured by hand, not continuously checked.** The performance figures above
+depend on the machine as well as the data; they are not byte-reproducible.
+Each was measured with a throwaway script, and the method is stated beside it
+so it can be repeated rather than trusted.
+
+**Classifier measurements are version-specific.** The hypothesis retains the
+historical v1 measurement and its query revision. The current companion SQL
+targets v2; neither rerunning that SQL nor passing fixture tests reproduces or
+updates the historical measurement by itself.
 
 The *properties* behind the generated numbers are also asserted, over notices
 carrying each case deliberately: `tests/test_sample_package.py` checks that a
 withheld count is not a number, that the notice UUID is not unique, that a sole
-trader keeps only an opaque key, and that every table's key is unique. So the
-shape of the data the pipeline promises to handle is checked on every push, and
-the counts from a real publication day are a command away.
+trader's specified identity fields are suppressed while its notice-scoped key is
+kept, and that every table's key is unique in those fixtures. These are bounded
+checks, not proof of all possible inputs or anonymity: the key remains
+source-linkable, and other retained fields can carry personal data.
 
 ## A published dataset would carry the writer's version
 
@@ -271,24 +342,29 @@ outputs written by one version, which is what determinism means here: the same
 code and the same data produce the same bytes. A dependency bump is a change of
 code, and it will show up as one.
 
-## The raw archive holds personal data, by design and with a basis
+## The raw archive and derived holdings need a lawful-basis and retention review
 
 A contact name, e-mail and telephone appear in **99.9%** of notices, and the
-archive keeps whole publication days byte-for-byte because reproducibility needs
-the exact bytes a flag came from. So the archive holds personal data that no
-derived record does.
+archive keeps whole publication days byte-for-byte for reproducibility. It holds
+personal data; retained-field leakage means derived datasets can too. Private,
+gitignored storage does not establish a lawful basis or effective security.
 
-[ADR-0010](adr/0010-raw-archive-retention.md) records the purpose, the Art.
-6(1)(f) basis and its balancing test, the retention rule and the security
-posture. **It has not been reviewed by counsel** — it is the document to hand
-them, not a substitute for asking.
+[ADR-0010, amended 2026-09-05](adr/0010-raw-archive-retention.md), withdraws its
+earlier anonymity and legal-basis assurances. Article 6(1)(f) is a proposed
+basis, not a completed necessity/balancing assessment. **Counsel review remains
+unresolved for current private holdings**, including raw and derived data,
+retention under Article 5, Article 14 transparency and any exception, and whether
+Article 35 requires a DPIA. No completed DPIA or compliance certification is
+claimed. The [TED reuse terms](https://ted.europa.eu/en/legal-notice) do not
+supply this project's GDPR basis.
 
-Two things follow that are worth watching rather than assuming. The retention
-rule says archived packages are kept while the datasets derived from them are
-published, and that this is **reviewed annually**; the first review is due
-2027-09-03 and the outcome belongs in this file. And an erasure request reaching
-the project is an escalation whose answer ADR-0010 deliberately does not
-pre-empt.
+The original policy linked retention to published datasets but did not settle
+today's unpublished holdings. Its first annual review date, **2027-09-03**, is
+not permission to retain until then or to defer current assessment. Record the
+counsel-reviewed retention decision and disposition of existing copies here.
+Rights requests and incidents require assessment across all affected holdings,
+not only the archive. ADR-0010 records the distinct Article 33 and 34 breach
+notification thresholds; nonpublication does not remove those duties.
 
 ## 65 commits in the history carry no sign-off
 

@@ -20,28 +20,36 @@ without a builder, or a builder without a column here, does not merge.
 
 ## What this is written against
 
-Every source path below was **observed** in the 3,190 notices of OJ S 157/2026,
-and the presence figures are that package's, from
-[`field-usage.md`](field-usage.md). Where a field the model needs is rare, the
-figure says so rather than the model pretending otherwise. `tests/test_data_model.py`
-fails if a path cited here is not one the survey actually measured.
+Every source path below was **observed** in **19,180 notices across five
+publication days of 2026** — OJ S 52, 94, 113, 157 and 168 — and the presence
+figures are those packages', from [`field-usage.md`](field-usage.md). Where a
+field the model needs is rare, the figure says so rather than the model
+pretending otherwise. `tests/test_data_model.py` fails if a path cited here is
+not one the survey actually measured.
 
 Presence is not the only thing measured, and it was not enough. This document
 originally gave one column to each path, which is a claim that the path occurs
-once per record — false for nine of them, and not visible in a presence figure.
-`field-usage.md` now reports **how many times each path occurs inside a single
-record**, and `tests/test_normalise_model.py` fails if a column that holds one
-value reads a path measured occurring more than once. The claim is checked
-rather than assumed.
+once per record — false for nine of them against the first day measured, and ten
+once a second day was, and not visible in a presence figure. `field-usage.md`
+now reports **how many times each path occurs inside a single record**, and
+`tests/test_normalise_model.py` fails if a column that holds one value reads a
+path measured occurring more than once. The claim is checked rather than
+assumed — against the days that have been measured, which is why the count went
+from nine to ten and may go to eleven.
 
 The shorthand `<ext>` stands for
 `notice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/efext:EformsExtension`,
 and `<org>` for `<ext>/efac:Organizations/efac:Organization`.
 
-One publication day is one day's mix of notice types and member states. Rerunning
-the survey over more packages ([#2](open-work.md#2-survey-which-eforms-fields-notices-actually-populate))
-may move the percentages; it should not move the structure, and if it does, this
-document is what gets corrected.
+**That prediction has now been tested, and it was half right.** This document
+was written against one publication day, and said that rerunning the survey over
+more packages might move the percentages but should not move the structure.
+Five days moved 66 of the percentages, none of them by more than 3 points — and
+moved the structure once: `procedure.process_reason_codes` is a set now,
+because 5 notices state two legal grounds where the first day's 3,190 never
+stated more than one. Four days of notices bought one structural correction,
+which is the rate at which this kind of error surfaces. More days will surface
+more, and this document is what gets corrected.
 
 ## Identity: what is stable and what is not
 
@@ -58,8 +66,13 @@ OJ S 157/2026, published as two notices on the same day — different notice
 numbers, same contract folder, same issue date, same subtype. Keying on the
 UUID would have merged two publications into one row.
 
+Across all five days measured, **six UUIDs appear twice**, and one of those six
+spans **two different publication dates**. So the duplication is not a
+same-day artefact that a date could disambiguate: the same UUID can come back
+weeks later.
+
 So every table is keyed on the **publication**, which is unique across all
-3,190 notices measured, plus the local identifier of the record within it.
+19,180 notices measured, plus the local identifier of the record within it.
 
 | Key | Source | Present | Note |
 |---|---|---:|---|
@@ -149,7 +162,7 @@ the wrong one.
 | `regulatory_domain` | `notice/cbc:RegulatoryDomain` | 100.0% |
 | `customization_id` | `notice/cbc:CustomizationID` | 100.0% |
 | `language_code` | `notice/cbc:NoticeLanguageCode` | 100.0% |
-| `contract_folder_id` | `notice/cbc:ContractFolderID` | 98.3% |
+| `contract_folder_id` | `notice/cbc:ContractFolderID` | 97.7% |
 | `root_element` | the notice's root element | 100.0% |
 | `changed_notice_id` | `<ext>/efac:Changes/efbc:ChangedNoticeIdentifier` | 14.8% |
 
@@ -169,18 +182,18 @@ structure.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `contract_folder_id` | `notice/cbc:ContractFolderID` | 98.3% |
-| `title` | `notice/cac:ProcurementProject/cbc:Name` | 99.9% |
-| `description` | `notice/cac:ProcurementProject/cbc:Description` | 99.9% |
+| `contract_folder_id` | `notice/cbc:ContractFolderID` | 97.7% |
+| `title` | `notice/cac:ProcurementProject/cbc:Name` | 100.0% |
+| `description` | `notice/cac:ProcurementProject/cbc:Description` | 100.0% |
 | `procurement_type_code` | `notice/cac:ProcurementProject/cbc:ProcurementTypeCode` | 99.7% |
-| `cpv_code` | `notice/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` | 99.9% |
-| `internal_id` | `notice/cac:ProcurementProject/cbc:ID` | 83.9% |
-| `procedure_code` | `notice/cac:TenderingProcess/cbc:ProcedureCode` | 91.1% |
-| `process_reason_code` | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` | 76.4% |
-| `estimated_amount` | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 40.6% |
-| `total_amount` | `<ext>/efac:NoticeResult/cbc:TotalAmount` | 34.6% |
-| `framework_overall_max_amount` | `<ext>/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount` | 8.4% |
-| `framework_overall_approximate_amount` | `<ext>/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount` | 4.8% |
+| `cpv_code` | `notice/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` | 100.0% |
+| `internal_id` | `notice/cac:ProcurementProject/cbc:ID` | 81.7% |
+| `procedure_code` | `notice/cac:TenderingProcess/cbc:ProcedureCode` | 91.5% |
+| `process_reason_codes` | `notice/cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode` | 76.7% |
+| `estimated_amount` | `notice/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 41.5% |
+| `total_amount` | `<ext>/efac:NoticeResult/cbc:TotalAmount` | 33.9% |
+| `framework_overall_max_amount` | `<ext>/efac:NoticeResult/efbc:OverallMaximumFrameworkContractsAmount` | 6.3% |
+| `framework_overall_approximate_amount` | `<ext>/efac:NoticeResult/efbc:OverallApproximateFrameworkContractsAmount` | 3.9% |
 
 `title` and `description` are free text and are carried as **provenance only**.
 Constraint 5 keeps classifiers to structured fields: no core classifier reads
@@ -188,13 +201,22 @@ either. They exist so a human verifying a flag can see what was bought. Both are
 published once per language and are stored in the notice's own language, with a
 `_language` companion saying which — see [Repeated values](#repeated-values).
 
-`procedure_code` and `process_reason_code` are the fields a
+`procedure_code` and `process_reason_codes` are the fields a
 direct-award hypothesis would rest on. Both are coded, both are below 100%, and
 both therefore need [ADR-0006](adr/0006-absence-is-recorded-not-collapsed.md)'s
 status column to be read honestly.
 
+`process_reason_codes` is a set because **a procedure can rest on more than one
+legal ground**, and 5 notices of 19,180 state two. It was a scalar column while
+one publication day was the whole evidence base, where the path never repeats;
+widening the base to five days found the case. Those five notices did not
+quietly store one of the two grounds — `Record.value` refused them, so they
+failed to normalise until the column carried the set (ADR-0007). A
+direct-award hypothesis reads the whole set: "the buyer cited this ground" is a
+different question from "this was the only ground cited".
+
 The place of performance is not here: `cac:RealizedLocation` repeats — one
-notice was measured naming 59 country codes — so it is
+procedure record was measured carrying 148 of them — so it is
 [`realized_location`](#realized_location) rows.
 
 ### `lot`
@@ -209,16 +231,16 @@ is where the procurement's substance actually lives.
 | `description` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:Description` | 99.8% |
 | `procurement_type_code` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ProcurementTypeCode` | 99.5% |
 | `cpv_code` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:MainCommodityClassification/cbc:ItemClassificationCode` | 99.5% |
-| `internal_id` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ID` | 90.0% |
+| `internal_id` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cbc:ID` | 87.8% |
 | `funding_programme_code` | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cbc:FundingProgramCode` | 94.1% |
-| `estimated_amount` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 35.7% |
-| `submission_deadline_date` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate` | 44.2% |
-| `submission_deadline_time` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime` | 44.2% |
+| `estimated_amount` | `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RequestedTenderTotal/cbc:EstimatedOverallContractAmount` | 37.3% |
+| `submission_deadline_date` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndDate` | 47.3% |
+| `submission_deadline_time` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime` | 47.3% |
 | `contracting_system_codes` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:ContractingSystem/cbc:ContractingSystemTypeCode` | 93.9% |
-| `gpa_covered` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:GovernmentAgreementConstraintIndicator` | 92.3% |
-| `electronic_auction` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` | 89.7% |
+| `gpa_covered` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cbc:GovernmentAgreementConstraintIndicator` | 92.0% |
+| `electronic_auction` | `notice/cac:ProcurementProjectLot/cac:TenderingProcess/cac:AuctionTerms/cbc:AuctionConstraintIndicator` | 90.1% |
 
-`contracting_system_codes` is a set: 8,028 of 8,624 lots carry exactly two
+`contracting_system_codes` is a set: 53,192 of 58,248 lots carry exactly two
 codes, one per contracting system the lot uses. `title` and `description` follow
 the same language rule as `procedure`'s, and the lot's places of performance are
 [`realized_location`](#realized_location) rows.
@@ -231,18 +253,18 @@ the table where constraint 2 bites.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `org_local_id` | `<org>/efac:Company/cac:PartyIdentification/cbc:ID` | 99.9% |
-| `name` | `<org>/efac:Company/cac:PartyName/cbc:Name` | 99.9% |
-| `company_ids` | `<org>/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` | 99.9% |
-| `country_code` | `<org>/efac:Company/cac:PostalAddress/cac:Country/cbc:IdentificationCode` | 99.9% |
-| `city` | `<org>/efac:Company/cac:PostalAddress/cbc:CityName` | 99.9% |
-| `postal_zone` | `<org>/efac:Company/cac:PostalAddress/cbc:PostalZone` | 99.9% |
-| `nuts_code` | `<org>/efac:Company/cac:PostalAddress/cbc:CountrySubentityCode` | 99.9% |
-| `street` | `<org>/efac:Company/cac:PostalAddress/cbc:StreetName` | 92.4% |
-| `website` | `<org>/efac:Company/cbc:WebsiteURI` | 91.1% |
-| `is_natural_person` | `<org>/efbc:NaturalPersonIndicator` | 9.5% |
+| `org_local_id` | `<org>/efac:Company/cac:PartyIdentification/cbc:ID` | 100.0% |
+| `name` | `<org>/efac:Company/cac:PartyName/cbc:Name` | 100.0% |
+| `company_ids` | `<org>/efac:Company/cac:PartyLegalEntity/cbc:CompanyID` | 100.0% |
+| `country_code` | `<org>/efac:Company/cac:PostalAddress/cac:Country/cbc:IdentificationCode` | 100.0% |
+| `city` | `<org>/efac:Company/cac:PostalAddress/cbc:CityName` | 100.0% |
+| `postal_zone` | `<org>/efac:Company/cac:PostalAddress/cbc:PostalZone` | 100.0% |
+| `nuts_code` | `<org>/efac:Company/cac:PostalAddress/cbc:CountrySubentityCode` | 100.0% |
+| `street` | `<org>/efac:Company/cac:PostalAddress/cbc:StreetName` | 90.3% |
+| `website` | `<org>/efac:Company/cbc:WebsiteURI` | 90.2% |
+| `is_natural_person` | `<org>/efbc:NaturalPersonIndicator` | 11.1% |
 
-`company_ids` is a set: 402 organisations carry more than one registration
+`company_ids` is a set: 2,570 organisations carry more than one registration
 number, up to five, and picking one would be picking which national register to
 believe.
 
@@ -274,11 +296,11 @@ notice and a supplier in another, so the role is an edge, not a column on
 
 | Role value | Source path for the reference | Present |
 |---|---|---:|
-| `buyer` | `notice/cac:ContractingParty/cac:Party/cac:PartyIdentification/cbc:ID` | 99.9% |
-| `procurement_service_provider` | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cac:Party/cac:PartyIdentification/cbc:ID` | 67.4% |
+| `buyer` | `notice/cac:ContractingParty/cac:Party/cac:PartyIdentification/cbc:ID` | 100.0% |
+| `procurement_service_provider` | `notice/cac:ContractingParty/cac:Party/cac:ServiceProviderParty/cac:Party/cac:PartyIdentification/cbc:ID` | 65.4% |
 | `appeal_receiver` | `notice/cac:ProcurementProjectLot/cac:TenderingTerms/cac:AppealTerms/cac:AppealReceiverParty/cac:PartyIdentification/cbc:ID` | 99.3% |
-| `tenderer` | `<ext>/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/cbc:ID` | 44.0% |
-| `contract_signatory` | `<ext>/efac:NoticeResult/efac:SettledContract/cac:SignatoryParty/cac:PartyIdentification/cbc:ID` | 8.0% |
+| `tenderer` | `<ext>/efac:NoticeResult/efac:TenderingParty/efac:Tenderer/cbc:ID` | 41.1% |
+| `contract_signatory` | `<ext>/efac:NoticeResult/efac:SettledContract/cac:SignatoryParty/cac:PartyIdentification/cbc:ID` | 7.2% |
 
 Each value is an `ORG-nnnn` reference in `org_ref`, resolved against
 `organisation` **within the same notice**. `scope_table` and `scope_ordinal` say
@@ -311,8 +333,8 @@ party that tendered is distinct from the organisations composing it.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `tendering_party_id` | `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:ID` | 44.0% |
-| `name` | `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:Name` | 11.0% |
+| `tendering_party_id` | `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:ID` | 41.1% |
+| `name` | `<ext>/efac:NoticeResult/efac:TenderingParty/cbc:Name` | 12.3% |
 
 Members are `organisation_role` rows with role `tenderer`. The 44% presence is
 not sparseness: award notices carry results and contract notices do not, and
@@ -324,15 +346,15 @@ One row per bid. **This is where most classifier inputs live.**
 
 | Column | Source path | Present |
 |---|---|---:|
-| `tender_id` | `<ext>/efac:NoticeResult/efac:LotTender/cbc:ID` | 44.0% |
-| `lot_ref` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderLot/cbc:ID` | 44.0% |
-| `tendering_party_ref` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderingParty/cbc:ID` | 44.0% |
-| `tender_reference` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderReference/cbc:ID` | 44.0% |
-| `payable_amount` | `<ext>/efac:NoticeResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` | 40.2% |
-| `is_ranked` | `<ext>/efac:NoticeResult/efac:LotTender/efbc:TenderRankedIndicator` | 21.5% |
-| `rank_code` | `<ext>/efac:NoticeResult/efac:LotTender/cbc:RankCode` | 14.5% |
-| `is_variant` | `<ext>/efac:NoticeResult/efac:LotTender/efbc:TenderVariantIndicator` | 16.7% |
-| `subcontracting_term_code` | `<ext>/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermCode` | 41.0% |
+| `tender_id` | `<ext>/efac:NoticeResult/efac:LotTender/cbc:ID` | 41.1% |
+| `lot_ref` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderLot/cbc:ID` | 41.1% |
+| `tendering_party_ref` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderingParty/cbc:ID` | 41.1% |
+| `tender_reference` | `<ext>/efac:NoticeResult/efac:LotTender/efac:TenderReference/cbc:ID` | 41.1% |
+| `payable_amount` | `<ext>/efac:NoticeResult/efac:LotTender/cac:LegalMonetaryTotal/cbc:PayableAmount` | 38.2% |
+| `is_ranked` | `<ext>/efac:NoticeResult/efac:LotTender/efbc:TenderRankedIndicator` | 21.2% |
+| `rank_code` | `<ext>/efac:NoticeResult/efac:LotTender/cbc:RankCode` | 15.4% |
+| `is_variant` | `<ext>/efac:NoticeResult/efac:LotTender/efbc:TenderVariantIndicator` | 15.4% |
+| `subcontracting_term_code` | `<ext>/efac:NoticeResult/efac:LotTender/efac:SubcontractingTerm/efbc:TermCode` | 38.9% |
 
 `payable_amount` carries a currency attribute in the source, and so has a
 `payable_amount_currency` companion — see [Amounts](#amounts) below. Currency
@@ -346,23 +368,23 @@ One row per lot outcome.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `lot_result_id` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:ID` | 47.5% |
-| `lot_ref` | `<ext>/efac:NoticeResult/efac:LotResult/efac:TenderLot/cbc:ID` | 47.5% |
-| `result_code` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:TenderResultCode` | 39.8% |
-| `winning_tender_refs` | `<ext>/efac:NoticeResult/efac:LotResult/efac:LotTender/cbc:ID` | 43.8% |
-| `contract_refs` | `<ext>/efac:NoticeResult/efac:LotResult/efac:SettledContract/cbc:ID` | 43.5% |
-| `highest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:HigherTenderAmount` | 10.3% |
-| `lowest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:LowerTenderAmount` | 10.3% |
-| `framework_max_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` | 8.4% |
-| `framework_reestimated_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount` | 4.8% |
+| `lot_result_id` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:ID` | 44.7% |
+| `lot_ref` | `<ext>/efac:NoticeResult/efac:LotResult/efac:TenderLot/cbc:ID` | 44.7% |
+| `result_code` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:TenderResultCode` | 38.0% |
+| `winning_tender_refs` | `<ext>/efac:NoticeResult/efac:LotResult/efac:LotTender/cbc:ID` | 40.9% |
+| `contract_refs` | `<ext>/efac:NoticeResult/efac:LotResult/efac:SettledContract/cbc:ID` | 40.8% |
+| `highest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:HigherTenderAmount` | 9.8% |
+| `lowest_tender_amount` | `<ext>/efac:NoticeResult/efac:LotResult/cbc:LowerTenderAmount` | 9.8% |
+| `framework_max_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/cbc:MaximumValueAmount` | 6.3% |
+| `framework_reestimated_amount` | `<ext>/efac:NoticeResult/efac:LotResult/efac:FrameworkAgreementValues/efbc:ReestimatedValueAmount` | 3.9% |
 | `decision_reason_code` | `<ext>/efac:NoticeResult/efac:LotResult/efac:DecisionReason/efbc:DecisionReasonCode` | 6.3% |
 
 `winning_tender_refs` and `contract_refs` are sets: one lot result was measured
-naming 683 winning tenders and 679 contracts, which is what a framework awarded
+naming 750 winning tenders and 747 contracts, which is what a framework awarded
 to many suppliers looks like.
 
 The submissions and appeal statistics are **not** columns here. Each is a
-repeatable code/value block — up to twelve in one lot result — so they are
+repeatable code/value block — up to seventeen in one lot result — so they are
 [`lot_result_statistic`](#lot_result_statistic) rows, which is also where the
 single most important input this model carries lives.
 
@@ -374,8 +396,8 @@ this model carries**, and the reason
 
 | Column | Source path | Present |
 |---|---|---:|
-| `statistic_code` | `<ext>/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsCode` | 39.4% |
-| `statistic_value` | `<ext>/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsNumeric` | 39.4% |
+| `statistic_code` | `<ext>/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsCode` | 37.6% |
+| `statistic_value` | `<ext>/efac:NoticeResult/efac:LotResult/efac:ReceivedSubmissionsStatistics/efbc:StatisticsNumeric` | 37.6% |
 
 `statistic_kind` says which block the row came from: `received_submissions`, or
 `appeal_requests` from
@@ -404,14 +426,14 @@ was the only behaviour available before the SDK mapping existed.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `contract_id` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:ID` | 43.8% |
-| `contract_reference` | `<ext>/efac:NoticeResult/efac:SettledContract/efac:ContractReference/cbc:ID` | 43.6% |
-| `tender_refs` | `<ext>/efac:NoticeResult/efac:SettledContract/efac:LotTender/cbc:ID` | 43.7% |
-| `issue_date` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:IssueDate` | 42.6% |
-| `award_date` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:AwardDate` | 20.4% |
-| `title` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:Title` | 15.6% |
-| `url` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:URI` | 5.6% |
-| `is_framework` | `<ext>/efac:NoticeResult/efac:SettledContract/efbc:ContractFrameworkIndicator` | 5.6% |
+| `contract_id` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:ID` | 40.9% |
+| `contract_reference` | `<ext>/efac:NoticeResult/efac:SettledContract/efac:ContractReference/cbc:ID` | 40.7% |
+| `tender_refs` | `<ext>/efac:NoticeResult/efac:SettledContract/efac:LotTender/cbc:ID` | 40.8% |
+| `issue_date` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:IssueDate` | 39.5% |
+| `award_date` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:AwardDate` | 19.4% |
+| `title` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:Title` | 15.2% |
+| `url` | `<ext>/efac:NoticeResult/efac:SettledContract/cbc:URI` | 5.3% |
+| `is_framework` | `<ext>/efac:NoticeResult/efac:SettledContract/efbc:ContractFrameworkIndicator` | 4.6% |
 
 `tender_refs` is a set: 756 settled contracts name more than one tender, up to
 35.
@@ -424,14 +446,14 @@ carries both — not over all award notices.
 ### `realized_location`
 
 One row per place of performance, for a procedure or a lot.
-`cac:RealizedLocation` repeats — 431 records carry more than one, and one lot
-names 59 country codes — so a location is a row rather than a pair of columns
-that could hold one.
+`cac:RealizedLocation` repeats — 3,185 records carry more than one, and one
+carries 148 — so a location is a row rather than a pair of columns that could
+hold one.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `country_code` | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` | 91.7% |
-| `nuts_code` | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` | 83.9% |
+| `country_code` | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode` | 90.3% |
+| `nuts_code` | `notice/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cbc:CountrySubentityCode` | 83.0% |
 
 For a lot the same fields are read from
 `notice/cac:ProcurementProjectLot/cac:ProcurementProject/cac:RealizedLocation/cac:Address/cac:Country/cbc:IdentificationCode`
@@ -452,8 +474,8 @@ across the package — and load-bearing.
 
 | Column | Source path | Present |
 |---|---|---:|
-| `field_identifier_code` | `<ext>/efac:NoticeResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` | 1.6% |
-| `reason_code` | `<ext>/efac:NoticeResult/efac:FieldsPrivacy/cbc:ReasonCode` | 1.6% |
+| `field_identifier_code` | `<ext>/efac:NoticeResult/efac:FieldsPrivacy/efbc:FieldIdentifierCode` | 1.5% |
+| `reason_code` | `<ext>/efac:NoticeResult/efac:FieldsPrivacy/cbc:ReasonCode` | 1.5% |
 | `publication_date` | `<ext>/efac:NoticeResult/efac:FieldsPrivacy/efbc:PublicationDate` | 0.1% |
 
 `efbc:ReasonDescription` is **not** a column: it is free prose and is dropped at
@@ -627,8 +649,12 @@ this model does with them. Three shapes, three answers:
 
 A column declared to hold one value **raises** when it meets several: the notice
 is reported as unnormalised and named, and the run continues. That is model
-drift being reported rather than an arbitrary value being stored, and it did not
-happen once across the 3,190 notices.
+drift being reported rather than an arbitrary value being stored, and it is not
+hypothetical: it happened to 5 notices the first time this model met a
+publication day it had not been written against. Each was named, the other
+19,175 normalised, and the fix was to make `process_reason_codes` carry the set.
+A model that had picked a value instead would have produced 19,180 rows and no
+sign that five of them were arbitrary.
 
 ## Excluded by design
 
@@ -694,7 +720,8 @@ Parquet, queried with DuckDB ([ADR-0001](adr/0001-parquet-duckdb-storage.md)).
 
 One daily package of 3,190 notices produces 98,629 rows across the twelve
 tables, 4.2 MB on disk, in about 12 seconds and 339 MB of peak resident memory
-(see [`known-issues.md`](known-issues.md) for how the stages were measured).
+(see [`known-issues.md`](known-issues.md) for how the stages were measured). The
+five days this model is measured against are 632,068 rows.
 Rerunning it writes byte-identical files, which
 [#9](open-work.md#9-add-the-rerun-identity-determinism-test) asserts in CI.
 

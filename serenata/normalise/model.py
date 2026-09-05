@@ -14,8 +14,8 @@ document cites absolute paths; `container` plus `path` reconstructs one, and
 the test does exactly that rather than trusting a second transcription.
 
 **Whether it holds one value or a set.** A path that occurs more than once in a
-record is ordinary — 8,028 of 8,624 lots carry two
-``cbc:ContractingSystemTypeCode``, and a lot result was measured carrying 683
+record is ordinary — 53,192 of 58,248 lots carry two
+``cbc:ContractingSystemTypeCode``, and a lot result was measured carrying 750
 winning-tender references. `Record.value` raises on those rather than picking
 one, and a column that picked one would be reporting an arbitrary member of a
 set. Such a column is a `SET`: it carries the whole set, in document order, and
@@ -227,9 +227,14 @@ PROCEDURE_TABLE = Table(
         ),
         Column("internal_id", "cac:ProcurementProject/cbc:ID"),
         Column("procedure_code", "cac:TenderingProcess/cbc:ProcedureCode"),
+        # A procedure can rest on more than one legal ground, and 5 notices in
+        # 19,180 state two. It was a scalar column while one publication day
+        # was the whole evidence base, and every one of those five failed to
+        # normalise rather than storing an arbitrary ground (ADR-0007).
         Column(
-            "process_reason_code",
+            "process_reason_codes",
             "cac:TenderingProcess/cac:ProcessJustification/cbc:ProcessReasonCode",
+            Kind.SET,
         ),
         # What the buyer expected to spend, against what the notice records
         # being awarded. The gap between the two is one of the indicators the
@@ -303,8 +308,8 @@ LOT_TABLE = Table(
             "submission_deadline_time",
             "cac:TenderingProcess/cac:TenderSubmissionDeadlinePeriod/cbc:EndTime",
         ),
-        # Repeated in 8,028 of 8,624 lots: eForms emits one code per contracting
-        # system the lot uses, so the set is the value.
+        # Repeated in 53,192 of 58,248 lots: eForms emits one code per
+        # contracting system the lot uses, so the set is the value.
         Column(
             "contracting_system_codes",
             "cac:TenderingProcess/cac:ContractingSystem/cbc:ContractingSystemTypeCode",
@@ -331,9 +336,9 @@ ORGANISATION_TABLE = Table(
         ORDINAL,
         Column("org_local_id", "efac:Company/cac:PartyIdentification/cbc:ID"),
         Column("name", "efac:Company/cac:PartyName/cbc:Name", Kind.TEXT),
-        # 402 organisations carry more than one registration number — several
-        # `cac:PartyLegalEntity` blocks, up to five. Picking one would be
-        # picking which national register to believe.
+        # 2,570 organisations carry more than one registration number —
+        # several `cac:PartyLegalEntity` blocks, up to five. Picking one would
+        # be picking which national register to believe.
         Column(
             "company_ids",
             "efac:Company/cac:PartyLegalEntity/cbc:CompanyID",
@@ -470,7 +475,7 @@ LOT_RESULT_TABLE = Table(
         Column("lot_result_id", "cbc:ID"),
         Column("lot_ref", "efac:TenderLot/cbc:ID"),
         Column("result_code", "cbc:TenderResultCode"),
-        # One lot result was measured naming 683 winning tenders and 679
+        # One lot result was measured naming 750 winning tenders and 747
         # contracts: a framework awarded to many suppliers is one result.
         Column("winning_tender_refs", "efac:LotTender/cbc:ID", Kind.SET),
         Column("contract_refs", "efac:SettledContract/cbc:ID", Kind.SET),

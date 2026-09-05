@@ -107,9 +107,9 @@ def _finish(pending: _Open, notice_id: str) -> Record:
     fields = pending.fields
     if pending.kind == "organisation" and _is_natural_person(fields):
         # The organisation is a private individual trading in their own name:
-        # the name, registration identifier and addresses are that person's
-        # personal data. The opaque intra-notice key is kept, so the record is
-        # anonymised rather than deleted. See docs/personal-data.md.
+        # specified names, registration identifiers, addresses and websites are
+        # suppressed. The opaque intra-notice key and source links remain;
+        # this does not establish anonymity. See docs/personal-data.md.
         fields = [
             item for item in fields if not suppressed_for_natural_person(item.path)
         ]

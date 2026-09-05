@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -70,6 +71,73 @@ class TestManifest:
         assert text.endswith("\n")
         keys = list(json.loads(text))
         assert keys == sorted(keys)
+
+    @pytest.mark.parametrize("existing_manifest", [False, True])
+    @pytest.mark.parametrize("failure", ["write", "replace"])
+    def test_failed_writes_preserve_the_package_and_prior_manifest(
+        self, tmp_path, monkeypatch, existing_manifest, failure
+    ):
+        archive = RawArchive(tmp_path)
+        payload = make_package()
+        package = archive.package_path(ISSUE)
+        package.parent.mkdir(parents=True)
+        package.write_bytes(payload)
+        path = archive.manifest_path(ISSUE)
+        original = manifest_for(payload)
+        if existing_manifest:
+            archive.write_manifest(ISSUE, original)
+        prior = path.read_bytes() if existing_manifest else None
+        before = set(package.parent.iterdir())
+        write_text = Path.write_text
+
+        def fail_write(destination, text, **kwargs):
+            write_text(destination, text[:10], **kwargs)
+            raise OSError("interrupted manifest write")
+
+        def fail_replace(source, destination):
+            raise OSError("interrupted manifest replace")
+
+        monkeypatch.setattr(
+            Path,
+            "write_text" if failure == "write" else "replace",
+            fail_write if failure == "write" else fail_replace,
+        )
+        with pytest.raises(OSError, match="interrupted manifest"):
+            archive.write_manifest(
+                ISSUE, manifest_for(payload, fetched_at="2026-09-02T00:00:00+00:00")
+            )
+
+        assert package.read_bytes() == payload
+        if existing_manifest:
+            assert path.read_bytes() == prior
+            assert archive.verify(ISSUE) == original
+        else:
+            assert not path.exists(), "a failed write must not publish partial JSON"
+        assert set(package.parent.iterdir()) == before, "staging files are cleaned up"
+
+    def test_replacement_publishes_complete_json_without_truncating_the_prior_manifest(
+        self, tmp_path, monkeypatch
+    ):
+        archive = RawArchive(tmp_path)
+        payload = make_package()
+        path = archive.write_manifest(ISSUE, manifest_for(payload))
+        prior = path.read_bytes()
+        updated = manifest_for(payload, fetched_at="2026-09-02T00:00:00+00:00")
+        replace = Path.replace
+        replacements = []
+
+        def checked_replace(source, destination):
+            assert destination == path
+            assert path.read_bytes() == prior
+            assert source.read_text(encoding="utf-8") == updated.to_json()
+            replacements.append(source)
+            return replace(source, destination)
+
+        monkeypatch.setattr(Path, "replace", checked_replace)
+        assert archive.write_manifest(ISSUE, updated) == path
+        assert len(replacements) == 1
+        assert archive.read_manifest(ISSUE) == updated
+        assert list(path.parent.iterdir()) == [path]
 
     def test_reading_an_absent_manifest_gives_nothing(self, tmp_path):
         assert RawArchive(tmp_path).read_manifest(ISSUE) is None
@@ -165,6 +233,18 @@ class TestVerify:
         with pytest.raises(ArchiveConflict, match="no package beside it"):
             archive.verify(ISSUE)
 
+    def test_a_package_without_its_manifest_is_a_conflict(self, tmp_path):
+        archive = RawArchive(tmp_path)
+        package = archive.package_path(ISSUE)
+        package.parent.mkdir(parents=True)
+        payload = make_package()
+        package.write_bytes(payload)
+
+        with pytest.raises(ArchiveConflict, match="no manifest"):
+            archive.verify(ISSUE)
+
+        assert package.read_bytes() == payload
+
     def test_verifying_nothing_at_all_is_a_conflict(self, tmp_path):
         with pytest.raises(ArchiveConflict, match="no manifest"):
             RawArchive(tmp_path).verify(ISSUE)
@@ -181,3 +261,46 @@ class TestHolds:
 
         archive.write_manifest(ISSUE, manifest_for(make_package()))
         assert archive.holds(ISSUE) is True
+
+    def test_a_manifest_alone_does_not_count(self, tmp_path):
+        archive = RawArchive(tmp_path)
+        archive.write_manifest(ISSUE, manifest_for(make_package()))
+
+        assert archive.holds(ISSUE) is False
+
+
+class TestHasArtifacts:
+    @pytest.mark.parametrize("package_exists", [False, True])
+    @pytest.mark.parametrize("manifest_exists", [False, True])
+    def test_either_artifact_requires_verification(
+        self, tmp_path, package_exists, manifest_exists
+    ):
+        archive = RawArchive(tmp_path)
+        payload = make_package()
+        if package_exists:
+            package = archive.package_path(ISSUE)
+            package.parent.mkdir(parents=True)
+            package.write_bytes(payload)
+        if manifest_exists:
+            archive.write_manifest(ISSUE, manifest_for(payload))
+
+        assert archive.has_artifacts(ISSUE) is (package_exists or manifest_exists)
+
+    @pytest.mark.parametrize("artifact", ["package", "manifest"])
+    @pytest.mark.parametrize("kind", ["directory", "dangling-symlink"])
+    def test_non_file_entries_also_require_verification(self, tmp_path, artifact, kind):
+        archive = RawArchive(tmp_path)
+        path = (
+            archive.package_path(ISSUE)
+            if artifact == "package"
+            else archive.manifest_path(ISSUE)
+        )
+        path.parent.mkdir(parents=True)
+        if kind == "directory":
+            path.mkdir()
+        else:
+            path.symlink_to(tmp_path / "missing")
+
+        assert archive.has_artifacts(ISSUE) is True
+        with pytest.raises(ArchiveConflict):
+            archive.verify(ISSUE)

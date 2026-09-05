@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import ast
 import re
+import tomllib
+from datetime import date
 from importlib.metadata import distributions
 from pathlib import Path
 from typing import ClassVar
@@ -323,15 +325,199 @@ class TestFlagsAreNotAccusations:
         assert (PACKAGE_ROOT / "classify").is_dir()
 
 
+def classifier_rule_version(path: Path) -> int:
+    """Read a single literal version without executing classifier code."""
+    values = [
+        node.value
+        for node in ast.parse(path.read_text(encoding="utf-8")).body
+        if (
+            isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "RULE_VERSION"
+                for target in node.targets
+            )
+        )
+        or (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "RULE_VERSION"
+        )
+    ]
+    assert len(values) == 1, f"{path.name}: declare RULE_VERSION exactly once"
+    value = values[0]
+    assert isinstance(value, ast.Constant) and type(value.value) is int, (
+        f"{path.name}: RULE_VERSION must be a literal positive integer"
+    )
+    assert value.value > 0, f"{path.name}: RULE_VERSION must be positive"
+    return value.value
+
+
+def assert_hypothesis_admission(doc: Path, rule_version: int) -> bool:
+    """Check implemented-rule metadata; return whether its measurement is current.
+
+    Historical evidence admits only explicitly pending local development, not
+    merge readiness. This is not a data rerun, proof of numbers, or human approval.
+    """
+    text = doc.read_text(encoding="utf-8")
+    statuses = re.findall(r"^Status:[ \t]*([^\n]+)$", text, re.M)
+    assert len(statuses) == 1, f"{doc.name}: expected exactly one Status line"
+    status = statuses[0].strip()
+    assert status in {"measured", "building", "live"}, (
+        f"{doc.name}: implemented hypothesis cannot have status {status!r}"
+    )
+
+    sections = re.findall(
+        r"^## Measurement metadata\n(.*?)(?=^## |\Z)", text, re.M | re.S
+    )
+    assert len(sections) == 1, f"{doc.name}: expected one Measurement metadata section"
+    blocks = re.findall(r"^```toml\n(.*?)^```[ \t]*$", sections[0], re.M | re.S)
+    assert len(blocks) == 1, f"{doc.name}: expected one fenced TOML measurement block"
+    try:
+        metadata = tomllib.loads(blocks[0])
+    except tomllib.TOMLDecodeError as exc:
+        raise AssertionError(f"{doc.name}: invalid measurement TOML: {exc}") from exc
+
+    assert set(metadata) == {"admission", "measurement"}, (
+        f"{doc.name}: expected admission and measurement tables only"
+    )
+    admission = metadata["admission"]
+    measurement = metadata["measurement"]
+    assert isinstance(admission, dict) and set(admission) == {
+        "current_rule_version",
+        "current_measurement",
+    }, f"{doc.name}: invalid admission fields"
+    assert isinstance(measurement, dict) and set(measurement) == {
+        "rule_version",
+        "measured_on",
+        "period_start",
+        "period_end",
+        "package_ids",
+        "query_file",
+        "query_revision",
+        "notice_count",
+        "population_count",
+        "population_notice_count",
+        "covered_count",
+        "uncovered_count",
+        "flagged_count",
+        "flagged_notice_count",
+    }, f"{doc.name}: incomplete or unknown measurement fields"
+
+    versions = (
+        rule_version,
+        admission["current_rule_version"],
+        measurement["rule_version"],
+    )
+    assert all(type(value) is int and value > 0 for value in versions), (
+        f"{doc.name}: rule versions must be positive integers"
+    )
+    assert admission["current_rule_version"] == rule_version, (
+        f"{doc.name}: current_rule_version differs from classifier RULE_VERSION"
+    )
+    measured_version = measurement["rule_version"]
+    assert measured_version <= rule_version, (
+        f"{doc.name}: measurement is for a future rule"
+    )
+    current = measured_version == rule_version
+    expected = "measured" if current else "pending"
+    assert admission["current_measurement"] == expected, (
+        f"{doc.name}: current_measurement must be {expected!r} for these versions"
+    )
+    assert current or status == "building", (
+        f"{doc.name}: {status} requires a version-matching measurement; "
+        "historical evidence permits only building with current measurement pending"
+    )
+
+    start, end, measured_on = (
+        measurement[key] for key in ("period_start", "period_end", "measured_on")
+    )
+    assert all(type(value) is date for value in (start, end, measured_on)), (
+        f"{doc.name}: measurement dates must be TOML local dates"
+    )
+    assert start <= end <= measured_on, (
+        f"{doc.name}: require period_start <= period_end <= measured_on"
+    )
+    packages = measurement["package_ids"]
+    assert isinstance(packages, list) and packages, f"{doc.name}: package_ids is empty"
+    assert all(
+        isinstance(package, str)
+        and re.fullmatch(r"[0-9]{9}", package)
+        and start.year <= int(package[:4]) <= end.year
+        and int(package[4:]) > 0
+        for package in packages
+    ), f"{doc.name}: package_ids must be yyyynnnnn IDs within the period's years"
+    assert packages == sorted(set(packages)), (
+        f"{doc.name}: package_ids must be sorted and unique"
+    )
+
+    count_keys = (
+        "notice_count",
+        "population_count",
+        "population_notice_count",
+        "covered_count",
+        "uncovered_count",
+        "flagged_count",
+        "flagged_notice_count",
+    )
+    assert all(
+        type(measurement[key]) is int and measurement[key] >= 0 for key in count_keys
+    ), f"{doc.name}: counts must be nonnegative integers (not booleans)"
+    population = measurement["population_count"]
+    notices = measurement["population_notice_count"]
+    covered = measurement["covered_count"]
+    flagged = measurement["flagged_count"]
+    flagged_notices = measurement["flagged_notice_count"]
+    assert population > 0, f"{doc.name}: population_count must be positive"
+    assert 0 < notices <= min(population, measurement["notice_count"]), (
+        f"{doc.name}: population notice counts are inconsistent"
+    )
+    assert covered + measurement["uncovered_count"] == population, (
+        f"{doc.name}: covered_count + uncovered_count must equal population_count"
+    )
+    assert flagged <= covered, f"{doc.name}: flagged_count exceeds covered_count"
+    assert flagged_notices <= min(notices, flagged) and (flagged_notices == 0) == (
+        flagged == 0
+    ), f"{doc.name}: flagged notice counts are inconsistent"
+
+    query_file = measurement["query_file"]
+    assert query_file == doc.with_suffix(".sql").name, (
+        f"{doc.name}: query_file must name the companion SQL file"
+    )
+    assert doc.with_suffix(".sql").is_file(), (
+        f"{doc.name}: companion SQL file is missing"
+    )
+    assert doc.with_suffix(".sql").read_text(encoding="utf-8").strip(), (
+        f"{doc.name}: companion SQL file is empty"
+    )
+    revision = measurement["query_revision"]
+    assert isinstance(revision, str) and (
+        re.fullmatch(r"[0-9a-f]{40}", revision)
+        or (current and revision == "working-tree")
+    ), (
+        f"{doc.name}: historical SQL requires a full Git revision; "
+        "current may use working-tree"
+    )
+    return current
+
+
 class TestClassifierHypotheses:
     """Constraint: every classifier is a documented hypothesis.
 
-    A flag whose false-positive profile is unknown is not shippable. This gate
-    has nothing to check until the first classifier lands, which is the point:
-    it binds that classifier rather than being retrofitted against work already
-    done.
+    A flag whose false-positive profile is unknown is not shippable. Metadata
+    sanity is enforceable here; the truth of a measurement and publication
+    clearance are not. Historical evidence allows explicitly pending local
+    building, never merge readiness. CI requires version-matching evidence via
+    --require-current-measurements; passing local tests alone is insufficient.
 
     Hypothesis files are named after their module, per docs/hypotheses/README.md.
+
+    **What counts as a classifier** is the contract a rule keeps, read from the
+    source rather than by importing it: a module-level ``RULE`` and a ``flags``
+    function. The package also holds modules that are not classifiers — the
+    records, the reader and writer — and requiring a hypothesis for those would
+    teach people to write empty ones. A module that keeps half the contract is
+    caught by `test_a_rule_is_either_a_classifier_or_not_one`, so the loophole
+    is a rule that declares nothing, and such a module cannot be in `RULES`.
     """
 
     REQUIRED_SECTIONS = (
@@ -343,11 +529,60 @@ class TestClassifierHypotheses:
         "Comparators",
         "Legal check",
     )
-    ALLOWED_STATUS = frozenset({"scoped", "measured", "building", "live", "rejected"})
-    PLACEHOLDERS = ("TODO", "TBD", "[", "XXX")
+    #: What a classifier module declares. All of it, or none of it.
+    CONTRACT = ("RULE", "RULE_VERSION", "flags")
+
+    @staticmethod
+    def declared(path: Path) -> set[str]:
+        """The contract names this module defines at module level."""
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        names: set[str] = set()
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                names.add(node.name)
+            elif isinstance(node, ast.Assign):
+                names.update(
+                    target.id for target in node.targets if isinstance(target, ast.Name)
+                )
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+        return names
 
     def classifier_modules(self) -> list[Path]:
-        return [path for path in python_files("classify") if path.name != "__init__.py"]
+        return [
+            path
+            for path in python_files("classify")
+            if path.name != "__init__.py" and set(self.CONTRACT) <= self.declared(path)
+        ]
+
+    def test_a_rule_is_either_a_classifier_or_not_one(self) -> None:
+        half = [
+            f"{path.stem} declares {sorted(set(self.CONTRACT) & self.declared(path))}"
+            for path in python_files("classify")
+            if path.name != "__init__.py"
+            and set(self.CONTRACT) & self.declared(path)
+            and not set(self.CONTRACT) <= self.declared(path)
+        ]
+        assert not half, (
+            f"modules keeping half a classifier's contract: {half}. A module "
+            f"declares all of {list(self.CONTRACT)} or none of them, because "
+            "the gates below find classifiers by that contract and a partial "
+            "one would slip past them."
+        )
+
+    def test_every_classifier_is_registered_to_run(self) -> None:
+        registered = (PACKAGE_ROOT / "classify" / "__init__.py").read_text(
+            encoding="utf-8"
+        )
+        unregistered = [
+            path.stem
+            for path in self.classifier_modules()
+            if path.stem not in registered
+        ]
+        assert not unregistered, (
+            f"classifiers missing from serenata.classify.RULES: {unregistered}. "
+            "A rule nobody runs is a hypothesis nobody tests."
+        )
 
     def test_every_classifier_has_a_hypothesis_file(self) -> None:
         missing = [
@@ -360,7 +595,9 @@ class TestClassifierHypotheses:
             "A classifier may not merge without a written hypothesis."
         )
 
-    def test_every_hypothesis_file_is_complete(self) -> None:
+    def test_every_hypothesis_file_is_complete(
+        self, require_current_measurements: bool
+    ) -> None:
         for path in self.classifier_modules():
             doc = DOCS_ROOT / "hypotheses" / f"{path.stem}.md"
             text = doc.read_text(encoding="utf-8")
@@ -368,19 +605,14 @@ class TestClassifierHypotheses:
             for section in self.REQUIRED_SECTIONS:
                 assert section in text, f"{doc.name} is missing '{section}'"
 
-            status = re.search(r"^Status:\s*(\w+)", text, re.M)
-            assert status, f"{doc.name} has no status line"
-            assert status.group(1) in self.ALLOWED_STATUS, (
-                f"{doc.name} has status {status.group(1)!r}, "
-                f"expected one of {sorted(self.ALLOWED_STATUS)}"
-            )
-
-            base_rate = text.split("## Base rate", 1)[-1].split("##", 1)[0].strip()
-            assert base_rate, f"{doc.name} has an empty base rate"
-            assert not any(mark in base_rate for mark in self.PLACEHOLDERS), (
-                f"{doc.name} still has a placeholder base rate. A flag whose "
-                "false-positive profile is unknown is not shippable."
-            )
+            version = classifier_rule_version(path)
+            current = assert_hypothesis_admission(doc, version)
+            if require_current_measurements:
+                assert current, (
+                    f"{doc.name}: current RULE_VERSION {version} requires a "
+                    "version-matching measurement before merge; historical evidence "
+                    "with current measurement pending permits local development only"
+                )
 
 
 class TestDependencyLicences:

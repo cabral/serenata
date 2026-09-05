@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -11,28 +14,26 @@ jobs:
       matrix:
         python: ["3.12", "3.13"]
     steps:
-      # Both run on Node 24. They were on runtimes GitHub had already begun
-      # forcing onto it, so CI was green only because of that forcing.
-      # setup-uv is pinned to an exact version rather than a major because it
-      # stopped publishing a moving major tag after v7 — `@v10` resolves to
-      # nothing — which makes bumping it a deliberate step rather than a
-      # silent one.
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
+      # Immutable action revisions; version comments make updates reviewable.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
       - name: Install
         run: uv sync --locked
       - name: Lint
-        run: uv run ruff check .
+        run: uv run --locked ruff check .
       - name: Check formatting
-        run: uv run ruff format --check .
+        run: uv run --locked ruff format --check .
       - name: Type check
-        run: uv run mypy
+        run: uv run --locked mypy
       # Runs the constraint gates in tests/test_constraints.py alongside the
-      # rest of the suite. The coverage floor lives here rather than in
-      # pyproject.toml so that running a subset of the suite locally is not a
-      # failing build; see the comment there.
+      # rest of the suite. Current-version measurements are mandatory before
+      # merge; local development tests may run with pending measurements.
+      # The measurement gate reads metadata, not real datasets. Keep the
+      # coverage floor here so focused local tests need not meet suite coverage.
       - name: Test
-        run: uv run pytest --cov-fail-under=95
+        run: uv run --locked pytest --cov-fail-under=95 --require-current-measurements

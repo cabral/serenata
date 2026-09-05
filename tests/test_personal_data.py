@@ -13,17 +13,22 @@ document means the document cannot quietly become aspirational.
 
 from __future__ import annotations
 
+import io
 import re
 from pathlib import Path
 
 import pytest
 
+from serenata.parse import read_notice
 from serenata.parse.personal_data import (
     DROPPED_SEGMENTS,
     NATURAL_PERSON_INDICATOR,
     is_dropped,
     suppressed_for_natural_person,
 )
+
+from .support import notice_xml
+from .test_parse import organisation
 
 DOC = Path(__file__).resolve().parent.parent / "docs" / "personal-data.md"
 
@@ -34,6 +39,41 @@ EXT = (
 
 #: Table rows in the document are ``| `path` | frequency | why |``.
 _ROW = re.compile(r"^\| `([^`]+)` \|", re.M)
+
+
+def website_notice(indicator: str | None, *, indicator_last: bool = True) -> bytes:
+    """Synthetic candidate and explicit-false control, each with three websites."""
+    organisations = []
+    for local_id, status, label in (
+        ("ORG-0001", indicator, "synthetic-candidate"),
+        ("ORG-0002", "false", "synthetic-control"),
+    ):
+        xml = organisation(local_id=local_id)
+        xml = xml.replace(
+            "</efac:Company>",
+            f"<cbc:WebsiteURI>https://{label}.invalid/company</cbc:WebsiteURI>"
+            "</efac:Company>"
+            + "".join(
+                "<efac:TouchPoint>"
+                f"<cbc:WebsiteURI>https://{label}.invalid/touch-{index}</cbc:WebsiteURI>"
+                "</efac:TouchPoint>"
+                for index in range(2)
+            ),
+        )
+        if status is not None:
+            flag = (
+                f"<efbc:NaturalPersonIndicator>{status}</efbc:NaturalPersonIndicator>"
+            )
+            if indicator_last:
+                xml = xml.replace("</efac:Organization>", flag + "</efac:Organization>")
+            else:
+                xml = xml.replace("<efac:Organization>", "<efac:Organization>" + flag)
+        organisations.append(xml)
+    return notice_xml(
+        extension="<efac:Organizations>"
+        + "".join(organisations)
+        + "</efac:Organizations>"
+    )
 
 
 def expand(path: str) -> str:
@@ -80,7 +120,7 @@ class TestDocumentAndCodeAgree:
 
     def test_the_sole_trader_table_is_suppressed(self) -> None:
         rows = _ROW.findall(section("The sole-trader case: conditional suppression"))
-        assert len(rows) >= 5, f"only found {len(rows)} sole-trader rows"
+        assert len(rows) >= 7, f"only found {len(rows)} sole-trader rows"
         for row in rows:
             # Rows are written from the notice root; the function takes a path
             # relative to the organisation, which is where the indicator lives.
@@ -143,7 +183,10 @@ class TestNaturalPersonSuppression:
             "efac:Company/cac:PartyName/cbc:Name",
             "efac:Company/cac:PartyLegalEntity/cbc:CompanyID",
             "efac:Company/cac:PostalAddress/cbc:StreetName",
+            "efac:Company/cbc:WebsiteURI",
             "efac:TouchPoint/cac:PartyName/cbc:Name",
+            "efac:TouchPoint/cac:PostalAddress/cbc:StreetName",
+            "efac:TouchPoint/cbc:WebsiteURI",
         ],
     )
     def test_identifying_values_are_suppressed(self, relative: str) -> None:
@@ -158,8 +201,7 @@ class TestNaturalPersonSuppression:
         )
 
     def test_the_opaque_key_survives(self) -> None:
-        # Suppression anonymises the record; it does not delete it. The
-        # notice-scoped token names nobody and keeps the structure joinable.
+        # Suppression keeps the record joinable; it does not guarantee anonymity.
         assert not suppressed_for_natural_person(
             "efac:Company/cac:PartyIdentification/cbc:ID"
         )
@@ -169,3 +211,48 @@ class TestNaturalPersonSuppression:
         path = f"{EXT}/efac:Organizations/efac:Organization/{NATURAL_PERSON_INDICATOR}"
         assert not is_dropped(path)
         assert not suppressed_for_natural_person(NATURAL_PERSON_INDICATOR)
+
+    @pytest.mark.parametrize("indicator_last", [False, True])
+    @pytest.mark.parametrize(
+        ("indicator", "suppressed"),
+        [
+            ("true", True),
+            ("1", True),
+            (" TRUE ", True),
+            ("unreadable", True),
+            ("", True),
+            ("false", False),
+            ("0", False),
+            (None, False),
+        ],
+    )
+    def test_websites_follow_the_existing_indicator_policy(
+        self, indicator: str | None, suppressed: bool, indicator_last: bool
+    ) -> None:
+        notice = read_notice(
+            io.BytesIO(website_notice(indicator, indicator_last=indicator_last))
+        )
+        candidate, control = notice.of_kind("organisation")
+        assert candidate.value("efac:Company/cac:PartyIdentification/cbc:ID") == (
+            "ORG-0001"
+        )
+        assert candidate.value(NATURAL_PERSON_INDICATOR) == (
+            indicator.strip() if indicator is not None else None
+        )
+        for record, label, removed in (
+            (candidate, "synthetic-candidate", suppressed),
+            (control, "synthetic-control", False),
+        ):
+            assert [
+                item.value for item in record.fields_at("efac:Company/cbc:WebsiteURI")
+            ] == ([] if removed else [f"https://{label}.invalid/company"])
+            assert [
+                item.value
+                for item in record.fields_at("efac:TouchPoint/cbc:WebsiteURI")
+            ] == (
+                []
+                if removed
+                else [f"https://{label}.invalid/touch-{index}" for index in range(2)]
+            )
+        if suppressed:
+            assert "synthetic-candidate.invalid" not in repr(notice)

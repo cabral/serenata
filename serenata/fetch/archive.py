@@ -16,6 +16,7 @@ import tarfile
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from serenata.fetch.ojs import OjsIssue
 
@@ -26,7 +27,7 @@ _HASH_CHUNK_BYTES = 1 << 20
 
 
 class ArchiveConflict(RuntimeError):
-    """Archived bytes disagree with the manifest that describes them."""
+    """An archived package/manifest pair is incomplete or fails verification."""
 
 
 @dataclass(frozen=True)
@@ -118,9 +119,15 @@ class RawArchive:
         return PackageManifest.from_dict(raw)
 
     def write_manifest(self, issue: OjsIssue, manifest: PackageManifest) -> Path:
+        """Publish complete JSON atomically; preserve the prior manifest on failure."""
         path = self.manifest_path(issue)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(manifest.to_json(), encoding="utf-8")
+        # Stage on the same filesystem so replacement is atomic. A failed write
+        # must leave either the prior manifest or no manifest, never partial JSON.
+        with TemporaryDirectory(prefix=f".{path.name}-", dir=path.parent) as temporary:
+            pending = Path(temporary) / path.name
+            pending.write_text(manifest.to_json(), encoding="utf-8")
+            pending.replace(path)
         return path
 
     def holds(self, issue: OjsIssue) -> bool:
@@ -129,11 +136,19 @@ class RawArchive:
             self.package_path(issue).is_file() and self.manifest_path(issue).is_file()
         )
 
+    def has_artifacts(self, issue: OjsIssue) -> bool:
+        """Whether either archive path is occupied and must be verified before fetch."""
+        return any(
+            path.exists() or path.is_symlink()
+            for path in (self.package_path(issue), self.manifest_path(issue))
+        )
+
     def verify(self, issue: OjsIssue) -> PackageManifest:
         """Confirm the archived bytes still match their manifest.
 
-        Raises ``ArchiveConflict`` when they do not — a corrupted or replaced
-        package is a fact to surface, never to paper over by refetching.
+        Raises ``ArchiveConflict`` for an incomplete pair or mismatching bytes —
+        an interrupted, corrupted or replaced archive is a fact to surface,
+        never to paper over by refetching.
         """
         manifest = self.read_manifest(issue)
         if manifest is None:

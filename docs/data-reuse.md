@@ -2,15 +2,18 @@
 
 The terms this project relies on to reuse TED data, recorded so a reviewer can
 verify them rather than take our word for it. Checked against TED's legal notice
-on 2026-09-01.
+and EUR-Lex on 2026-09-05. This is a record of terms and unresolved obligations,
+not legal advice or a compliance certification.
 
 ## What TED permits
 
 Procurement notices published in the Supplement to the Official Journal can be
-**freely reused for commercial or non-commercial purposes**. The reuse policy is
+**freely reused for commercial or non-commercial purposes unless otherwise
+noted**. The reuse policy is
 Commission Decision [2011/833/EU](https://eur-lex.europa.eu/eli/dec/2011/833/oj/eng)
-of 12 December 2011 on the reuse of Commission documents, whose central condition
-is that the reuser **acknowledges the source**.
+of 12 December 2011 on the reuse of Commission documents. This project
+**acknowledges the source**; Article 6 permits reuse conditions including
+acknowledgement, preserving meaning and a non-liability notice.
 
 Alongside that, TED's legal notice states:
 
@@ -19,10 +22,42 @@ Alongside that, TED's legal notice states:
   attribution;
 - **the TED and SIMAP logos may not be used** without prior consent of the
   Publications Office.
+- identifiable private individuals and third-party works may require additional
+  rights clearance; the reuse policy does not grant rights the EU does not hold.
 
 Source: [TED legal notice](https://ted.europa.eu/en/legal-notice) · copyright
 notice © European Union, 1998–2026 · copyright queries go to
 op-copyright@publications.europa.eu.
+
+## Reuse permission is not a lawful basis for personal-data processing
+
+Decision 2011/833/EU Article 4 preserves data-protection obligations. TED's own
+privacy statement describes its processing under Regulation (EU) 2018/1725; it
+does not supply this project's lawful basis or retention period.
+
+Under the [GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng):
+
+- **Article 4(1)–(2) and Recital 26:** identifiable-person data includes indirect
+  identification; collection, storage, structuring and use are processing even
+  without publication. Opaque keys linked to public source notices are not proof
+  of anonymity.
+- **Articles 5 and 6:** lawfulness, fairness, transparency, minimisation, storage
+  limitation and security apply to current private holdings as well as releases.
+  Public availability is not a blanket exemption or an independent lawful basis.
+- **Article 14:** obtaining data from TED rather than the data subject raises
+  transparency duties. Any exception must be assessed and documented; it is not
+  established merely by the source being public or by calling the work research.
+- **Articles 33 and 34:** a personal-data breach requires a risk assessment and
+  documentation. Notification to the supervisory authority is due without undue
+  delay and, where feasible, within 72 hours of awareness unless risk to rights
+  and freedoms is unlikely. Communication to affected people is required without
+  undue delay where high risk is likely, subject to Article 34(3)'s exceptions.
+
+Lawful basis for existing raw and derived holdings, retention before any release,
+transparency arrangements and DPIA necessity (Article 35) remain counsel
+questions. [ADR-0010](adr/0010-raw-archive-retention.md), amended 2026-09-05,
+records the gaps rather than approving continued processing. No private dataset
+or flag is cleared for publication.
 
 ## The attribution line
 
@@ -45,9 +80,17 @@ report cannot quietly lose it. A test asserts it is present.
   and status counts; neither carries a field value. The second one measures how
   often a contact address turned up in a column that should not hold one, which
   is precisely a measurement that must report counts and never values.
-- **No republication of personal data.** Fields that can name a natural person
-  are dropped at ingestion and never reach a published artefact. That is a
-  standing constraint, not a property of any one dataset.
+- **No authorisation to republish personal data.** This is the standing
+  constraint, not a demonstrated property of all derived data. Structural drops
+  leave documented leakage in retained fields: the historical
+  [dataset-shape report](dataset-shape.md) counts 427 email/address-shaped
+  values, 139 personal-address-shaped, including 359 values in descriptions.
+  These patterns are not a complete inventory or a legal classification.
+  Explicit-natural-person Company/TouchPoint `WebsiteURI` suppression is fixed
+  in code, but stored datasets have not been rebuilt. Source-linkable opaque
+  keys and unknown natural-person status also need review. Raw archives,
+  normalised datasets and flags remain unpublished; nonpublication does not
+  remove the processing obligations above.
 
 ## Third-party material redistributed in this repository
 
@@ -82,9 +125,9 @@ datasets and findings may be reused, including commercially, provided credit is
 given, the licence is linked, and changes are indicated.
 
 Version 4.0 specifically: it licenses the EU **sui generis database right**
-(Directive 96/9/EC) alongside copyright, and that right — arising from the
-investment in compiling a collection rather than from authorship — is what
-actually attaches to a table of measurements. It is also the licence TED applies
+(Directive 96/9/EC) alongside copyright, to the extent those rights exist and
+this project holds them; not every table automatically attracts that right.
+It is also the licence TED applies
 to its own editorial content, so a derived dataset's terms sit legibly next to
 its source.
 

@@ -1,4 +1,4 @@
-"""The eForms XML vocabulary, and how this project reads it safely.
+"""The eForms XML vocabulary and shared guarded reader.
 
 Shared by the parse stage and the field survey. It lives at package root rather
 than inside either of them because the prefix map is load-bearing for
@@ -33,8 +33,7 @@ EFORMS_PREFIXES = {
 #: field would appear under several paths.
 ROOT = "notice"
 
-#: A document type declaration must appear in the prolog, so the opening bytes
-#: are enough to find one. Comfortably larger than any eForms prolog.
+#: Size of the first read, not a limit on the prolog scan.
 HEADER_BYTES = 8192
 
 #: Bytes fed to the parser at a time once the header has been cleared.
@@ -53,11 +52,12 @@ EFORMS_NOTICE_NAMESPACES = frozenset(
     {"http://data.europa.eu/p27/eforms-business-registration-information-notice/1"}
 )
 
-#: Byte-order marks for encodings this project does not read. All 3,190 notices
-#: in OJ S 157/2026 are plain UTF-8. Refusing the rest keeps the prolog scan
-#: below a byte comparison against ASCII-compatible bytes, which is the only
-#: thing that makes it sound.
-_REJECTED_BOMS = (b"\xff\xfe", b"\xfe\xff", b"\x00\x00\xfe\xff")
+#: Collect this many opening bytes (or EOF) before feeding the parser, even
+#: when read() returns short. UTF-16/32 signatures contain NUL or a non-ASCII
+#: BOM; an ASCII-compatible XML document starts with '<' or XML whitespace,
+#: optionally preceded by a UTF-8 BOM. This is not full UTF-8 validation.
+_ENCODING_BYTES = 4
+_XML_STARTS = (b"<", b" ", b"\t", b"\r", b"\n", b"\xef\xbb\xbf")
 
 #: ``<!DOCTYPE`` minus one, so a declaration split across two reads is still
 #: seen: the tail of one chunk is prepended to the next before scanning.
@@ -153,23 +153,13 @@ def accept_eforms_root(tag: str, *, because: str) -> None:
 
 
 class PrologGuard:
-    """Refuses a document type declaration anywhere it may legally appear.
+    """Check the opening encoding signature, then scan the prolog for DTDs.
 
-    ADR-0003 rests the whole case for using the standard library on refusing
-    DTDs, because refusing them is what closes internal entity expansion. That
-    claim is only true if the refusal cannot be walked around, and scanning a
-    fixed-size header can be: a notice whose prolog opens with a comment longer
-    than the header pushes its declaration out of view, and it is then parsed
-    with entity expansion live.
-
-    The XML specification allows a document type declaration only before the
-    root element, so scanning every byte read until the root opens covers every
-    position it can occupy. Past that point the scan stops and costs nothing,
-    which keeps this affordable on a 40 MB notice.
-
-    Encodings are handled by refusing them: a UTF-16 document would hide
-    ``<!DOCTYPE`` from any ASCII byte comparison, so it is rejected outright
-    rather than scanned wrongly.
+    The XML specification allows a DTD only before the root element. For
+    ASCII-compatible markup, scanning chunks with overlap until the root opens
+    catches the marker even behind long comments or across reads (ADR-0003).
+    UTF-16/32 would hide that marker, with or without a BOM, so the opening
+    signature must be checked before any bytes reach the parser.
     """
 
     def __init__(self) -> None:
@@ -178,14 +168,15 @@ class PrologGuard:
         self._started = False
 
     def check(self, chunk: bytes) -> None:
-        """Refuse ``chunk`` if the prolog declares a DTD. Call before feeding."""
+        """Check before feeding; first chunk must contain at least 4 bytes or EOF."""
         if not self._started:
             self._started = True
-            if chunk.startswith(_REJECTED_BOMS):
+            prefix = chunk[:_ENCODING_BYTES]
+            if b"\x00" in prefix or not prefix.startswith(_XML_STARTS):
                 raise NoticeRejected(
-                    "notice is not UTF-8; this project reads the UTF-8 that "
-                    "every surveyed notice uses, and refuses encodings it "
-                    "cannot scan for a document type declaration (ADR-0003)"
+                    "notice lacks an ASCII-compatible XML prefix (UTF-8 is "
+                    "supported); this project refuses encodings it cannot scan "
+                    "for a document type declaration (ADR-0003)"
                 )
         if not self._scanning:
             return
@@ -212,8 +203,9 @@ def stream_elements(source: IO[bytes]) -> Iterator[tuple[str, str, Element[str]]
     reader does with the events — count paths, build records — is its own.
 
     **An element is not valid after its end event.** It is cleared and unhooked
-    from its parent as soon as the consumer resumes, which is what keeps cost
-    tracking the deepest element rather than the document. Read what you need
+    from its parent as soon as the consumer resumes. This releases completed
+    subtrees, but does not impose a memory limit on parser buffers, large text
+    or attributes, nesting, or values retained by consumers. Read what you need
     while you have it.
     """
     parser: XMLPullParser[Element[str]] = XMLPullParser(events=("start", "end"))
@@ -244,6 +236,13 @@ def stream_elements(source: IO[bytes]) -> Iterator[tuple[str, str, Element[str]]
                 open_elements[-1].remove(element)
 
     chunk = source.read(HEADER_BYTES)
+    # A binary stream may return fewer bytes than requested. Do not let Expat
+    # see a partial BOM or encoding signature before the guard can check it.
+    while 0 < len(chunk) < _ENCODING_BYTES:
+        more = source.read(_ENCODING_BYTES - len(chunk))
+        if not more:
+            break
+        chunk += more
     while chunk:
         guard.check(chunk)
         parser.feed(chunk)

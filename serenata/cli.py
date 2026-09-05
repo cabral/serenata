@@ -1,9 +1,8 @@
 """Command-line entry point: ``serenata fetch|normalise|classify``.
 
-Each subcommand maps to one pipeline stage (parsing runs inside
-``normalise``). ``fetch`` and ``normalise`` are implemented; ``classify`` is
-still a stub while milestone 1 is under construction, and exits with status 2
-saying so.
+Each subcommand maps to one pipeline stage; parsing runs inside ``normalise``.
+All three are implemented. ``classify`` runs every rule the classify package
+carries over the normalised dataset and writes the flags each one produced.
 """
 
 from __future__ import annotations
@@ -15,6 +14,11 @@ from datetime import date, datetime
 from pathlib import Path
 
 from serenata import __version__
+from serenata.classify import (
+    Classified,
+    classify_dataset,
+    default_flag_root,
+)
 from serenata.fetch import (
     ArchiveConflict,
     DayResult,
@@ -38,7 +42,7 @@ STAGES = {
     "classify": "run hypothesis classifiers over the normalised dataset",
 }
 
-IMPLEMENTED = frozenset({"fetch", "normalise"})
+IMPLEMENTED = frozenset({"fetch", "normalise", "classify"})
 
 
 def _iso_date(raw: str) -> date:
@@ -66,6 +70,8 @@ def build_parser() -> argparse.ArgumentParser:
             _add_fetch_arguments(stage)
         elif name == "normalise":
             _add_normalise_arguments(stage)
+        elif name == "classify":
+            _add_classify_arguments(stage)
 
     return parser
 
@@ -131,6 +137,51 @@ def _add_normalise_arguments(parser: argparse.ArgumentParser) -> None:
             f"where the Parquet dataset is written (default: {default_dataset_root()})"
         ),
     )
+
+
+def _add_classify_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--dataset",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help=f"normalised dataset to classify (default: {default_dataset_root()})",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help=f"where flags are written (default: {default_flag_root()})",
+    )
+
+
+def _run_classify(args: argparse.Namespace) -> int:
+    dataset = args.dataset if args.dataset is not None else default_dataset_root()
+    if not dataset.is_dir():
+        print(
+            f"serenata classify: no dataset at {dataset}; "
+            "normalise some packages first (serenata normalise)",
+            file=sys.stderr,
+        )
+        return 2
+
+    out = args.out if args.out is not None else default_flag_root()
+    results: list[Classified] = classify_dataset(dataset, out)
+    for result in results:
+        print(result.describe())
+
+    flags = sum(result.flags for result in results)
+    rules = f"{len(results)} rule" + ("" if len(results) == 1 else "s")
+    print(f"\n{rules}: {flags} flags -> {out}")
+    # Constraint 3, in the one place a reader meets the output first.
+    print(
+        "A flag is a statistical anomaly with possible innocent explanations, "
+        "never an accusation. Each one names the notice it came from and the "
+        "baseline it was measured against; see docs/hypotheses/.",
+        file=sys.stderr,
+    )
+    return 0
 
 
 def _run_normalise(args: argparse.Namespace) -> int:
@@ -245,13 +296,7 @@ def main(
         return _run_fetch(args, open_client)
     if args.command == "normalise":
         return _run_normalise(args)
-
-    print(
-        f"serenata {args.command}: not implemented yet; "
-        "milestone 1 is in progress (see README).",
-        file=sys.stderr,
-    )
-    return 2
+    return _run_classify(args)
 
 
 if __name__ == "__main__":

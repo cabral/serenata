@@ -7,10 +7,12 @@ authors = [{ name = "Felipe B. Cabral", email = "felipe.benites@gmail.com" }]
 license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-# httpx is BSD-3-Clause (ADR-0002) and pyarrow is Apache-2.0 (ADR-0001, which
-# names it as the Parquet writer). Both are AGPL-3.0 compatible, and
-# tests/test_constraints.py checks that against installed metadata every run.
+# httpx is BSD-3-Clause (ADR-0002), pyarrow is Apache-2.0 and duckdb is MIT
+# (ADR-0001, which names them as the Parquet writer and the query engine). All
+# three are AGPL-3.0 compatible, and tests/test_constraints.py checks that
+# against installed metadata every run.
 dependencies = [
+    "duckdb>=1.5.5",
     "httpx>=0.27",
     "pyarrow>=25.0.1",
 ]
@@ -24,11 +26,10 @@ serenata = "serenata.cli:main"
 [dependency-groups]
 # Development tooling only; none of this ships with the distributed package.
 # All permissive and AGPL-3.0 compatible, and tests/test_constraints.py checks
-# that on every run rather than trusting this comment. duckdb (MIT) is here
-# rather than in dependencies because the pipeline writes Parquet and only the
-# tests read it back; classifiers will move it when they need SQL (ADR-0001).
+# that on every run rather than trusting this comment. duckdb was here until the
+# first classifier needed SQL over the dataset, which is the move ADR-0001
+# anticipated; it is a runtime dependency now.
 dev = [
-    "duckdb>=1.5.5",
     "mypy>=1.13",
     "pip-audit>=2.7",
     "pytest>=8",

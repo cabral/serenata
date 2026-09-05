@@ -10,27 +10,31 @@ What the normalise stage produces, measured rather than remembered: how many row
 
 ## What was measured
 
-- **3,190 notices** from 1 package(s)
+- **19,180 notices** from 5 package(s)
+  - `202600052.tar.gz` — `sha256:d9880b96cc2b20831b43dd1077724bea624b08582c275c4f7855f170b55ef035`
+  - `202600094.tar.gz` — `sha256:395c45325072b72bc8d902f508c7416619076290ef3e5fc677ea00ccfa389db7`
+  - `202600113.tar.gz` — `sha256:92aca3765e1bad95385e3525c47228383789fee8dfa87abf2110353855c61076`
   - `202600157.tar.gz` — `sha256:c90b2b7411bde50143e39ce57376442abc6880777b1fda70c54f7daac396d146`
+  - `202600168.tar.gz` — `sha256:537a6c7830d224f26cce54457b4bce3bcab46210bc60c402e47d3bfc6679bf4c`
 
 ## Rows
 
 | Table | Rows | Rows sharing a key |
 |---|---:|---:|
-| `notice` | 3,190 | 0 |
-| `procedure` | 3,190 | 0 |
-| `lot` | 8,624 | 0 |
-| `organisation` | 12,719 | 0 |
-| `organisation_role` | 19,017 | 0 |
-| `tendering_party` | 3,025 | 0 |
-| `lot_tender` | 8,612 | 0 |
-| `lot_result` | 4,218 | 0 |
-| `lot_result_statistic` | 15,984 | 0 |
-| `settled_contract` | 5,835 | 0 |
-| `realized_location` | 14,000 | 0 |
-| `field_privacy` | 215 | 0 |
+| `notice` | 19,180 | 0 |
+| `procedure` | 19,180 | 0 |
+| `lot` | 58,248 | 0 |
+| `organisation` | 77,444 | 0 |
+| `organisation_role` | 124,505 | 0 |
+| `tendering_party` | 18,030 | 0 |
+| `lot_tender` | 52,689 | 0 |
+| `lot_result` | 26,749 | 0 |
+| `lot_result_statistic` | 100,269 | 0 |
+| `settled_contract` | 37,090 | 0 |
+| `realized_location` | 97,084 | 0 |
+| `field_privacy` | 1,600 | 0 |
 
-**Rows sharing a key** must be zero: every table is keyed on the publication plus what identifies the row within it. The notice UUID looked like a key and is not — **2** notice UUIDs here carry more than one publication.
+**Rows sharing a key** must be zero: every table is keyed on the publication plus what identifies the row within it. The notice UUID looked like a key and is not — **6** notice UUIDs here carry more than one publication.
 
 ## Withheld values published as a sentinel
 
@@ -38,16 +42,18 @@ eForms publishes a withheld value rather than omitting it. A column below holds 
 
 | Column | Values that are `-1` |
 |---|---:|
-| `lot_result.framework_max_amount` | 11 |
-| `lot_result.framework_reestimated_amount` | 6 |
-| `lot_result.highest_tender_amount` | 10 |
-| `lot_result.lowest_tender_amount` | 10 |
-| `lot_result_statistic.statistic_value` | 2 |
-| `lot_tender.payable_amount` | 72 |
-| `procedure.framework_overall_approximate_amount` | 2 |
-| `procedure.framework_overall_max_amount` | 6 |
-| `procedure.total_amount` | 42 |
-| `settled_contract.contract_reference` | 2 |
+| `lot_result.framework_max_amount` | 104 |
+| `lot_result.framework_reestimated_amount` | 11 |
+| `lot_result.highest_tender_amount` | 108 |
+| `lot_result.lowest_tender_amount` | 108 |
+| `lot_result_statistic.statistic_value` | 145 |
+| `lot_tender.payable_amount` | 385 |
+| `lot_tender.rank_code` | 12 |
+| `procedure.estimated_amount` | 1 |
+| `procedure.framework_overall_approximate_amount` | 7 |
+| `procedure.framework_overall_max_amount` | 59 |
+| `procedure.total_amount` | 225 |
+| `settled_contract.contract_reference` | 3 |
 
 ## Address-shaped values where none belongs
 
@@ -55,13 +61,13 @@ The personal-data drop list matches element paths and cannot catch a publisher w
 
 | Column | Address-shaped | Shaped like a person's |
 |---|---:|---:|
-| `lot.description` | 15 | 5 |
-| `organisation.city` | 5 | 1 |
-| `organisation.company_ids` | 3 | 0 |
-| `organisation.name` | 6 | 0 |
-| `organisation.street` | 2 | 0 |
-| `organisation.website` | 1 | 0 |
-| `procedure.description` | 14 | 7 |
+| `lot.description` | 234 | 77 |
+| `organisation.city` | 6 | 1 |
+| `organisation.company_ids` | 16 | 4 |
+| `organisation.name` | 11 | 1 |
+| `organisation.street` | 18 | 6 |
+| `organisation.website` | 17 | 5 |
+| `procedure.description` | 125 | 45 |
 
 ## Column population
 
@@ -69,92 +75,92 @@ The share of rows in each status (ADR-0006). `absent` is "not provided", never "
 
 | Column | Rows | present | empty | absent | withheld | not_applicable |
 |---|---:|---:|---:|---:|---:|---:|
-| `field_privacy.field_identifier_code` | 215 | 100.0% | — | — | — | — |
-| `field_privacy.publication_date` | 215 | 4.2% | — | 95.8% | — | — |
-| `field_privacy.reason_code` | 215 | 100.0% | — | — | — | — |
-| `lot.contracting_system_codes` | 8,624 | 95.9% | — | 4.1% | — | — |
-| `lot.cpv_code` | 8,624 | 99.8% | — | 0.2% | — | — |
-| `lot.description` | 8,624 | 100.0% | — | 0.0% | — | — |
-| `lot.electronic_auction` | 8,624 | 93.3% | — | 6.7% | — | — |
-| `lot.estimated_amount` | 8,624 | 51.5% | — | 48.5% | — | — |
-| `lot.funding_programme_code` | 8,624 | 97.4% | — | 2.6% | — | — |
-| `lot.gpa_covered` | 8,624 | 92.5% | — | 7.5% | — | — |
-| `lot.internal_id` | 8,624 | 93.0% | — | 7.0% | — | — |
-| `lot.lot_id` | 8,624 | 100.0% | — | — | — | — |
-| `lot.procurement_type_code` | 8,624 | 99.8% | — | 0.2% | — | — |
-| `lot.submission_deadline_date` | 8,624 | 46.5% | — | 53.5% | — | — |
-| `lot.submission_deadline_time` | 8,624 | 46.5% | — | 53.5% | — | — |
-| `lot.title` | 8,624 | 99.9% | — | 0.1% | — | — |
-| `lot_result.contract_refs` | 4,218 | 84.0% | — | 16.0% | — | — |
-| `lot_result.decision_reason_code` | 4,218 | 14.1% | — | 85.8% | 0.0% | — |
-| `lot_result.framework_max_amount` | 4,218 | 32.2% | — | 67.5% | 0.3% | — |
-| `lot_result.framework_reestimated_amount` | 4,218 | 30.4% | — | 69.5% | 0.1% | — |
-| `lot_result.highest_tender_amount` | 4,218 | 32.3% | — | 67.4% | 0.3% | — |
-| `lot_result.lot_ref` | 4,218 | 100.0% | — | — | — | — |
-| `lot_result.lot_result_id` | 4,218 | 100.0% | — | — | — | — |
-| `lot_result.lowest_tender_amount` | 4,218 | 32.3% | — | 67.4% | 0.3% | — |
-| `lot_result.result_code` | 4,218 | 89.1% | — | 10.9% | — | — |
-| `lot_result.winning_tender_refs` | 4,218 | 84.3% | — | 15.7% | — | — |
-| `lot_result_statistic.statistic_code` | 15,984 | 99.3% | — | 0.7% | 0.0% | — |
-| `lot_result_statistic.statistic_value` | 15,984 | 100.0% | — | — | 0.0% | — |
-| `lot_tender.is_ranked` | 8,612 | 79.9% | — | 20.1% | — | — |
-| `lot_tender.is_variant` | 8,612 | 16.2% | — | 83.3% | 0.5% | — |
-| `lot_tender.lot_ref` | 8,612 | 100.0% | — | — | — | — |
-| `lot_tender.payable_amount` | 8,612 | 93.3% | — | 5.8% | 0.9% | — |
-| `lot_tender.rank_code` | 8,612 | 71.0% | — | 29.0% | — | — |
-| `lot_tender.subcontracting_term_code` | 8,612 | 98.1% | — | 1.9% | — | — |
-| `lot_tender.tender_id` | 8,612 | 100.0% | — | — | — | — |
-| `lot_tender.tender_reference` | 8,612 | 100.0% | — | — | — | — |
-| `lot_tender.tendering_party_ref` | 8,612 | 100.0% | — | — | — | — |
-| `notice.changed_notice_id` | 3,190 | 14.8% | — | 85.2% | — | — |
-| `notice.contract_folder_id` | 3,190 | 98.3% | — | 1.7% | — | — |
-| `notice.customization_id` | 3,190 | 100.0% | — | — | — | — |
-| `notice.gazette_id` | 3,190 | 100.0% | — | — | — | — |
-| `notice.issue_date` | 3,190 | 100.0% | — | — | — | — |
-| `notice.issue_time` | 3,190 | 100.0% | — | — | — | — |
-| `notice.language_code` | 3,190 | 100.0% | — | — | — | — |
-| `notice.notice_subtype_code` | 3,190 | 100.0% | — | — | — | — |
-| `notice.notice_type_code` | 3,190 | 100.0% | — | — | — | — |
-| `notice.publication_date` | 3,190 | 100.0% | — | — | — | — |
-| `notice.regulatory_domain` | 3,190 | 100.0% | — | — | — | — |
-| `notice.root_element` | 3,190 | 100.0% | — | — | — | — |
-| `notice.version_id` | 3,190 | 100.0% | — | — | — | — |
-| `organisation.city` | 12,719 | 99.9% | — | 0.1% | — | — |
-| `organisation.company_ids` | 12,719 | 99.8% | — | 0.2% | — | — |
-| `organisation.country_code` | 12,719 | 99.9% | — | 0.1% | — | — |
-| `organisation.is_natural_person` | 12,719 | 2.9% | — | 97.1% | — | — |
-| `organisation.name` | 12,719 | 99.9% | — | 0.1% | — | — |
-| `organisation.nuts_code` | 12,719 | 99.8% | — | 0.2% | — | — |
-| `organisation.org_local_id` | 12,719 | 100.0% | — | — | — | — |
-| `organisation.postal_zone` | 12,719 | 99.9% | — | 0.1% | — | — |
-| `organisation.street` | 12,719 | 79.1% | — | 20.9% | — | — |
-| `organisation.website` | 12,719 | 58.8% | — | 41.2% | — | — |
-| `organisation_role.buyer_activity_code` | 19,017 | 18.6% | — | 81.4% | — | — |
-| `organisation_role.buyer_type_code` | 19,017 | 18.0% | — | 82.0% | — | — |
-| `organisation_role.is_group_lead` | 19,017 | 2.1% | — | 97.9% | — | — |
-| `organisation_role.org_ref` | 19,017 | 100.0% | — | — | — | — |
-| `procedure.contract_folder_id` | 3,190 | 98.3% | — | 1.7% | — | — |
-| `procedure.cpv_code` | 3,190 | 99.9% | — | 0.1% | — | — |
-| `procedure.description` | 3,190 | 99.9% | — | 0.1% | — | — |
-| `procedure.estimated_amount` | 3,190 | 40.6% | — | 59.4% | — | — |
-| `procedure.framework_overall_approximate_amount` | 3,190 | 4.7% | — | 95.2% | 0.1% | — |
-| `procedure.framework_overall_max_amount` | 3,190 | 8.2% | — | 91.6% | 0.2% | — |
-| `procedure.internal_id` | 3,190 | 83.9% | — | 16.1% | — | — |
-| `procedure.procedure_code` | 3,190 | 91.1% | — | 8.9% | — | — |
-| `procedure.process_reason_code` | 3,190 | 76.4% | — | 23.6% | — | — |
-| `procedure.procurement_type_code` | 3,190 | 99.7% | — | 0.3% | — | — |
-| `procedure.title` | 3,190 | 99.9% | — | 0.1% | — | — |
-| `procedure.total_amount` | 3,190 | 33.2% | — | 65.4% | 1.4% | — |
-| `realized_location.country_code` | 14,000 | 98.7% | — | 1.3% | — | — |
-| `realized_location.nuts_code` | 14,000 | 93.8% | — | 6.2% | — | — |
-| `settled_contract.award_date` | 5,835 | 22.4% | — | 77.6% | — | — |
-| `settled_contract.contract_id` | 5,835 | 100.0% | — | — | — | — |
-| `settled_contract.contract_reference` | 5,835 | 99.9% | — | 0.1% | — | — |
-| `settled_contract.is_framework` | 5,835 | 51.2% | — | 48.8% | — | — |
-| `settled_contract.issue_date` | 5,835 | 99.2% | — | 0.8% | — | — |
-| `settled_contract.tender_refs` | 5,835 | 99.9% | — | 0.1% | — | — |
-| `settled_contract.title` | 5,835 | 20.1% | — | 79.9% | — | — |
-| `settled_contract.url` | 5,835 | 3.7% | — | 96.3% | — | — |
-| `tendering_party.name` | 3,025 | 21.0% | — | 79.0% | — | — |
-| `tendering_party.tendering_party_id` | 3,025 | 100.0% | — | — | — | — |
+| `field_privacy.field_identifier_code` | 1,600 | 100.0% | — | — | — | — |
+| `field_privacy.publication_date` | 1,600 | 10.1% | — | 89.9% | — | — |
+| `field_privacy.reason_code` | 1,600 | 100.0% | — | — | — | — |
+| `lot.contracting_system_codes` | 58,248 | 93.8% | — | 6.2% | — | — |
+| `lot.cpv_code` | 58,248 | 99.8% | — | 0.2% | — | — |
+| `lot.description` | 58,248 | 100.0% | — | 0.0% | — | — |
+| `lot.electronic_auction` | 58,248 | 91.6% | — | 8.4% | — | — |
+| `lot.estimated_amount` | 58,248 | 44.0% | — | 56.0% | — | — |
+| `lot.funding_programme_code` | 58,248 | 97.0% | — | 3.0% | — | — |
+| `lot.gpa_covered` | 58,248 | 91.2% | — | 8.8% | — | — |
+| `lot.internal_id` | 58,248 | 89.1% | — | 10.9% | — | — |
+| `lot.lot_id` | 58,248 | 100.0% | — | — | — | — |
+| `lot.procurement_type_code` | 58,248 | 99.8% | — | 0.2% | — | — |
+| `lot.submission_deadline_date` | 58,248 | 50.3% | — | 49.7% | — | — |
+| `lot.submission_deadline_time` | 58,248 | 50.3% | — | 49.7% | — | — |
+| `lot.title` | 58,248 | 100.0% | — | 0.0% | — | — |
+| `lot_result.contract_refs` | 26,749 | 85.2% | — | 14.8% | — | — |
+| `lot_result.decision_reason_code` | 26,749 | 13.4% | — | 86.6% | 0.0% | — |
+| `lot_result.framework_max_amount` | 26,749 | 27.6% | — | 72.0% | 0.4% | — |
+| `lot_result.framework_reestimated_amount` | 26,749 | 24.9% | — | 75.0% | 0.0% | — |
+| `lot_result.highest_tender_amount` | 26,749 | 32.7% | — | 66.9% | 0.4% | — |
+| `lot_result.lot_ref` | 26,749 | 100.0% | — | — | — | — |
+| `lot_result.lot_result_id` | 26,749 | 100.0% | — | — | — | — |
+| `lot_result.lowest_tender_amount` | 26,749 | 32.7% | — | 66.9% | 0.4% | — |
+| `lot_result.result_code` | 26,749 | 84.8% | — | 15.2% | 0.0% | — |
+| `lot_result.winning_tender_refs` | 26,749 | 85.4% | — | 14.6% | — | — |
+| `lot_result_statistic.statistic_code` | 100,269 | 99.1% | — | 0.8% | 0.1% | — |
+| `lot_result_statistic.statistic_value` | 100,269 | 99.9% | — | — | 0.1% | — |
+| `lot_tender.is_ranked` | 52,689 | 81.4% | — | 18.6% | — | — |
+| `lot_tender.is_variant` | 52,689 | 15.8% | — | 83.9% | 0.4% | — |
+| `lot_tender.lot_ref` | 52,689 | 100.0% | — | — | — | — |
+| `lot_tender.payable_amount` | 52,689 | 95.7% | — | 3.6% | 0.7% | — |
+| `lot_tender.rank_code` | 52,689 | 73.6% | — | 26.4% | 0.0% | — |
+| `lot_tender.subcontracting_term_code` | 52,689 | 98.4% | — | 1.6% | 0.0% | — |
+| `lot_tender.tender_id` | 52,689 | 100.0% | — | — | — | — |
+| `lot_tender.tender_reference` | 52,689 | 100.0% | — | — | — | — |
+| `lot_tender.tendering_party_ref` | 52,689 | 100.0% | — | — | — | — |
+| `notice.changed_notice_id` | 19,180 | 14.8% | — | 85.2% | — | — |
+| `notice.contract_folder_id` | 19,180 | 97.7% | — | 2.3% | — | — |
+| `notice.customization_id` | 19,180 | 100.0% | — | — | — | — |
+| `notice.gazette_id` | 19,180 | 100.0% | — | — | — | — |
+| `notice.issue_date` | 19,180 | 100.0% | — | — | — | — |
+| `notice.issue_time` | 19,180 | 100.0% | — | — | — | — |
+| `notice.language_code` | 19,180 | 100.0% | — | — | — | — |
+| `notice.notice_subtype_code` | 19,180 | 100.0% | — | — | — | — |
+| `notice.notice_type_code` | 19,180 | 100.0% | — | — | — | — |
+| `notice.publication_date` | 19,180 | 100.0% | — | — | — | — |
+| `notice.regulatory_domain` | 19,180 | 100.0% | — | — | — | — |
+| `notice.root_element` | 19,180 | 100.0% | — | — | — | — |
+| `notice.version_id` | 19,180 | 100.0% | — | — | — | — |
+| `organisation.city` | 77,444 | 99.9% | — | 0.1% | — | — |
+| `organisation.company_ids` | 77,444 | 99.8% | — | 0.2% | — | — |
+| `organisation.country_code` | 77,444 | 99.9% | — | 0.1% | — | — |
+| `organisation.is_natural_person` | 77,444 | 3.4% | — | 96.6% | — | — |
+| `organisation.name` | 77,444 | 99.9% | — | 0.1% | — | — |
+| `organisation.nuts_code` | 77,444 | 99.7% | — | 0.3% | — | — |
+| `organisation.org_local_id` | 77,444 | 100.0% | — | — | — | — |
+| `organisation.postal_zone` | 77,444 | 99.9% | — | 0.1% | — | — |
+| `organisation.street` | 77,444 | 78.8% | — | 21.2% | — | — |
+| `organisation.website` | 77,444 | 59.7% | — | 40.3% | — | — |
+| `organisation_role.buyer_activity_code` | 124,505 | 19.0% | — | 81.0% | — | — |
+| `organisation_role.buyer_type_code` | 124,505 | 18.5% | — | 81.5% | — | — |
+| `organisation_role.is_group_lead` | 124,505 | 1.8% | — | 98.2% | — | — |
+| `organisation_role.org_ref` | 124,505 | 100.0% | — | — | — | — |
+| `procedure.contract_folder_id` | 19,180 | 97.7% | — | 2.3% | — | — |
+| `procedure.cpv_code` | 19,180 | 100.0% | — | 0.0% | — | — |
+| `procedure.description` | 19,180 | 100.0% | — | 0.0% | — | — |
+| `procedure.estimated_amount` | 19,180 | 41.5% | — | 58.5% | — | — |
+| `procedure.framework_overall_approximate_amount` | 19,180 | 3.9% | — | 96.1% | 0.0% | — |
+| `procedure.framework_overall_max_amount` | 19,180 | 6.0% | — | 93.7% | 0.3% | — |
+| `procedure.internal_id` | 19,180 | 81.7% | — | 18.3% | — | — |
+| `procedure.procedure_code` | 19,180 | 91.5% | — | 8.5% | — | — |
+| `procedure.process_reason_codes` | 19,180 | 76.7% | — | 23.3% | — | — |
+| `procedure.procurement_type_code` | 19,180 | 99.7% | — | 0.3% | — | — |
+| `procedure.title` | 19,180 | 100.0% | — | 0.0% | — | — |
+| `procedure.total_amount` | 19,180 | 32.7% | — | 66.1% | 1.2% | — |
+| `realized_location.country_code` | 97,084 | 98.8% | — | 1.2% | — | — |
+| `realized_location.nuts_code` | 97,084 | 94.1% | — | 5.9% | — | — |
+| `settled_contract.award_date` | 37,090 | 20.0% | — | 80.0% | — | — |
+| `settled_contract.contract_id` | 37,090 | 100.0% | — | — | — | — |
+| `settled_contract.contract_reference` | 37,090 | 99.9% | — | 0.1% | — | — |
+| `settled_contract.is_framework` | 37,090 | 47.6% | — | 52.4% | — | — |
+| `settled_contract.issue_date` | 37,090 | 99.1% | — | 0.9% | — | — |
+| `settled_contract.tender_refs` | 37,090 | 100.0% | — | 0.0% | — | — |
+| `settled_contract.title` | 37,090 | 17.8% | — | 82.2% | — | — |
+| `settled_contract.url` | 37,090 | 4.0% | — | 96.0% | — | — |
+| `tendering_party.name` | 18,030 | 28.9% | — | 71.1% | — | — |
+| `tendering_party.tendering_party_id` | 18,030 | 100.0% | — | — | — | — |
 
