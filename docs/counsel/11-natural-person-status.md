@@ -195,10 +195,13 @@ tables in case files as well as to generated reports.
 ### B6. Conflicting and unreadable indicators
 
 Present-but-unreadable and empty values already suppress. Two contradictory
-indicators on one organisation are not yet specified. The project proposes
-treating any organisation carrying a `true`-equivalent value as a natural
-person regardless of what else it carries, and asks counsel to confirm that
-"err toward suppression" is the correct resolution.
+indicators on one organisation now suppress as well: any organisation carrying a
+`true`-equivalent value anywhere is treated as a natural person regardless of
+what else it carries. That was implemented ahead of this instruction because it
+is strictly more protective than the behaviour it replaced and needed no real
+data to change, and because the previous behaviour made suppression depend on
+which element the publisher wrote first. The project asks counsel to confirm
+that "err toward suppression" is the correct resolution rather than assuming it.
 
 ## What each answer changes in the code
 
