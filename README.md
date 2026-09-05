@@ -6,8 +6,8 @@ statistical anomalies anyone can verify against the source.
 The EU publishes around 700,000 procurement notices a year through
 [TED](https://ted.europa.eu), since late 2024 in the machine-readable eForms
 standard. Dashboards for analysts exist. A continuously running, open pipeline
-that turns those notices into verifiable public flags does not. This project
-builds one.
+that turns those notices into verifiable public flags is this project's goal,
+not a service it operates today.
 
 ## Start here
 
@@ -47,14 +47,18 @@ published here. The lineage above is shared history, not a partnership.
 ## What a flag means
 
 A flag is a statistical anomaly matched against a documented risk indicator,
-nothing more. Most flags have innocent explanations. Every flag links to the
-source notice so you can check it yourself, every classifier's hypothesis and
-measured error rates are published in [`docs/hypotheses/`](docs/hypotheses/),
-and flags concern institutions and companies, never private individuals.
+nothing more. Flags can have innocent explanations. Every flag links to the
+source notice so you can check it yourself. The first classifier's hypothesis,
+historical base rates and predicted failure modes are in
+[docs/hypotheses/](docs/hypotheses/); **no empirical false-positive rate has been
+measured**. Project publication is restricted to institutional and company
+patterns, not identifiable natural persons. The current data does not yet
+establish that this restriction can be met for every record.
 
 ## Status
 
-**Milestone 1, the pipeline reaches a dataset** (September 2026). `serenata fetch`
+**An eForms ingestion and normalisation prototype is built; milestone 1 is
+not complete** (September 2026). `serenata fetch`
 archives TED's daily notice packages with provenance and checksums.
 [`serenata.survey`](serenata/survey/) measured which eForms fields notices
 actually populate, so the data model could be designed against evidence rather
@@ -62,11 +66,12 @@ than against the specification — the result is
 [`docs/field-usage.md`](docs/field-usage.md), and the model it produced is
 [`docs/data-model.md`](docs/data-model.md).
 [`serenata.parse`](serenata/parse/) reads archived notices into typed records,
-dropping the fields that can name a person as it reads, and
+applying structural privacy suppression as it reads, and
 [`serenata.normalise`](serenata/normalise/) writes those records as the
 documented model in Parquet.
 
-Against five real publication days spanning March to September 2026, all
+In the recorded run against five real publication days spanning March to
+September 2026, all
 **19,180 notices parse and become 632,068 rows across twelve tables**,
 byte-identical when a run is repeated — the determinism the project's whole
 credibility rests on, and now a test rather than an intention. **3.5% of every
@@ -88,6 +93,16 @@ naming the packages it measured with their checksums. It reports counts and
 never values, which is what lets it also count the contact addresses publishers
 type into fields that are not contact fields.
 
+**Structural suppression does not remove all personal data.** That report
+documents **427 email/address-like values** in retained columns, **139
+personal-address-shaped**, with **359 in lot and procedure descriptions**.
+These are pattern counts, not a complete inventory or a legal classification
+of each value. The natural-person indicator is absent from about **90% of
+notices**; absence means unknown, not a company by default. The current patch
+closes the explicit-natural-person Company/TouchPoint `WebsiteURI` leak, but
+stored datasets still need rebuilding and the broader privacy policy remains
+unresolved. No rebuild or data publication was performed for this audit.
+
 Building the stage against real notices corrected the data model three times,
 which is the point of measuring rather than reading a specification: the notice
 UUID turned out not to be unique, most columns turned out to repeat, and a
@@ -105,29 +120,49 @@ method.
 
 What survives is the comparative form, and it is built:
 [`single_bid_in_segment`](docs/hypotheses/single_bid_in_segment.md) flags a lot
-that drew one bid in a market where single bids are rare. Single-bid rates run
-from 6.5% to 78.2% across markets, so the distance from a lot's own market is
-what carries information. Over five publication days it produces **96 flags from
-8,159 lot outcomes**, byte-identical when the run is repeated, and every flag
+that drew one bid in a market where single bids are rare. In the historical
+**version-1** measurement, single-bid rates ranged from 6.5% to 78.2% across
+eligible markets, motivating comparison with a lot's own market. That run over five publication
+days produced **96 flags from 8,159 lot outcomes**; eligible segments covered
+**52.7%** of that population and excluded **47.3%** below the segment-size floor.
+These are base-rate and coverage measurements, not empirical error rates.
+That run was byte-identical on repeat, and every flag
 carries the baseline it was measured against so a reader can disagree with it
 without rerunning anything ([ADR-0011](docs/adr/0011-flags-carry-their-own-baseline.md)).
 
-**No flag has been published, and none may be yet.** A flag on a notice that was
-later corrected is a flag on something that no longer stands, and whether an
-entity may be named at all when its natural-person status is unknown is an open
-question. Both gate publication rather than computation. Legacy pre-2024 TED
+**Version 2 is implemented; remeasurement is pending.** It rejects duplicate
+structural and join keys, ambiguous and fractional tender counts, requires a present statistic code, and
+requires every buyer reference to resolve to a present, agreed country. Its
+output writer stages replacements and removes stale files for that rule after
+a successful run, but a multi-year replacement is not transactional. The
+historical counts above do not describe this version. One historical flag has
+had its arithmetic re-derived; **none has completed the verification protocol**.
+Current-version measurement is a **pre-merge requirement**, enforced by CI's
+`--require-current-measurements` check. Passing local developer tests does not
+clear it; this version currently fails that gate. Real-data remeasurement must
+also respect the unresolved processing review below.
+
+**No flag has been published, and none may be yet.** Correction and withdrawal
+handling needs both a design and deterministic implementation and tests, not
+just an ADR. Publication also requires v2 remeasurement, verification, and a
+decision on unknown natural-person status. Counsel must review current private
+holdings as well as proposed releases: collection and storage are processing,
+even without publication. Lawful basis, retention, transparency obligations and
+whether a data protection impact assessment (DPIA) is required remain unresolved
+([ADR-0010, amended 2026-09-05](docs/adr/0010-raw-archive-retention.md)).
+This audit is not a certification of legal compliance. Legacy pre-2024 TED
 notices are refused rather than parsed, because the mapping for them has never
 been measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
 what the pipeline does not do, or does incompletely. The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
-| 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | in progress |
-| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | in progress — one rule |
+| 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | eForms prototype built; privacy and correction gaps open; legacy not built |
+| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built; v2 remeasurement and verification pending |
 | 3 | Entity resolution against open national company registers | not started |
 | 4 | Public API and versioned bulk data releases | not started |
 | 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |
-| 6 | Documentation, packaging, contributor onboarding | not started |
+| 6 | Documentation, packaging, contributor onboarding | underway |
 
 ## Layout
 
@@ -141,7 +176,7 @@ serenata/
   eforms.py     # the eForms vocabulary and safe reading, shared by parse+survey
   packages.py   # streaming notices out of an archived package, shared likewise
   parse/        # archived notices -> typed intermediate records (eForms only)
-    notice.py   #   read one notice, dropping personal data as it reads
+    notice.py   #   read one notice with structural privacy suppression
     packages.py #   an outcome per notice: records, or why there are none
     records.py  #   the intermediate records, keyed by element path
     personal_data.py # the fields dropped at ingestion, executable
@@ -217,7 +252,7 @@ for outcome in parse_package(Path("data/raw/ted/daily/2026/202600157.tar.gz")):
         continue
     for organisation in outcome.of_kind("organisation"):
         names = organisation.values("efac:Company/cac:PartyName/cbc:Name")
-        print(outcome.notice_id, names)
+        print("organisation name values:", len(names))  # counts, not identities
 ```
 
 `values` rather than `value` because a buyer may publish its name in several
@@ -226,12 +261,16 @@ one value where the notice holds several raises rather than returning an
 arbitrary one — 97% of lot records repeat at least one path, so this is the
 normal case, not an edge.
 
-Fields that can name a natural person are never read into a record — not
-recorded and filtered later, which is [a legal constraint](CLAUDE.md) rather
-than a preference. Where a notice flags an organisation as a sole trader, the
-values identifying it are suppressed and its notice-scoped key is kept, so the
-record is anonymous but still joins. The list, with the measured frequency of
-every field on it, is [`docs/personal-data.md`](docs/personal-data.md).
+The documented path rules suppress contact blocks and other specified fields
+before they reach a record. Where a notice explicitly marks a natural person,
+specified identifying fields are also suppressed, including Company and
+TouchPoint `WebsiteURI` values in the current patch. Its notice-scoped key
+still joins and links back to the source; **that is not proof of anonymity**.
+Identifiability includes reasonably likely linkage to other information
+([GDPR Art. 4(1) and Recital 26](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)).
+Other retained fields can carry personal data, so this implementation does not
+yet meet the full [no-personal-data constraint](CLAUDE.md). The rules and their
+limits are in [docs/personal-data.md](docs/personal-data.md).
 
 A notice that cannot be parsed is handed back as an `Unparsed`, naming itself
 and why. Nothing is skipped quietly: a stage that dropped what it could not read
@@ -301,15 +340,16 @@ e-mail in 99.9% of cases and committing one to test that we remove personal data
 would leave it here permanently. What that leaves unproven is in
 [`docs/known-issues.md`](docs/known-issues.md).
 
-The constraints this project runs on are executable, not just documented.
-[`tests/test_constraints.py`](tests/test_constraints.py) enforces them on every
-run: fetch is the only stage that may import a network library, no stage
+The constraints have automated checks as well as documentation.
+[`tests/test_constraints.py`](tests/test_constraints.py) checks on every
+run that fetch is the only stage that may import a network library, no stage
 downstream of it may read a clock or an unseeded random source, no module may
 import an NLP or LLM library, no user-facing string may call a flagged record
 `corrupt` or `fraudulent`, every classifier must have a complete hypothesis file,
 and every dependency's licence must be AGPL-3.0 compatible. Some of those gates
-have nothing to check yet; they are written now so they bind the code that
-arrives later rather than being argued about afterwards.
+have nothing to check yet. These checks cover specified patterns, fixtures and
+metadata; they do not certify privacy, legal compliance, empirical error rates
+or every possible source of nondeterminism.
 
 ## Contributing
 
@@ -328,9 +368,11 @@ decisions in [`docs/adr/`](docs/adr/), and the limits of what exists in
 
 © European Union, 1998–2026. Source: [TED](https://ted.europa.eu), the Supplement
 to the Official Journal of the European Union. Notices published there may be
-freely reused for commercial and non-commercial purposes, on condition that the
-source is acknowledged, under Commission Decision
+freely reused for commercial and non-commercial purposes unless otherwise
+noted, with source acknowledgement under Commission Decision
 [2011/833/EU](https://eur-lex.europa.eu/eli/dec/2011/833/oj/eng).
+Third-party and identifiable-person rights may impose additional restrictions;
+reuse permission is not a GDPR lawful basis.
 
 [`docs/data-reuse.md`](docs/data-reuse.md) records the specific terms, what this
 project does not do under them, and the licence this project's own published

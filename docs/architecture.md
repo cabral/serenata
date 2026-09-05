@@ -1,8 +1,8 @@
 # Architecture
 
 How the pipeline is put together, and — the part that matters more — **why the
-boundaries are where they are.** Each one exists to make a specific failure
-impossible rather than merely forbidden, and the reasoning is in an ADR.
+boundaries are where they are.** Each limits a class of failures; none certifies
+privacy or legal compliance. The reasoning is in the ADRs.
 
 New to the project? Read this, then [`glossary.md`](glossary.md) for the
 vocabulary, then [`data-model.md`](data-model.md) for what the dataset actually
@@ -11,13 +11,16 @@ contains.
 ## The shape
 
 ```
-TED  ──fetch──▶  raw archive  ──parse──▶  records  ──normalise──▶  Parquet  ──classify──▶  flags
-     network      immutable       typed,        the documented        not built yet
-                  .tar.gz         no personal   twelve-table model
-                                  data
+TED
+ └─ fetch (networked) ──▶ raw archive (byte-preserved packages)
+   └─ parse ──▶ typed records (structural suppression, not anonymisation)
+     └─ normalise ──▶ Parquet (twelve-table model)
+       └─ classify ──▶ flags (v2 built; measurement pending)
+         └─ publish: NOT BUILT; release blocked
 ```
 
-Five stages, each a module that runs and is tested on its own. Four exist.
+Five stages are planned. Four have runnable, separately tested modules;
+publication is not built.
 
 | Stage | Reads | Writes | Networked | Built |
 |---|---|---|---|---|
@@ -50,23 +53,35 @@ whole suite. The one deliberate exception is `tests/test_ted_contract.py`, which
 runs weekly against the live service to catch TED changing under us.
 
 > [ADR-0002](adr/0002-fetch-daily-bulk-packages.md) — daily bulk packages ·
-> [ADR-0010](adr/0010-raw-archive-retention.md) — on what basis the archive is
-> kept, and for how long
+> [ADR-0010](adr/0010-raw-archive-retention.md) — proposed basis and retention;
+> current private holdings still require counsel review
 
-### 2. The archive → records: *this is where personal data stops*
+### 2. The archive → records: *this is where structural suppression runs*
 
 Parse reads notices out of the tarball without extracting them, streaming
-element by element, and **drops person-carrying fields before they reach a
-record** — not after, not filtered downstream. A dropped field has no record to
-land in, so no later stage can leak it by mistake.
+element by element, and **drops the documented paths before they reach a
+record**. This limits what is retained; it does not establish that every
+retained value is free of personal data.
 
 Measured on one publication day: **32,135 leaf elements, 3.6% of every leaf**,
 removed. [`dropped-fields.md`](dropped-fields.md) counts them and checks each
 against the model's columns; none is one.
 
-This boundary is why the whole design holds. Everything downstream can be
-published, queried, shared and reproduced without a personal-data review,
-because there is nothing personal in it.
+The five-day [dataset-shape report](dataset-shape.md) documents **427
+email/address-shaped values in retained columns**, including **139
+personal-address-shaped values** and **359 in descriptions**. These are pattern
+counts, not a complete personal-data inventory. Explicit-natural-person
+Company/TouchPoint `WebsiteURI` suppression is now implemented, but existing
+datasets have not been rebuilt. Other leakage remains unresolved.
+
+Opaque notice-scoped organisation keys still join to the source publication;
+they do not make a person anonymous. Most notices omit the natural-person
+indicator. Neither missing names nor a missing indicator proves anonymity
+([GDPR Art. 4(1) and Recital 26](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)).
+Downstream review is required, and **dataset and flag publication remain
+blocked**. Collection, storage and internal use are processing too, not an
+exemption while the project is private. The current implementation does not
+fully meet the no-personal-data constraint.
 
 > [ADR-0003](adr/0003-xml-parsing-without-defusedxml.md) — streaming, no DTDs ·
 > [`personal-data.md`](personal-data.md) — the list, executable as
@@ -110,15 +125,37 @@ package in CI and the checksums are compared.
 > [ADR-0001](adr/0001-parquet-duckdb-storage.md) — Parquet + DuckDB, and why no
 > database server yet
 
+## The classifier and the release boundary
+
+The [single-bid classifier](hypotheses/single_bid_in_segment.md) is implemented
+at **version 2**. It rejects duplicate structural/join keys and ambiguous tender
+counts, checks statistic-code presence, and requires every buyer reference to
+resolve to a present, agreed country. The writer stages output before replacing
+files and removes stale files for that rule on success; replacement across years
+is not transactional.
+
+The historical **96 flags from 8,159 lot outcomes are version 1 only**. Version-2
+base rates, coverage and sensitivity await measurement. No empirical
+false-positive rate is known, and no flag has completed verification.
+
+The eForms ingestion/normalisation prototype is built, not milestone 1 complete.
+Legacy parsing, privacy remediation, and deterministic correction/withdrawal
+handling with tests remain open. An ADR alone cannot close correction handling.
+Publication additionally needs verification and legal review, including current
+private holdings; [open work](open-work.md) records these gates.
+
 ## What holds it together
 
-**Six hard constraints** in [`CLAUDE.md`](../CLAUDE.md), five of them enforced
-mechanically by `tests/test_constraints.py`: AGPL-compatible dependencies only,
+**Six hard constraints** in [`CLAUDE.md`](../CLAUDE.md): AGPL-compatible dependencies only,
 no personal data, flags are anomalies and never accusations, determinism,
 structured fields only, and no classifier without a measured hypothesis.
+Automated checks cover specified patterns, fixtures and metadata, not every
+possible violation. Passing tests is not a privacy, legal or empirical-validity
+certification; the current rule's measurement remains pending.
 
-**Documents that cannot drift.** Two are executable, with a test that fails when
-document and code disagree:
+**Document/code consistency checks.** Tests compare the documented path rules
+and model columns with their implementations. They do not validate every prose
+claim or detect every possible privacy leak:
 
 | Document | Code | Guarded by |
 |---|---|---|
@@ -132,9 +169,9 @@ those files is a measurement anyone can rerun, not a sentence someone wrote once
 
 **Decisions with expiry conditions.** Every ADR ends with what would make us
 revisit it — the section that is useful two years later — and begins with an
-`Enforced by:` line naming the test that keeps it true. `tests/test_adr.py`
-checks those names still resolve, so a decision cannot quietly lose the
-guarantee it claims.
+`Enforced by:` line naming a check or stating that nothing mechanical enforces
+the policy. `tests/test_adr.py` checks that references resolve; it does not
+validate the legal conclusions or implementation claims in an ADR.
 
 ## What is deliberately not here
 

@@ -11,14 +11,21 @@ violate one without its author noticing — an incompatible dependency licence, 
 field that quietly carries a person's name, a classifier without a measured
 false-positive profile. Those are cheaper to prevent than to review.
 
-Most of them no longer depend on you noticing.
-[`tests/test_constraints.py`](../tests/test_constraints.py) enforces constraints
-1, 3, 4, 5 and 6 in CI, so a change that violates one fails with a message
-naming it. **Constraint 2 — no personal data — is the one with legal weight.**
-It is now mechanized for eForms: [`personal-data.md`](personal-data.md) is the
-field list, `serenata/parse/personal_data.py` is that document in executable
-form, and a test fails if the two disagree. The legacy TED half of the list does
-not exist yet, which is why item 3 stays open.
+[`tests/test_constraints.py`](../tests/test_constraints.py) checks specified
+patterns and metadata for constraints 1, 3, 4, 5 and 6; it does not certify every
+possible violation or the empirical validity of a classifier. **Constraint 2 —
+no personal data — is not fully met.** The eForms structural drop list in
+[personal-data.md](personal-data.md) is executable and tested, but retained-field
+leakage is documented and source-linkable opaque keys do not establish anonymity.
+The explicit-natural-person Company/TouchPoint `WebsiteURI` leak is fixed in
+code; stored datasets have not been rebuilt. Legacy mapping is still absent.
+
+**Release remains blocked.** Lawful basis, retention, transparency and DPIA
+necessity require counsel review for current private holdings, not just future
+publication ([ADR-0010](adr/0010-raw-archive-retention.md)). Under
+[GDPR Articles 4, 5, 6 and 14 and Recital 26](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng),
+collection and storage are processing and indirect identifiability matters.
+Neither an unpublished dataset nor passing tests establishes compliance.
 
 If you pick something up, say so on the tracker so two people don't start the
 same thing. Questions are welcome before code, especially on the blocking items.
@@ -33,15 +40,15 @@ record of how each was built and what it corrected is in the
 |---|------|---------------|
 | [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
-| [6](#6-handle-corrected-and-withdrawn-notices) | Corrected and withdrawn notices | an ADR |
-| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Publication rule for unknown natural-person status | a decision, before the first finding |
-| [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in non-contact fields | counsel |
+| [6](#6-handle-corrected-and-withdrawn-notices) | Corrected and withdrawn notices | design, deterministic code and tests |
+| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing and a publication rule |
+| [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
-| [17](#17-build-the-first-classifier) | Publishing what the first classifier finds | blocked on 6 and 11 |
+| [17](#17-build-the-first-classifier) | Version-2 measurement and verification | blocked release; also needs 6, 11 and 14 |
 
-Two of those seven are engineering behind the same blocker, four are decisions —
-three of them not this project's to take alone — and one, 17, is the next thing
-to build.
+The eForms prototype and first classifier are built. Remaining work includes
+engineering, empirical measurement and legal decisions; it is not just paperwork
+before publication.
 
 ## Everything, in order
 
@@ -49,36 +56,32 @@ to build.
 |---|------|--------|-------|
 | 1 | [Write the data model contract](#1-write-the-data-model-contract) | **done** | — |
 | 2 | [Survey which eForms fields notices actually populate](#2-survey-which-eforms-fields-notices-actually-populate) | **done** | — |
-| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | **eForms done**, legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
+| 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | eForms structural drops built; privacy gaps and legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | **done** | [#17](https://github.com/cabral/serenata/issues/17) |
-| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | needs an ADR, later | [#15](https://github.com/cabral/serenata/issues/15) |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | design, code and tests pending; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
-| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | needs a decision, before findings | [#14](https://github.com/cabral/serenata/issues/14) |
+| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | current processing and publication unresolved | [#14](https://github.com/cabral/serenata/issues/14) |
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
 | 15 | [Decide whether beneficial ownership can be analysed at all](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | needs counsel | [#25](https://github.com/cabral/serenata/issues/25) |
 | 16 | [Add the value and timing columns the red-flag literature needs](#16-add-the-value-and-timing-columns-the-red-flag-literature-needs) | **done** | [#27](https://github.com/cabral/serenata/issues/27) |
-| 17 | [Build the first classifier](#17-build-the-first-classifier) | **built**; publishing is blocked | [#33](https://github.com/cabral/serenata/issues/33) |
+| 17 | [Build the first classifier](#17-build-the-first-classifier) | **v2 built**; measurement pending, merge and release blocked | [#33](https://github.com/cabral/serenata/issues/33) |
 
-**Order matters.** 2 fed 1; 1, 3, 4, 5, 7, 12, 13 and 16 are all done for
-eForms, and 12 turned records into a dataset, which closed 9 with it. 13 then
-made a withheld amount read `withheld` rather than `present`, and 16 gave the
-model the amounts and the deadline the indicator literature needs — between
-them, the last things standing between the dataset and a classifier that can
-trust what it reads.
+**Order matters.** The field survey fed the model, then parsing, normalisation,
+privacy-status mapping and determinism tests made the eForms prototype usable
+for development. These do not close the remaining privacy or correction gaps.
 
-**Milestone 1 is complete for eForms.** What is open is either a decision rather
-than a task (11, 14), a format this project has not measured (3, and the legacy
-half of 4), or filed so it is not discovered late (6). The next code is the
-first classifier — item 17 — which milestone 2 owns and which constraint 6
-governs: a written hypothesis citing its risk-indicator source, tests, and
-measured base rates on real historical data, before it merges. The base rates
-are now measured; the hypothesis is not written.
+**Milestone 1 is not complete.** An eForms ingestion/normalisation prototype is
+built; legacy TED, privacy remediation and correction/withdrawal handling remain
+open. Milestone 2 has a written hypothesis and an implemented version-2 rule,
+but only version 1 has historical measurements. Version-2 base rates, coverage
+and sensitivity, empirical false-positive assessment and full verification are
+pending. No flag has completed the verification protocol.
 
 Every open item below has a GitHub issue mirroring it. Say there that you are
 taking something, so two people do not start the same thing.
@@ -112,10 +115,13 @@ scalar column being given to a path that repeats.
 
 ## 3. Document and drop the fields that can name a natural person
 
-**eForms done; the legacy TED half is open.**
+**eForms structural drops built; privacy gaps and the legacy TED half are open.**
 [`personal-data.md`](personal-data.md) is the list, measured against 3,190 real
 notices rather than read off the specification, and executable as
 `serenata/parse/personal_data.py` with a test that fails if the two disagree.
+This tests the documented paths, not the absence of all personal data. Retained
+fields, unknown natural-person status and source-linkable keys remain the work
+of #11 and #14; the `WebsiteURI` fix still needs a dataset rebuild and validation.
 
 **What is still open.** The five 2026 packages now measured — spanning March to
 September — contain **zero legacy-schema notices between them**, so there is no
@@ -138,9 +144,9 @@ Full record of the eForms half:
 
 **eForms done; legacy notices are refused rather than guessed at.**
 `serenata/parse/` reads archived notices into typed intermediate records,
-dropping person-carrying fields as it reads. All 19,180 notices of five
-publication days parse with no failures; the first of them produced 46,223
-records.
+applying documented structural drops as it reads. In the recorded run, all
+19,180 notices of five publication days parse with no failures; the first of
+them produced 46,223 records.
 
 **What is still open** is the same blocker as
 [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person): a legacy
@@ -175,7 +181,7 @@ corrected or withdrawn is a flag against something that no longer stands, and
 the project's whole promise is that a reader can check a flag against its
 source. ADR-0002 flagged it as the main limitation of whole-day snapshots.
 
-**What to decide** — a design decision, so an ADR rather than a patch:
+**What to decide and implement** — record the design in an ADR, then code it:
 
 - How a correction is detected. TED publishes corrigenda as notices in their own
   right; the relation to the original has to be read from the data.
@@ -189,12 +195,15 @@ records, never rewriting an archived package. Constraint 4 still binds — the
 same archive and code produce the same flags, so "current state" must be derived
 from archived inputs, not from a live lookup at classify time.
 
-**Done when** an ADR records the decision and its consequences, and the data
-model (#1) can represent whichever answer it reaches.
+**Done when** the ADR and model describe correction/version links and
+deterministic code applies them to the population and affected flags. Tests must
+cover corrections, withdrawals, superseded notices, ambiguous/missing links and
+rerun identity, including revised baselines and stale-output removal. A written
+policy or an unused link is not an implementation.
 
-**Do not start here.** It depends on the normalised model existing, and the
-answer partly depends on what corrections look like once notices are parsed.
-Filed now so it is not discovered late.
+**Release blocker and current engineering work.** The normalised model already
+exists. Measure correction structures in archived notices before designing the
+mapping; do not substitute a live lookup inside the classifier.
 
 
 ---
@@ -241,21 +250,22 @@ than pasted, with a test asserting it.
 
 ## 11. Decide the publication rule for unknown natural-person status
 
-`efbc:NaturalPersonIndicator` tells us an organisation is a sole trader, and
+`efbc:NaturalPersonIndicator` can explicitly mark a natural person, and
 [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) suppresses
-that organisation's identifying values when it is true. The problem is what the
+specified identifying values when it is true. The problem is what the
 indicator does *not* say: it is **absent from about 90% of notices**, and under
 this project's own absence semantics absent is "not provided", never "false".
 
-So for most organisations in the dataset, whether the record describes a company
-or a private individual trading under their own name is unknown, and no amount
-of reading the XML resolves it. Parse handles what it can; this is what is left.
+For an organisation without the indicator, whether it describes a legal person
+or an individual trading under their own name is unresolved by that field.
+Notice-level absence counts are not an organisation-level prevalence estimate.
+An official procurement notice does not make an entity institutional by default.
 
-**Why it is not an ingestion question.** Dropping every organisation name would
-end the project — naming buyers and suppliers is the dataset. The names are kept
-because an organisation in an official procurement notice is institutional by
-default. The residual risk is not in storing them, it is in *publishing a flag*
-about one that turns out to be a person.
+**This is an ingestion and storage question as well as a publication question.**
+Source-linked opaque keys can remain indirectly identifying even when specified
+names and identifiers are suppressed. Counsel must assess current holdings and
+the permitted processing, not just the wording of future flags. No attempt to
+reconstruct a dropped identity is authorised.
 
 **What to decide.**
 
@@ -266,21 +276,19 @@ about one that turns out to be a person.
   registrant is not a natural person — in Sweden a sole trader's is their
   personnummer. Milestone 3's entity resolution against national company
   registers is the obvious source of a better answer, and is a long way off.
-- Whether the answer differs for a buyer and for a supplier. Contracting
-  authorities are institutions by definition; suppliers are where sole traders
-  actually appear.
+- Whether the answer differs for a buyer and for a supplier, without treating
+  a role code as proof that a record cannot identify a natural person.
 
 **Constraints.** The legal guardrails route anything identifying a natural
-person away from project channels entirely, so the conservative answer is
-available and cheap: publish only where the entity is corroborated, and count
-the rest without naming them. Constraint 3 also binds — whatever is published is
-an anomaly, never an accusation.
+person away from project channels entirely. Corroborating legal-person status
+does not itself clear incidental personal data; aggregate outputs also need an
+identifiability review. Constraint 3 binds whatever is published: an anomaly,
+never an accusation.
 
-**Done when** an ADR records the rule and the verification interface can state,
-for any published flag, why the entity it names is an organisation.
-
-**Before the first finding, not before parse.** Nothing is published yet, so
-this blocks milestone 2, not milestone 1.
+**Done when** counsel-reviewed processing and publication rules are recorded,
+implemented and tested, and verification can justify the identity and data
+included in any proposed flag. Current holdings must be assessed under those
+rules. This remains a privacy and release gate, not a publication-only concern.
 
 
 ---
@@ -311,25 +319,31 @@ times, and widening the evidence to five days corrected it a fourth.
 
 Constraint 2's drop list is structural: it rejects any path through
 `cac:Contact`, `efac:UltimateBeneficialOwner` or `cac:TechnicalCommitteePerson`.
-That is the right shape for the rule, and it cannot catch a publisher who types
+It cannot catch a publisher who types
 a contact address into a field that is not a contact field.
 
 They do. Scanning five normalised packages finds **427 email-shaped values in 7
 columns** — city, registration number, street, website, name, description — and
 **139 of them are shaped like a person's own address** (`firstname.lastname@`).
-The drop list is not wrong; the data arrived in a field it has no reason to
-reject.
+These are pattern counts, not a complete personal-data inventory or legal
+classification. They demonstrate the limits of the structural rule, not that
+everything outside its paths is safe.
 
-**359 of the 427 are in the two description columns.** One publication day
-suggested the problem was scattered across identity fields; five days say it is
-overwhelmingly free text, which narrows the decision below to fields no
-classifier reads and a published dataset would still carry.
+**359 of the 427 are in the two description columns.** Most observed matches
+are in free text that no classifier reads and the current private dataset still
+carries. Remediation must also cover the other retained fields; this count does
+not limit the problem to descriptions.
+
+The explicit-natural-person Company/TouchPoint `WebsiteURI` omission is a
+separate structural leak, now fixed in code. Existing datasets have not been
+rebuilt; those stored outputs must not be described as remediated.
 
 **What to decide.** A value-level rule is a different kind of rule from a
 path-level one, and the options lose different things:
 
-- **Reject the value**, recording the field as withheld or absent. Loses a city
-  name when a publisher put an address in it, which is the honest trade.
+- **Reject the value**, recording project suppression distinctly from publisher
+  withholding or source absence. Loses a city name when a publisher put an
+  address in it; the status semantics need design too.
 - **Redact the match**, keeping the rest of the value. Keeps more, and means the
   dataset contains partially rewritten source values, which the project has so
   far never done.
@@ -344,9 +358,10 @@ because it changes what "dropped at ingestion" means.
 **Constraints.** Constraint 2 is legal, not stylistic, and the guardrails say to
 err toward dropping. Constraint 5 bears on the mechanism: a regex over values is
 not NLP and not a classifier reading free text, but it is the first content-based
-rule in the pipeline and should be argued rather than slipped in. Nothing is
-published yet, so this blocks the first dataset release rather than the
-pipeline.
+rule in the pipeline and should be argued rather than slipped in. Nonpublication
+does not remove processing obligations. Review the lawful basis for current raw
+and derived holdings, their retention, Article 14 transparency and DPIA necessity
+with counsel now, not at launch. ADR-0010 does not certify them.
 
 **This one needs counsel before it is acted on.** Whichever option is chosen
 changes what "dropped at ingestion" means, and a change to the drop-at-ingestion
@@ -354,9 +369,12 @@ rule is on the project's escalation list rather than being a judgement call to
 make in a pull request. Writing the options down is in scope; deciding between
 them is not.
 
-**Done when** the rule is decided in an ADR, executable, tested against the
-measured cases, and `personal-data.md` says which fields it applies to and why a
-path-based list could not have caught them.
+**Done when** counsel-reviewed rules cover existing holdings as well as future
+outputs, are recorded in an ADR, and are executable and tested against the
+measured cases. Rebuild affected datasets under the agreed rules, validate
+remaining leakage and source linkability, and document disposition of old copies.
+[personal-data.md](personal-data.md) must describe the scope and limits. A regex
+or successful rebuild alone cannot certify anonymity or authorise release.
 
 
 ---
@@ -368,14 +386,12 @@ The drop list rejects `efac:UltimateBeneficialOwner` outright, and that is
 identifiers, family and first names, nationality and residence addresses.
 [`dropped-fields.md`](dropped-fields.md) counts them.
 
-Everything else the drop removes costs the analysis nothing: no other dropped
-path is a column of the normalised model, and core classifiers read structured
-fields only, so a pipeline that kept the rest would compute the same flags. This
-subtree is the exception. **Beneficial ownership is one of the most analysable
-signals in procurement integrity** — shell structures, a supplier owned by
-someone connected to the buyer, the same owner behind nominally competing
-bidders. Losing it is a real capability trade, and it is currently silent: the
-data simply is not there and nothing says why.
+The current classifier uses neither contact details nor beneficial ownership.
+The drop-path/model comparison documents exclusions, not the value or legality
+of every possible future analysis. Ownership relationships could support other
+hypotheses, such as a common owner behind competing bidders, but that would need
+separate evidence and legal review. This item records the capability trade; it
+does not authorise recovering the data.
 
 **What makes it hard.** A beneficial owner is a natural person by definition.
 This is not personal data that leaked into a business field; it is person-level
@@ -387,18 +403,20 @@ decided in a pull request.
 
 - Whether any analysis of this subtree is available at all, or whether the
   answer is simply no.
-- If some is: whether an aggregate that never identifies an individual — "this
+- If some is: whether a relation intended not to identify an individual — "this
   supplier and that one declare an owner in common", as a boolean, without
-  storing who — is a different question legally than storing the owner. The
-  opaque-key treatment already used for sole traders is the precedent to argue
-  from.
+  storing who — is a different question legally than storing the owner. A boolean
+  relation can still identify people by linkage; the source-linkable opaque-key
+  treatment of sole traders is not an anonymity precedent.
 - Whether any of it may be *published*, which is a separate question again, and
   where the answer is most likely no under the defamation guardrail.
-- Whether the answer differs for `efac:Nationality`, which is arguably special
-  category data and should probably stay dropped regardless.
+- Whether `efac:Nationality` raises additional risks in context. Nationality is
+  not automatically an Article 9 special category; person-level use remains an
+  escalation and the field stays dropped.
 
 **Constraints.** Constraint 2 is legal, not stylistic. Whatever is decided,
-[ADR-0010](adr/0010-raw-archive-retention.md) governs what may be retained and
+[ADR-0010](adr/0010-raw-archive-retention.md) records unresolved retention and
+lawful-basis questions, not an approval, and
 [`personal-data.md`](personal-data.md) is where the rule becomes executable. A
 change to the drop-at-ingestion rule is on the escalation list.
 
@@ -425,21 +443,34 @@ gap from 143 of 215 blocks to 212 as a side effect.
 
 ## 17. Build the first classifier
 
-**Built.** `serenata classify` runs
+**Version 2 built; measurement pending.** `serenata classify` runs
 [`single_bid_in_segment`](hypotheses/single_bid_in_segment.md) over the
-normalised dataset and writes flags as Parquet. Over five publication days it
-produces **96 flags from 8,159 lot outcomes**, byte-identical on rerun, each
+normalised dataset and writes flags as Parquet. The historical **version-1** run
+over five publication days produced **96 flags from 8,159 lot outcomes**,
+byte-identical on rerun, each
 carrying the baseline it was measured against
-([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). The implementation
-and the hypothesis's published query agree on real data, and a test runs both
-over one dataset so they cannot drift.
+([ADR-0011](adr/0011-flags-carry-their-own-baseline.md)). Version-1 eligible
+segments covered 4,299 outcomes (52.7%), excluding 3,860 (47.3%) below the size
+floor. These are coverage and base-rate figures, not empirical error rates.
 
-**What is still open is publishing any of it**, and neither blocker is code:
-[#6](#6-handle-corrected-and-withdrawn-notices) — a flag on a corrected notice
-— and [#11](#11-decide-the-publication-rule-for-unknown-natural-person-status)
-— whether the entity may be named. The false-positive profile is also predicted
-rather than observed: one flag of the 96 has been re-derived from its raw
-archived notice, which is a start and not a verification pass.
+Version 2 rejects duplicate structural/join keys, ambiguous and fractional tender counts,
+requires a present statistic code and resolves every buyer reference to a
+present, agreed country. Output is staged before replacement and stale rule
+files are removed on success; a multi-year replacement is not transactional.
+The current companion SQL targets v2. Fixture-based query/code agreement is not
+a version-2 historical measurement: base rates, coverage and sensitivity are
+still pending. **Merge is blocked** by CI's `--require-current-measurements`
+gate until current-version evidence is recorded and reviewed. Default local
+tests do not require new data processing; passing them does not clear this gate.
+Real-data remeasurement depends on the unresolved processing review below.
+
+**Release is blocked**, including on deterministic correction handling and tests
+in [#6](#6-handle-corrected-and-withdrawn-notices), identity rules in
+[#11](#11-decide-the-publication-rule-for-unknown-natural-person-status) and
+privacy remediation and current-holdings review in
+[#14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields).
+There is **no empirical false-positive rate**. One historical v1 flag's
+arithmetic has been re-derived; **none has completed the verification protocol**.
 
 The record of how it was argued follows.
 
@@ -460,10 +491,10 @@ delta either.
 [Case 002](cases/002-single-bid-against-its-segment.md) is the form that
 survives. Compare a lot against its own market — the buyer's country and the CPV
 division — rather than against a European average. Single-bid rates across the
-26 segments large enough to have a baseline run from 6.5% to 78.2%, so no flat
-threshold can be right in both tails; a rule keyed to the segment fires on
-**2.23%** of the population it covers, which is small enough to verify by hand.
-It passes all four gates.
+26 version-1 segments large enough to have a baseline ran from 6.5% to 78.2%,
+motivating segment-specific comparison; the rule fired on
+**2.23%** of the population it covers in that historical run. The intake case
+supported building the rule, not release approval or a measured error rate.
 
 **What it needed**, and what each answer was:
 
@@ -471,9 +502,10 @@ It passes all four gates.
   settled. The baseline is computed from the corpus rather than frozen, and
   every flag carries it, so the corpus dependence is visible in the row instead
   of argued away. The grouping is country and CPV division, with the
-  falsification test written down. The threshold is 15% in a market of at least
-  50, chosen after a sweep the file records — including that the sample cannot
-  tell 15% from 20%. The unit is the lot result.
+  falsification test written down. The provisional threshold is 15% in a market
+  of at least 50, retained from the v1 sweep — including its inability to
+  distinguish 15% from 20%. Version-2 sensitivity remains unmeasured. The unit
+  is the lot result.
 - **A flag record**, which the data model did not have.
   [ADR-0011](adr/0011-flags-carry-their-own-baseline.md).
 - **The classifier**, `serenata/classify/single_bid_in_segment.py`: a pure
@@ -483,13 +515,11 @@ It passes all four gates.
   be excluded; the rerun-identity check on the flag files; and the published
   query run against the code's own so the two definitions cannot drift.
 
-**Constraints.** Constraint 6 governs all of it. Constraint 4 binds the baseline
-question specifically. Nothing here is publishable until
-[#6](#6-handle-corrected-and-withdrawn-notices) settles what a flag on a
-superseded notice does and
-[#11](#11-decide-the-publication-rule-for-unknown-natural-person-status) settles
-who may be named — but the classifier can be built and measured before either.
+**Constraints.** Constraint 6 requires a version-matching measurement; constraint
+4 binds baseline computation and correction handling. Synthetic-fixture work
+can continue without claiming that processing real holdings is legally cleared.
 
-**Good entry point now:** verifying flags. The profile in the hypothesis is
-what the design predicts; walking real flags through the verification protocol
-is what would replace prediction with evidence, and it needs no code at all.
+**Next steps:** close the engineering and privacy gates, remeasure v2 on an
+approved corpus, then verify flags under the full protocol. Record innocent
+explanations and empirical errors rather than treating arithmetic agreement as
+verification.
