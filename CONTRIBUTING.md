@@ -42,8 +42,8 @@ allows explicitly pending `building` classifiers with historical evidence so
 development can continue offline. CI's mandatory `--require-current-measurements`
 option additionally requires version-matching measured evidence for every
 implemented classifier. It checks recorded metadata without processing real data
-or rerunning SQL. Pending single-bid v2 therefore cannot merge, even when default
-tests pass. The gate can be checked separately with
+or rerunning SQL. Version 2 is now measured; a future pending version cannot
+merge even when default tests pass. The gate can be checked separately with
 `uv run --locked pytest tests/test_constraints.py::TestClassifierHypotheses --require-current-measurements`.
 Do not invent or relabel measurements to make it pass; human review remains required.
 
@@ -163,6 +163,14 @@ Agents may draft, edit and test within the requested scope, but not self-approve
 Explicit human authorization is required before any merge, push, publication or
 external message, including issue comments and private replies. A passing build,
 review checklist, DCO sign-off or co-authorship trailer is not that authorization.
+
+[Bounded automation](docs/automation/README.md) separates technical checking
+from authority. Its proposed standing-delegation lane can avoid per-PR approval
+clicks for a narrow scope after independent deployment and explicit adoption.
+It is disabled here; ordinary merge authorization remains unchanged. Agent
+reports never activate it, and code-merge authority is not processing or release
+authority. See the [four gate handoffs](docs/automation/handoffs.md) for evidence
+that an automated test or model cannot manufacture.
 
 ## Commits and pull requests
 

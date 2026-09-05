@@ -1,0 +1,12 @@
+# TEMPLATE ONLY. A model editing this file does not receive merge authority.
+# The read-only checker may use an authorized external copy for evaluation only.
+# A future executor and delegation need separate implementation/review/adoption.
+# Evaluation scope changes and renewal require explicit maintainer authorization.
+enabled = false
+repository = "cabral/serenata"
+base = "main"
+expires_at = 2000-01-01T00:00:00Z
+authors = []
+paths = []
+max_files = 2
+max_lines = 200

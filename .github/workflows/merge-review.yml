@@ -1,0 +1,38 @@
+name: Merge review (read only)
+
+# A manual probe, not a required PR status or a writer. The external controller
+# can poll after CI/DCO/Audit completion; no write credential lives in this repo.
+on:
+  workflow_dispatch:
+    inputs:
+      pull_request:
+        description: Pull request number to inspect
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  inspect:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      # Stdlib-only, isolated Python 3.12 supplied by ubuntu-24.04. Do not install
+      # the project, restore a cache, or execute any proposed-head content here.
+      - name: Inspect with the disabled repository template
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pull_request }}
+          TRUSTED_BASE: ${{ github.workflow_sha }}
+        run: >-
+          python3 -I tools/merge_guard.py
+          --policy .github/automation-policy.toml
+          --trusted-base "$TRUSTED_BASE"
+          --pull-request "$PR_NUMBER"

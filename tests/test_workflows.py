@@ -18,7 +18,7 @@ from pathlib import Path
 from textwrap import dedent
 
 WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
-NAMES = ("ci", "audit", "contract", "dco")
+NAMES = ("ci", "audit", "contract", "dco", "merge-review")
 ACTION_LINE = re.compile(r"^\s*(?:-\s+)?uses:\s*(.+)$", re.MULTILINE)
 PINNED_ACTION = re.compile(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}\s+#\s+v\d[\w.-]*")
 UV_LINE = re.compile(r"^\s*run:\s*(uv\s+.+)$", re.MULTILINE)
