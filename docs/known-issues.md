@@ -34,7 +34,11 @@ unresolved processing review.
 
 - A flag on a notice later corrected or withdrawn is a flag on something that
   no longer stands, and the pipeline records the corrigendum link without
-  acting on it. Deterministic code and tests are needed, not just an ADR —
+  acting on it. The structure is now measured
+  ([correction-links.md](correction-links.md)) and the mapping proposed
+  ([ADR-0013](adr/0013-correction-and-withdrawal-semantics.md)); deterministic
+  code and tests are still needed, and withdrawals remain undesignable until the
+  change reason is measured —
   [open-work #6](open-work.md#6-handle-corrected-and-withdrawn-notices).
 - Whether an entity may be named at all when its natural-person status is
   unknown, and whether current processing is permitted —

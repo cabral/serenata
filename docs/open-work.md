@@ -59,7 +59,7 @@ before publication.
 | 3 | [Document and drop the fields that can name a natural person](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | eForms structural drops built; privacy gaps and legacy open | [#13](https://github.com/cabral/serenata/issues/13) |
 | 4 | [Build the parse stage](#4-build-the-parse-stage) | **eForms done**, legacy refused | — |
 | 5 | [Add an opt-in test for TED's live contract](#5-add-an-opt-in-test-for-teds-live-contract) | **done** | [#17](https://github.com/cabral/serenata/issues/17) |
-| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | design, code and tests pending; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
+| 6 | [Handle corrected and withdrawn notices](#6-handle-corrected-and-withdrawn-notices) | measured and designed (ADR-0013 proposed); code and tests pending; release blocker | [#15](https://github.com/cabral/serenata/issues/15) |
 | 7 | [Commit a small sample package for end-to-end tests](#7-commit-a-small-sample-package-for-end-to-end-tests) | **done** | [#16](https://github.com/cabral/serenata/issues/16) |
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
@@ -194,15 +194,32 @@ records, never rewriting an archived package. Constraint 4 still binds — the
 same archive and code produce the same flags, so "current state" must be derived
 from archived inputs, not from a live lookup at classify time.
 
-**Done when** the ADR and model describe correction/version links and
-deterministic code applies them to the population and affected flags. Tests must
-cover corrections, withdrawals, superseded notices, ambiguous/missing links and
-rerun identity, including revised baselines and stale-output removal. A written
-policy or an unused link is not an implementation.
+**Measured, then designed; not implemented.**
+[`correction-links.md`](correction-links.md) measures the structure over 19,180
+notices, and [ADR-0013](adr/0013-correction-and-withdrawal-semantics.md) proposes
+the mapping from it. What the measurement changed about the design:
 
-**Release blocker and current engineering work.** The normalised model already
-exists. Measure correction structures in archived notices before designing the
-mapping; do not substitute a live lookup inside the classifier.
+- The link column is **polymorphic** — 61.7% an eForms notice UUID with a
+  version suffix, 38.3% a second namespace matching no identifier the model
+  carries. The namespace has to be recorded, not assumed.
+- Links resolve **45 of 2,840** times, and only after the version suffix is
+  removed. That measures five sampled days, not the mapping: correction
+  handling cannot be demonstrated end to end without a continuous archive,
+  which the [ADR-0010](adr/0010-raw-archive-retention.md) review gates.
+- **7** targets are corrected by more than one notice, so ambiguity is real at
+  this sample size and the pipeline must refuse rather than pick.
+- **Withdrawals remain undesignable**: nothing measured distinguishes one from a
+  correction. The change reason is not in the model and the path survey records
+  presence, not values.
+
+**Done when** deterministic code applies the ADR's mapping to the population and
+affected flags, with the synthetic acceptance tests the ADR lists, a
+`RULE_VERSION` bump and a current-version remeasurement. A written policy, a
+proposed ADR or an unused link is not an implementation.
+
+**Release blocker.** Adopting ADR-0013 changes no flag today — none of the 96
+sits on a notice corrected within the corpus — which is the absence of evidence
+of staleness, not evidence of currency.
 
 
 ---
