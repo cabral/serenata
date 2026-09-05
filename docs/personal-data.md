@@ -176,7 +176,13 @@ parse — name, registration identifier, postal addresses and Company/TouchPoint
 websites. The existing indicator policy also suppresses for `1` and unreadable
 present values (including empty ones); explicit `false` or `0` does not suppress.
 Whitespace and case are normalised when interpreting the indicator. An absent
-indicator still does not trigger suppression.
+indicator still does not trigger suppression. **Every** indicator on the
+organisation is read rather than the first: where two contradict each other, the
+one claiming personhood decides, so the outcome does not depend on which the
+publisher wrote first. Suppression is the parse stage's decision alone — the
+contradictory values themselves are carried into the record, because resolving a
+repeated path by picking one is what [ADR-0007](adr/0007-repeated-values-are-carried-not-resolved.md)
+forbids.
 
 The website fix is verified with an obviously synthetic notice using `.invalid`
 URLs, an explicit-natural-person organisation and an explicit-false control.
