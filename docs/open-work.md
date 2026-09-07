@@ -38,7 +38,7 @@ record of how each was built and what it corrected is in the
 
 | # | Item | What it needs |
 |---|------|---------------|
-| [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
+| [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | TED serves the packages; needs the processing review, then a measurement |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing, then a publication rule; [instruction drafted](counsel/11-natural-person-status.md) |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
@@ -131,9 +131,27 @@ rather than guessing which of its fields can name a person. Five days spread
 across six months finding none is also evidence about how the blocker lifts: it
 will not lift by fetching more recent days.
 
-Fetching a pre-2024 package is one command against an already-built stage —
-though whether TED still serves daily packages that far back is unverified, and
-checking that is the first step rather than an assumption.
+**The availability question is now answered, and it was not the blocker.**
+[`legacy-availability.md`](legacy-availability.md) asked TED, without
+downloading a package: every OJ S issue probed is served, back to at least 2012.
+So fetching a pre-2024 package really is one command against an already-built
+stage, and what stands between here and a measurement is the unresolved
+processing review in [ADR-0010](adr/0010-raw-archive-retention.md), not TED.
+
+Two things that probe turned up, both worth knowing before a backfill:
+
+- The **Search API indexes back to 2016-09-06 and no further** — bisected to
+  the day — while the package endpoint serves OJ S 170/2016, 111/2015 and
+  107/2012 when addressed directly. Reaching below that date is an addressing
+  problem, not a retrieval one, and **a legacy measurement can use 2016 onward
+  without solving it**: ten years of history is not the constraint here.
+- Below that edge the fetch stage was **quietly wrong** — `issue_for_date`
+  returned `None` and `iter_fetch_range` recorded `NOT_PUBLISHED`, the same
+  outcome as a weekend, so the archive would have said TED did not publish on
+  2016-09-05. **Fixed**: it refuses below the floor before making a request,
+  [ADR-0002](adr/0002-fetch-daily-bulk-packages.md) is amended, and the weekly
+  contract suite watches the floor. Nothing had asked for those dates, so no
+  archived package carries a wrong answer.
 
 Full record of the eForms half:
 [decision log](decision-log.md#3-document-and-drop-the-fields-that-can-name-a-natural-person).
