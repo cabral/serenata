@@ -21,6 +21,8 @@ verified against the service on 2026-09-01 and asserted here:
 4. A notice carries `ojs-number` in the form `"157/2026"`.
 5. `GET https://ted.europa.eu/packages/daily/{yyyynnnnn}` returns a gzipped tar
    whose members sit under one `YYYYMMDD_NNN` directory.
+6. The Search API indexes back to `SEARCH_INDEX_FLOOR` and no further, measured
+   2026-09-07 and recorded in `docs/legacy-availability.md`.
 
 **Politeness is part of the design.** One run makes a handful of `limit: 1`
 requests through the project's own throttled client, and reads only the first
@@ -40,7 +42,7 @@ import pytest
 
 from serenata.fetch import FetchError, OjsIssue, TedClient, issue_for_date
 from serenata.fetch.client import MAX_SEARCH_LIMIT, SEARCH_URL, USER_AGENT
-from serenata.fetch.ojs import OJS_FIELD
+from serenata.fetch.ojs import OJS_FIELD, SEARCH_INDEX_FLOOR
 
 pytestmark = pytest.mark.contract
 
@@ -141,6 +143,54 @@ class TestTheSearchApi:
         assert issue.number > 0
         assert issue.year >= 2024
         assert str(issue) == f"{issue.number}/{issue.year}"
+
+
+class TestTheSearchIndexFloor:
+    """Assumption 6: where the Search API's index actually starts.
+
+    `SEARCH_INDEX_FLOOR` is a measured constant compiled into the fetch stage,
+    which is the kind of thing that rots without anyone noticing. Below it
+    `issue_for_date` refuses; above it an empty answer is read as a day that
+    published nothing. If TED moves the edge, one of those two readings becomes
+    wrong — silently, because both look exactly like a weekend.
+
+    **A failure here can be good news.** An index that reaches further back
+    means the floor can be lowered and more of the legacy record addressed by
+    date. It still has to fail, because the constant is only true until it
+    isn't, and nothing else in the suite would notice.
+    """
+
+    def test_the_index_still_reaches_the_floor(self, client: TedClient) -> None:
+        found = issue_for_date(client, SEARCH_INDEX_FLOOR)
+        assert found is not None, (
+            f"the Search API no longer indexes {SEARCH_INDEX_FLOOR.isoformat()}, "
+            "the floor the fetch stage refuses below. The index has shrunk: "
+            "dates just above the floor are now read as days that published "
+            "nothing, and a backfill would archive that. Remeasure with "
+            "tools/probe_legacy_packages.py and raise the floor"
+        )
+
+    def test_the_day_below_the_floor_is_still_outside_the_index(
+        self, client: TedClient
+    ) -> None:
+        below = SEARCH_INDEX_FLOOR - timedelta(days=1)
+        # Asked directly rather than through `issue_for_date`, which refuses
+        # this date by design. The question here is what TED says, not what we
+        # do about it.
+        body = client.search(
+            query=(
+                f"publication-date>={below.strftime('%Y%m%d')} AND "
+                f"publication-date<={below.strftime('%Y%m%d')}"
+            ),
+            fields=[OJS_FIELD],
+            limit=1,
+        )
+        assert not (body.get("notices") or []), (
+            f"the Search API now indexes {below.isoformat()}, below the floor "
+            "the fetch stage refuses. This is good news and still a failure: "
+            "remeasure with tools/probe_legacy_packages.py, lower "
+            "SEARCH_INDEX_FLOOR, and update docs/legacy-availability.md"
+        )
 
 
 class TestTheDailyPackage:

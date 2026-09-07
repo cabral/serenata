@@ -140,15 +140,18 @@ processing review in [ADR-0010](adr/0010-raw-archive-retention.md), not TED.
 
 Two things that probe turned up, both worth knowing before a backfill:
 
-- The **Search API stops indexing between 2016-08-31 and 2016-09-07**, while the
-  package endpoint serves 2015 and 2012 issues addressed directly. Reaching
-  further back than September 2016 is an addressing problem, not a retrieval
-  one.
-- Below that edge the fetch stage is **quietly wrong**: `issue_for_date`
-  returns `None`, and `iter_fetch_range` records `NOT_PUBLISHED` — the same
-  outcome as a weekend. TED published on 2016-06-08; the archive would say it
-  did not. Nothing has asked for those dates yet, which is why this has cost
-  nothing so far. Fix it before a legacy backfill, not during one.
+- The **Search API indexes back to 2016-09-06 and no further** — bisected to
+  the day — while the package endpoint serves OJ S 170/2016, 111/2015 and
+  107/2012 when addressed directly. Reaching below that date is an addressing
+  problem, not a retrieval one, and **a legacy measurement can use 2016 onward
+  without solving it**: ten years of history is not the constraint here.
+- Below that edge the fetch stage was **quietly wrong** — `issue_for_date`
+  returned `None` and `iter_fetch_range` recorded `NOT_PUBLISHED`, the same
+  outcome as a weekend, so the archive would have said TED did not publish on
+  2016-09-05. **Fixed**: it refuses below the floor before making a request,
+  [ADR-0002](adr/0002-fetch-daily-bulk-packages.md) is amended, and the weekly
+  contract suite watches the floor. Nothing had asked for those dates, so no
+  archived package carries a wrong answer.
 
 Full record of the eForms half:
 [decision log](decision-log.md#3-document-and-drop-the-fields-that-can-name-a-natural-person).

@@ -28,8 +28,9 @@ Two questions per date, asked separately because they fail separately:
 **No package was downloaded.** Nothing was written to disk, and no notice was
 read. That boundary is deliberate: fetching a pre-2024 package is processing
 under the review [ADR-0010](adr/0010-raw-archive-retention.md) leaves
-unresolved, and asking whether one could be fetched is not. Thirty-two requests
-across five runs, through the project's throttled client and User-Agent.
+unresolved, and asking whether one could be fetched is not. Thirty-eight
+requests across seven runs, through the project's throttled client and
+User-Agent.
 
 The first row is a control — the publication day `data/raw/` already holds. Had
 it failed, the rest of the table would say nothing about TED.
@@ -48,6 +49,10 @@ it failed, the rest of the table would say nothing about TED.
 | 2017-01-04 | OJ S 2/2017 | 201700002 | served, application/gzip, 6,948,711 bytes |
 | 2016-12-07 | OJ S 236/2016 | 201600236 | served, application/gzip, 5,225,266 bytes |
 | 2016-09-07 | OJ S 172/2016 | 201600172 | served, application/gzip, 6,138,584 bytes |
+| 2016-09-06 | OJ S 171/2016 | 201600171 | served, application/gzip, 7,473,038 bytes |
+| 2016-09-05 | — | — | no notice indexed for this date |
+| 2016-09-02 | — | — | no notice indexed for this date |
+| 2016-09-01 | — | — | no notice indexed for this date |
 | 2016-08-31 | — | — | no notice indexed for this date |
 | 2016-08-17 | — | — | no notice indexed for this date |
 | 2016-08-03 | — | — | no notice indexed for this date |
@@ -64,14 +69,20 @@ in ten years of publication dates.
 
 | Issue | Package id | Daily package |
 |---|---|---|
+| OJ S 170/2016 | 201600170 | served, application/gzip, 5,838,584 bytes |
 | OJ S 109/2016 | 201600109 | served, application/gzip, 5,927,344 bytes |
 | OJ S 111/2015 | 201500111 | served, application/gzip, 6,373,046 bytes |
 | OJ S 107/2012 | 201200107 | served, application/gzip, 3,344,262 bytes |
 
-These three issue numbers were **chosen as plausible for their year, not
-resolved from a date**. What they establish is that the endpoint serves issues
-of those years — including 2015 and 2016 issues the Search API would not address
-by date. Which calendar day each one published is not known from this probe.
+These issue numbers were **chosen rather than resolved from a date**, so which
+calendar day each one published is not known from this probe. What they
+establish is that the endpoint serves issues of those years — including 2015 and
+2016 issues the Search API will not address by date.
+
+**OJ S 170/2016 is the sharpest of them.** It is the issue immediately before
+the first one the Search API indexes, and it is served. The index and the
+archive disagree about the same week: TED will hand over the package and deny
+that the day exists.
 
 ## What this establishes
 
@@ -83,25 +94,35 @@ different kind of gate and is not lifted by anything here.
 **There are two limits, and only one of them is TED's archive.** They are
 usually conflated and behave differently:
 
-- The **Search API index** stops between **2016-08-31 and 2016-09-07** — six
-  probed Wednesdays from June to August 2016 return nothing, and every date from
-  2016-09-07 onward resolves. Bounded by bisection on publication days, not read
-  from documentation, and an index edge can move.
+- The **Search API index** starts at **2016-09-06**, bisected to the day:
+  2016-09-05 is a Monday it reports as empty, 2016-09-06 resolves to OJ S
+  171/2016. The two days between them are a weekend. Measured, not read from
+  documentation, and an index edge can move.
 - The **package archive** goes back at least to 2012 and was never observed to
-  refuse.
+  refuse — including OJ S 170/2016, on the far side of that edge.
 
 So the pipeline as built — resolve a date to an issue, then fetch the issue —
-reaches back to **early September 2016** unchanged. Reaching further is an
-addressing problem, not a retrieval one: the packages are there, and only the
-date-to-issue mapping is missing.
+reaches back to **2016-09-06** unchanged. Reaching further is an addressing
+problem, not a retrieval one: the packages are there, and only the date-to-issue
+mapping is missing.
 
-**The fetch stage would answer a pre-September-2016 date wrongly, and quietly.**
-`issue_for_date` returns `None` when the Search API returns no notice, and
-`iter_fetch_range` records that as `NOT_PUBLISHED` — the same outcome as a
-weekend. TED published on 2016-06-08; the archive would record that it did not.
-That is safe today because nothing has asked for those dates, and it is a trap
-for whoever asks first. It should be fixed before, not during, a legacy
-backfill.
+**The fetch stage would have answered a pre-floor date wrongly, and quietly.**
+`issue_for_date` returned `None` when the Search API returned no notice, and
+`iter_fetch_range` recorded that as `NOT_PUBLISHED` — the same outcome as a
+weekend. TED published on 2016-09-05; the archive would have recorded that it
+did not.
+
+**Fixed, on the strength of this measurement.** `issue_for_date` now
+refuses a date below `SEARCH_INDEX_FLOOR` before making any request, and
+[ADR-0002](adr/0002-fetch-daily-bulk-packages.md) is amended: the service is the
+authority on which days published only within the period it indexes. Nothing had
+asked for those dates, so no archived package carries a wrong answer.
+
+Because the floor is a measured constant compiled into the stage, the weekly
+contract suite watches both of its edges against the live service
+(`tests/test_ted_contract.py::TestTheSearchIndexFloor`). If TED's index reaches
+further back, that fails — which is good news, and still a failure, because the
+constant would otherwise go stale unnoticed.
 
 ## What this does not establish
 

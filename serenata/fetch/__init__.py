@@ -18,7 +18,13 @@ from serenata.fetch.archive import (
     sha256_of,
 )
 from serenata.fetch.client import FetchError, RetryPolicy, TedClient
-from serenata.fetch.ojs import OjsIssue, dates_in_range, issue_for_date
+from serenata.fetch.ojs import (
+    SEARCH_INDEX_FLOOR,
+    DateNotIndexed,
+    OjsIssue,
+    dates_in_range,
+    issue_for_date,
+)
 from serenata.fetch.packages import (
     DayResult,
     Outcome,
@@ -28,7 +34,9 @@ from serenata.fetch.packages import (
 )
 
 __all__ = [
+    "SEARCH_INDEX_FLOOR",
     "ArchiveConflict",
+    "DateNotIndexed",
     "DayResult",
     "FetchError",
     "OjsIssue",
