@@ -96,11 +96,19 @@ def _is_natural_person(fields: list[Field]) -> bool:
     notice written with ``1`` keep a sole trader's name, national registration
     number and address, and docs/personal-data.md's instruction is to err
     toward dropping — a value we cannot read is not a denial.
+
+    **Every** indicator on the organisation is read, not the first one. An
+    organisation carrying two contradictory indicators is suppressed on the
+    strength of the one claiming personhood, which is the same instruction
+    applied to a disagreement. Stopping at the first also made the answer
+    depend on document order, and an organisation's identifying values are not
+    something to decide by which element a publisher happened to write first.
     """
-    for item in fields:
-        if item.path == NATURAL_PERSON_INDICATOR:
-            return item.value.strip().lower() not in _NOT_A_NATURAL_PERSON
-    return False
+    return any(
+        item.value.strip().lower() not in _NOT_A_NATURAL_PERSON
+        for item in fields
+        if item.path == NATURAL_PERSON_INDICATOR
+    )
 
 
 def _finish(pending: _Open, notice_id: str) -> Record:

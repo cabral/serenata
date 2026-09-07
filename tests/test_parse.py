@@ -42,12 +42,15 @@ LOT = "<cac:ProcurementProjectLot><cbc:ID>LOT-0001</cbc:ID></cac:ProcurementProj
 
 
 def organisation(
-    *, local_id: str = "ORG-0001", natural_person: str | None = None
+    *,
+    local_id: str = "ORG-0001",
+    natural_person: str | None = None,
+    second_indicator: str | None = None,
 ) -> str:
-    indicator = (
-        f"<efbc:NaturalPersonIndicator>{natural_person}</efbc:NaturalPersonIndicator>"
-        if natural_person is not None
-        else ""
+    indicator = "".join(
+        f"<efbc:NaturalPersonIndicator>{value}</efbc:NaturalPersonIndicator>"
+        for value in (natural_person, second_indicator)
+        if value is not None
     )
     return f"""
       <efac:Organization>
@@ -317,6 +320,38 @@ class TestNaturalPersonSuppression:
     def test_an_explicit_false_does_not_suppress(self) -> None:
         notice = parse(
             eforms_notice(organisations=organisation(natural_person="false"))
+        )
+        org = notice.of_kind("organisation")[0]
+        assert org.value("efac:Company/cac:PartyName/cbc:Name") == "EXAMPLE BODY"
+
+    @pytest.mark.parametrize(
+        ("first", "second"), [("true", "false"), ("false", "true")]
+    )
+    def test_contradictory_indicators_suppress_either_way_round(
+        self, first: str, second: str
+    ) -> None:
+        # Reading the first indicator and stopping made suppression depend on
+        # which element the publisher wrote first. Err toward dropping applies
+        # to a disagreement too: a claim of personhood anywhere in the
+        # organisation suppresses it. See docs/personal-data.md.
+        notice = parse(
+            eforms_notice(
+                organisations=organisation(
+                    natural_person=first, second_indicator=second
+                )
+            )
+        )
+        org = notice.of_kind("organisation")[0]
+        assert org.values("efbc:NaturalPersonIndicator") == (first, second)
+        assert org.value("efac:Company/cac:PartyName/cbc:Name") is None
+        assert org.value("efac:Company/cac:PartyLegalEntity/cbc:CompanyID") is None
+
+    def test_two_denials_still_do_not_suppress(self) -> None:
+        # The rule is "any claim of personhood", not "any repeat".
+        notice = parse(
+            eforms_notice(
+                organisations=organisation(natural_person="false", second_indicator="0")
+            )
         )
         org = notice.of_kind("organisation")[0]
         assert org.value("efac:Company/cac:PartyName/cbc:Name") == "EXAMPLE BODY"
