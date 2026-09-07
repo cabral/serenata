@@ -47,7 +47,10 @@ unresolved processing review.
   The question is drafted for counsel at
   [`docs/counsel/11-natural-person-status.md`](counsel/11-natural-person-status.md),
   which asks for the processing half to be answered first; it is not sent and
-  answers nothing yet.
+  answers nothing yet. **No counsel is engaged and none is named in this
+  repository**, so this gate is blocked on finding a recipient rather than on
+  waiting for one. What to do about current holdings meanwhile is open and
+  undecided.
 - Privacy remediation, rebuilding affected datasets, and counsel review of
   current raw and derived holdings —
   [open-work #14](open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields).

@@ -40,7 +40,7 @@ record of how each was built and what it corrected is in the
 |---|------|---------------|
 | [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
-| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing, then a publication rule; [instruction drafted](counsel/11-natural-person-status.md) |
+| [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | **a recipient** — the [instruction is drafted](counsel/11-natural-person-status.md) and no counsel is engaged |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
 | [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 11, 14 and 18 |
@@ -64,7 +64,7 @@ before publication.
 | 8 | [Write CONTRIBUTING.md](#8-write-contributingmd) | **done** | — |
 | 9 | [Add the rerun-identity determinism test](#9-add-the-rerun-identity-determinism-test) | **done** | [#12](https://github.com/cabral/serenata/issues/12) |
 | 10 | [Settle the licence for published datasets](#10-settle-the-licence-for-published-datasets) | **done** | — |
-| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | counsel instruction drafted, not sent; processing and publication unresolved | [#14](https://github.com/cabral/serenata/issues/14) |
+| 11 | [Decide the publication rule for unknown natural-person status](#11-decide-the-publication-rule-for-unknown-natural-person-status) | instruction drafted; **not sent — no counsel engaged**; processing and publication unresolved | [#14](https://github.com/cabral/serenata/issues/14) |
 | 12 | [Build the normalise stage](#12-build-the-normalise-stage) | **done** | [#11](https://github.com/cabral/serenata/issues/11) |
 | 13 | [Derive the withheld status from the eForms field identifiers](#13-derive-the-withheld-status-from-the-eforms-field-identifiers) | **done** | [#21](https://github.com/cabral/serenata/issues/21) |
 | 14 | [Decide what to do about personal data in fields that are not contact fields](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | needs counsel | [#22](https://github.com/cabral/serenata/issues/22) |
@@ -283,6 +283,20 @@ An official procurement notice does not make an entity institutional by default.
 The question has been drafted for counsel:
 [`docs/counsel/11-natural-person-status.md`](counsel/11-natural-person-status.md).
 It is not sent and not answered, and it authorizes nothing.
+
+**What is blocking it is a recipient, not the drafting.** No counsel is engaged
+and none is named anywhere in this repository — the legal guardrails say to stop
+and get qualified counsel without saying who that is. Finding someone to answer
+Part A is therefore the open step, and it is the single largest dependency on
+this board: [#3](#3-document-and-drop-the-fields-that-can-name-a-natural-person),
+[#14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields),
+[#17](#17-build-the-first-classifier) and
+[#18](#18-validate-correction-handling-against-a-continuous-archive) all wait
+behind it, and so does Part B of this item.
+
+What to do about current holdings while that is outstanding is **open and
+undecided**. Nothing in this repository has decided to keep them, reduce them or
+delete them, and no such decision should be read into the fact that they exist.
 
 **This is two decisions, and they are not equally urgent.** Processing risk
 accrues every day the corpus is held; publication risk accrues only at
