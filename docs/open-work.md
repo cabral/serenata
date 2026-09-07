@@ -38,7 +38,7 @@ record of how each was built and what it corrected is in the
 
 | # | Item | What it needs |
 |---|------|---------------|
-| [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
+| [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | TED serves the packages; needs the processing review, then a measurement |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing, then a publication rule; [instruction drafted](counsel/11-natural-person-status.md) |
 | [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
@@ -131,9 +131,24 @@ rather than guessing which of its fields can name a person. Five days spread
 across six months finding none is also evidence about how the blocker lifts: it
 will not lift by fetching more recent days.
 
-Fetching a pre-2024 package is one command against an already-built stage —
-though whether TED still serves daily packages that far back is unverified, and
-checking that is the first step rather than an assumption.
+**The availability question is now answered, and it was not the blocker.**
+[`legacy-availability.md`](legacy-availability.md) asked TED, without
+downloading a package: every OJ S issue probed is served, back to at least 2012.
+So fetching a pre-2024 package really is one command against an already-built
+stage, and what stands between here and a measurement is the unresolved
+processing review in [ADR-0010](adr/0010-raw-archive-retention.md), not TED.
+
+Two things that probe turned up, both worth knowing before a backfill:
+
+- The **Search API stops indexing between 2016-08-31 and 2016-09-07**, while the
+  package endpoint serves 2015 and 2012 issues addressed directly. Reaching
+  further back than September 2016 is an addressing problem, not a retrieval
+  one.
+- Below that edge the fetch stage is **quietly wrong**: `issue_for_date`
+  returns `None`, and `iter_fetch_range` records `NOT_PUBLISHED` — the same
+  outcome as a weekend. TED published on 2016-06-08; the archive would say it
+  did not. Nothing has asked for those dates yet, which is why this has cost
+  nothing so far. Fix it before a legacy backfill, not during one.
 
 Full record of the eForms half:
 [decision log](decision-log.md#3-document-and-drop-the-fields-that-can-name-a-natural-person).
