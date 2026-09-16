@@ -1,6 +1,6 @@
 # ADR-0002: FtM-shaped tables, a two-table export, no FtM library in phase 1
 
-Status: accepted, 2026-09-10
+Status: accepted, 2026-09-10. Amended by [ADR-0006](0006-standard-library-only.md), which kept the two-table export and replaced the renderer: a server-rendered inline SVG rather than vis-network.
 
 ## Context
 

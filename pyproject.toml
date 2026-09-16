@@ -36,6 +36,21 @@ dev = [
     "pytest-cov>=5",
     "ruff>=0.8",
 ]
+# The incoming project (ADR-0014), in a group of its own rather than smuggled
+# into `dev`, because it is neither a development tool nor a dependency of this
+# package: it is the other project sharing this repository until the handover
+# finishes. Named and default-enabled so that one `uv sync` still gives you
+# everything, and one `pytest` still runs both suites.
+crony = ["crony-eu"]
+
+[tool.uv]
+default-groups = ["dev", "crony"]
+
+[tool.uv.workspace]
+members = ["crony-eu"]
+
+[tool.uv.sources]
+crony-eu = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8.0,<0.9.0"]
@@ -63,7 +78,12 @@ select = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["serenata", "tools/merge_guard.py"]
+files = ["serenata", "tools/merge_guard.py", "crony-eu/src/crony_eu"]
+# Two projects, one checker. `crony_eu` is under `crony-eu/src/`, which is not
+# on the path mypy infers from the file list, so it is told where the package
+# root is rather than left to guess from the directory name (which is not a
+# legal module name).
+mypy_path = "crony-eu/src"
 
 # pyarrow ships no type information. The alternative to this override is an
 # ignore comment on every import of it, which says the same thing in more
@@ -73,7 +93,10 @@ module = ["pyarrow.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# Both projects' suites, from one command. Each tree keeps its own conftest and
+# its own offline guard: `tests/` refuses a socket unless a test is marked
+# `contract`, `crony-eu/tests/` unless it is marked `live`.
+testpaths = ["tests", "crony-eu/tests"]
 # Coverage is measured on every run and enforced only in CI (see
 # .github/workflows/ci.yml, which passes --cov-fail-under=95). With the floor
 # here, running one test file reported a failing build at 20% coverage, which
@@ -88,7 +111,8 @@ testpaths = ["tests"]
 # `uv run pytest -m contract`; CI runs them weekly, not on every push.
 # Include the standalone read-only controller; coverage is not evidence of
 # GitHub enforcement, real-data verification or a deployed security boundary.
-addopts = "-ra --cov=serenata --cov=tools.merge_guard --cov-report=term-missing -m 'not contract'"
+addopts = "-ra --cov=serenata --cov=tools.merge_guard --cov=crony_eu --cov-report=term-missing -m 'not contract and not live'"
 markers = [
     "contract: reaches the live TED service; excluded from the default run",
+    "live: reaches a live French open data source; excluded from the default run",
 ]

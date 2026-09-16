@@ -73,12 +73,22 @@ _NOT_REPOSITORY_PATHS = (
     "$",
 )
 
-#: The tree phase 1 is specified to build and has not built. These are not
+#: The tree phase 1 is specified to build and has not built yet. These are not
 #: illustrations — they are the real intended paths, named by a work order
 #: written before the code, and a `<placeholder>` would be a lie about that.
 #: `TestPathsNotYetBuilt` below makes the exemption expire on its own: the day
 #: the tree exists, this constant has to shrink or the tests fail.
-_NOT_YET_BUILT = ("crony-eu/src/", "crony-eu/tests/")
+#:
+#: It shrank once already. `crony-eu/src/` and `crony-eu/tests/` were here until
+#: session 0 built them, and every path the Crony documents claim inside those
+#: two trees is now checked like any other. What is left is the code the later
+#: sessions are ordered to write.
+_NOT_YET_BUILT = (
+    "crony-eu/src/crony_eu/sources/",
+    "crony-eu/src/crony_eu/match/",
+    "crony-eu/src/crony_eu/flags/",
+    "crony-eu/src/crony_eu/export/",
+)
 
 
 def documents() -> list[Path]:

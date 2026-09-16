@@ -30,6 +30,11 @@ jobs:
         run: uv run --locked ruff format --check .
       - name: Type check
         run: uv run --locked mypy
+      # Crony's constraint 1, asked of the tracked tree. It guards `crony-eu/`
+      # only: this repository also holds Serenata's synthetic TED fixtures,
+      # which are XML and legitimate under that project's rules (ADR-0014).
+      - name: No data in the repository
+        run: uv run --locked python crony-eu/scripts/check_no_data.py --all
       # Runs the constraint gates in tests/test_constraints.py alongside the
       # rest of the suite. Current-version measurements are mandatory before
       # merge; local development tests may run with pending measurements.

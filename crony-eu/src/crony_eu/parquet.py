@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Write a staged table as Parquet, the same bytes every time.
+
+Constraint 4 says a rerun over the same inputs produces identical output, and
+Parquet is only byte-stable if the writer makes it so. Four things make it so,
+and all four are here rather than at each call site, because a setting that
+differs between two writers is a difference nobody sees until a checksum moves.
+
+- **Fixed row order.** Rows are sorted by the table's key before writing, with
+  Python's stable sort, so ties keep the order they arrived in rather than
+  whatever order a dict iteration or a DuckDB scan produced.
+- **Fixed schema.** Columns and their types come from the caller's declared
+  schema, in declaration order, never inferred from the values that happen to be
+  present in this slice.
+- **Fixed writer settings.** `WRITER` below, passed on every write.
+- **Pinned writer version.** `uv.lock` pins pyarrow, and Parquet records which
+  version wrote a file, so a pyarrow upgrade can change the bytes without
+  changing a row. That is a dependency bump behaving like one, and the rerun
+  test will say so rather than letting it pass unnoticed.
+
+This is a deliberate copy of the arrangement in the repository's other project
+(`serenata/normalise/dataset.py`), not an import of it: ADR-0014 says nothing in
+Crony depends on Serenata, and a shared module would be a dependency in the
+direction that record forbids.
+"""
+
+from __future__ import annotations
+
+import os
+from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
+from typing import Any
+
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+#: Parquet writer settings, pinned. Changing any of them changes every byte this
+#: project has ever written. zstd because it is deterministic and widely read;
+#: the 2.6 format and v2 data pages because that is what current readers expect.
+WRITER: dict[str, Any] = {
+    "compression": "zstd",
+    "compression_level": 3,
+    "version": "2.6",
+    "data_page_version": "2.0",
+    "use_dictionary": True,
+    "write_statistics": True,
+}
+
+#: Rows per row group. Fixed, because the grouping is part of the file's bytes:
+#: the same rows split differently are the same data and a different checksum.
+ROW_GROUP_SIZE = 20_000
+
+
+def sort_key(row: Mapping[str, Any], columns: Sequence[str]) -> tuple[Any, ...]:
+    """A comparable key that survives nulls and mixed types.
+
+    A staged table has nullable columns by design ("not provided" and "not
+    applicable" are different facts, and both are common in registry data), and
+    `None < str` raises. Each part becomes a pair: a presence flag first, so
+    nulls group together and sort before values, then the value rendered as a
+    string so that an int and a str in one column cannot raise either.
+    """
+    key: list[Any] = []
+    for column in columns:
+        value = row.get(column)
+        key.append((1, str(value)) if value is not None else (0, ""))
+    return tuple(key)
+
+
+def write(
+    rows: Iterable[Mapping[str, Any]],
+    schema: pa.Schema,
+    destination: Path,
+    key: Sequence[str],
+) -> int:
+    """Write `rows` to `destination` as Parquet. Returns the row count.
+
+    Written to a `.partial` and renamed, so an interrupted write leaves no file
+    that a later stage would read as complete.
+    """
+    ordered = sorted(rows, key=lambda row: sort_key(row, key))
+    table = pa.Table.from_pylist(
+        [{name: row.get(name) for name in schema.names} for row in ordered],
+        schema=schema,
+    )
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_suffix(destination.suffix + ".partial")
+    pq.write_table(table, partial, row_group_size=ROW_GROUP_SIZE, **WRITER)
+    os.replace(partial, destination)
+    return int(table.num_rows)

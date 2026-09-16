@@ -4,14 +4,25 @@ Links between elected officials, companies and public contracts, built from offi
 
 The idea comes from Sophie E. Hill's [My Little Crony](https://github.com/sophieehill/my-little-crony), an interactive network of UK politicians and the firms that won government contracts during the pandemic. Her network was assembled by hand from investigative journalism. This project uses public registries to propose links, and a person confirms or rejects each one.
 
-## Status: specified, not built
+## Status: session 0 of six
 
-**There is no code yet.** This directory holds the specification, the decision
-records and the source list. There is no `crony` command to run, no package to
-install, and nothing to point at a data directory. The sections below say what
-phase 1 is specified to do, in the future tense they deserve.
+**One command runs.** `crony doctor` checks that your data directory is set,
+absolute, outside the repository and writable, that no data file has reached the
+tracked tree, and it tells you plainly which of its checks it could not perform.
 
-Building it starts at session 0 of
+```
+uv sync
+export CRONY_DATA_DIR=/absolute/path/outside/this/repo
+uv run crony doctor
+```
+
+Built: the data directory rules, the layout, the fetch client (rate limiting,
+retries including DNS failures, hashed downloads and a manifest), and
+byte-stable Parquet writing. Not built: every source, matching, review, the flag
+and the case packet. The sections below say what phase 1 is specified to do, in
+the future tense they deserve.
+
+The work order is
 [`crony-eu/docs/work-order-phase-1.md`](docs/work-order-phase-1.md).
 
 This directory also sits inside a repository that is in the middle of being
@@ -40,7 +51,7 @@ Code, documentation, and test fixtures generated from invented names. No real
 data and no results. The tool will run on your machine and download public
 datasets into a directory you choose, outside the repository.
 
-## Requirements (once there is something to run)
+## Requirements
 
 - Python 3.12 or newer and [uv](https://docs.astral.sh/uv/)
 - an encrypted disk for the data directory

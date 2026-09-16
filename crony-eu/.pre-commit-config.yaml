@@ -1,12 +1,23 @@
 # Local hooks only: they run the project's own locked tool versions through uv.
+#
+# Not installed by default, and not at the repository's default config path,
+# because this repository is shared with another project during the handover
+# (ADR-0014) and that one uses CI plus .githooks rather than pre-commit. Install
+# it deliberately, from the repository root:
+#
+#     pre-commit install -c crony-eu/.pre-commit-config.yaml
+#
+# Every path below is relative to the repository root, which is where pre-commit
+# runs and where it passes filenames from.
 repos:
   - repo: local
     hooks:
       - id: no-data-in-repo
         name: no data in the repository
-        entry: uv run python scripts/check_no_data.py
+        entry: uv run python crony-eu/scripts/check_no_data.py
         language: system
         pass_filenames: true
+        files: ^crony-eu/
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix
@@ -18,8 +29,8 @@ repos:
         language: system
         types: [python]
       - id: mypy
-        name: mypy (src)
-        entry: uv run mypy src
+        name: mypy
+        entry: uv run mypy
         language: system
         pass_filenames: false
-        files: ^src/
+        files: ^(crony-eu/src|serenata|tools)/

@@ -9,7 +9,9 @@ Revised 2026-09-16. Two changes run through every session below, both from [ADR-
 - **Officer role history is phase 1 work.** It was phase 2, while phase 1's only flag needed it. Session 3 is now a feasibility gate that can stop the phase.
 - **Phase 1 measures descriptive pair rates**, not excess risk. See `crony-eu/docs/flags/F1-same-body.md`.
 
-Nothing in this work order has been built. Every module it names is an order, not a description.
+Session 0 is built. Everything below it is an order, not a description.
+
+Three things reconnaissance settled before session 1, recorded here so they are not re-derived: the open company API carries officer birth dates as `YYYY-MM` (the precision ADR-0003 assumes) but **no role dates at all**, so phase 1 produces no packet-eligible hits until INPI; and that same API carries every SIRENE field session 2 wanted, so the SIRENE stock is not ingested and `fr_sirene.py` is not written.
 
 ## How to run a session
 
@@ -22,7 +24,7 @@ Nothing in this work order has been built. Every module it names is an order, no
 
 Progress:
 
-- [ ] Session 0: bootstrap
+- [x] Session 0: bootstrap. Package, config, paths, http, parquet, `crony doctor`, both suites from one pytest, the data guard in CI. Two decisions it forced: ADR-0005 (one licence, AGPL-3.0-only) and ADR-0006 (standard library, no typer/rich/jinja2/vis-network).
 - [ ] Session 1: élus
 - [ ] Session 2: contracts, buyers, populations
 - [ ] Session 3: supplier officers and role history (**feasibility gate**)

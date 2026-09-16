@@ -4,15 +4,25 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Documentation. No code.** There is no `crony-eu/src/`, no `crony-eu/tests/`,
-no `pyproject.toml` of this project's own and no `crony` command. Everything
-below describing modules, tables, commands and outputs is a **specification
-written before the code**, which is the point of it, and is not a description of
-something you can run.
+**Session 0 only.** The package exists and one command runs:
 
-Session 0 in `crony-eu/docs/work-order-phase-1.md` is what builds the first of
-it. A document here that reads as though a module exists is a bug worth fixing
-on its own, because the reader who believes it wastes an afternoon.
+    uv run crony doctor
+
+What is built: `crony-eu/src/crony_eu/config.py` (the data directory rules),
+`paths.py` (the layout), `http.py` (rate limiting, retries, hashed downloads and
+the manifest), `parquet.py` (byte-stable writes) and `cli.py`. Their tests are
+in `crony-eu/tests/`.
+
+What is not: every source module, matching, judgments, review, flags and the
+export. `crony fetch`, `crony stage`, `crony match`, `crony review`,
+`crony flag`, `crony base-rate` and `crony case` do not exist as commands yet,
+deliberately, because a subcommand that parsed its flags and printed "not
+implemented" would be listed by `--help` as though it worked.
+
+Everything below describing an unbuilt module is a **specification written
+before the code**, which is the point of it. A document here that reads as
+though something exists when it does not is a bug worth fixing on its own,
+because the reader who believes it wastes an afternoon.
 
 ## Where this sits
 
@@ -47,7 +57,9 @@ Pilot country: France. Phase 1 covers communes only, one département at a time.
 
 3. Candidate matches are not facts. Matching writes candidates to the judgments table with status `pending`. Only a `confirmed` judgment, set by a person through `crony review`, can put a person-to-company edge into an export. Flags may run on candidates for triage; every such output row says `unconfirmed`.
 
-4. Deterministic runs. Same inputs and same code give byte-identical outputs. Sort before writing. Fix every seed, including the vis-network layout seed. The only timestamps inside data are `retrieved_at` values recorded at fetch time. Transform stages make no network calls.
+4. Deterministic runs. Same inputs and same code give byte-identical outputs. Sort before writing. Fix every seed, including the network layout's. The only timestamps inside data are `retrieved_at` values recorded at fetch time. Transform stages make no network calls.
+
+   Two places this is enforced rather than intended. `crony-eu/src/crony_eu/parquet.py` pins the writer settings, the row-group size and the sort, and its tests write twice and compare bytes. And the one clock reading that reaches a file is `retrieved_at`; fetch is allowed a clock and a random source for backoff because neither touches a staged row, and both are injected so the tests neither sleep nor flake.
 
 5. Rules, not models. Matching, flags and scores use structured fields and written rules. No machine learning, embeddings or LLM calls anywhere in the pipeline.
 
@@ -95,71 +107,54 @@ Pilot country: France. Phase 1 covers communes only, one département at a time.
 - Python 3.12+, uv (commit `uv.lock`), src layout, package `crony_eu`, CLI entry point `crony`
 - DuckDB for transforms; Parquet with zstd compression between stages
 - httpx for HTTP, with retries (exponential backoff with jitter) and a per-source rate limiter
-- typer for the CLI; rich for the review screen
-- jinja2 for the HTML template; vis-network vendored as its standalone UMD build, version pinned, licence file alongside
+- **the standard library for everything else** ([ADR-0006](docs/adr/0006-standard-library-only.md)): argparse rather than typer, plain `print` and `input` rather than rich, `string.Template` rather than jinja2, and a server-rendered inline SVG rather than a vendored vis-network. No new dependency has been added, and the three above were already in this repository
 - pytest, hypothesis (property tests for normalisation), ruff (lint and format), mypy (strict on `crony-eu/src/`)
-- pre-commit with local hooks only (see `crony-eu/.pre-commit-config.yaml`)
-- License: AGPL-3.0-or-later; SPDX header in every source file. **The repository's `LICENSE` is the plain AGPL-3.0 text and says nothing about "or later".** The two statements have to be reconciled before this project's first source file is written, and reconciling them is a licensing change affecting every existing contributor's DCO sign-off, so it gets its own ADR rather than an edit here ([ADR-0014](../docs/adr/0014-replace-serenata-with-crony.md))
+- pre-commit with local hooks only, not installed by default while this repository holds two projects: `pre-commit install -c crony-eu/.pre-commit-config.yaml` from the repository root. CI runs the same checks either way.
+- License: **AGPL-3.0-only**, one licence for the whole repository ([ADR-0005](docs/adr/0005-one-licence-for-the-repository.md)). SPDX header `# SPDX-License-Identifier: AGPL-3.0-only` in every source file. The handover asked for "or later"; adopting it would relicense every existing contribution and needs its own record and every contributor's agreement.
 - No `followthemoney` dependency in phase 1 (ADR-0002). Tables carry FtM schema names in an `ftm_schema` column.
 
 Name normalisation uses the standard library (`unicodedata`), not `unidecode` (licence and determinism).
 
-## Repository layout (target, not current)
+## Repository layout
 
-None of this exists yet. It is what session 0 builds and the later sessions
-fill in; `crony-eu/` today holds this file, `README.md`, `.gitignore`,
-`.pre-commit-config.yaml`, `scripts/check_no_data.py` and `docs/`.
+`[built]` exists and is tested. Everything else is ordered by
+`crony-eu/docs/work-order-phase-1.md` and is not there yet.
 
 ```
 crony-eu/
-  CLAUDE.md
-  README.md
-  LICENSE
-  pyproject.toml
-  uv.lock
-  .gitignore
-  .pre-commit-config.yaml
-  .github/workflows/ci.yml
-  scripts/
-    check_no_data.py
+  CLAUDE.md                        [built]
+  README.md                        [built]
+  pyproject.toml                   [built]  workspace member; LICENSE is the repository's
+  .gitignore                       [built]
+  .pre-commit-config.yaml          [built]
+  scripts/check_no_data.py         [built]  guards this tree; CI runs it
   src/crony_eu/
-    __init__.py
-    cli.py
-    config.py          # reads CRONY_DATA_DIR, refuses paths inside the repo
-    paths.py           # data directory layout
-    http.py            # client, retries, rate limit, raw snapshot + manifest writer
-    normalize.py       # names, dates, SIREN/SIRET, INSEE codes
+    __init__.py                    [built]
+    cli.py                         [built]  argparse; only `doctor` so far
+    config.py                      [built]  CRONY_DATA_DIR rules
+    paths.py                       [built]  data directory layout
+    http.py                        [built]  rate limit, retries, hashed download, manifest
+    parquet.py                     [built]  pinned writer, sorted rows, byte-stable
+    normalize.py                            names, dates, SIREN/SIRET, INSEE codes
     sources/
-      fr_rne_elus.py
-      fr_decp.py
-      fr_sirene.py
-      fr_insee_pop.py
-      fr_entreprises_api.py
+      fr_rne_elus.py                        session 1
+      fr_decp.py                            session 2
+      fr_insee_pop.py                       session 2
+      fr_entreprises_api.py                 session 3: companies and officers
+      fr_inpi_rne.py                        session 3, once there is an account
     match/
-      keys.py
-      candidates.py
-      judgments.py
-      review.py
+      keys.py  candidates.py  judgments.py  review.py     session 4
     flags/
-      f1_same_body.py
-      base_rates.py
-      sql/             # queries longer than ~15 lines live here as .sql files
+      f1_same_body.py  base_rates.py  dataset.py  sql/    session 5
     export/
-      model.py         # nodes/edges contract
-      case.py
-      html.py
-      templates/network.html.j2
-      assets/vis-network.min.js
-      assets/vis-network.LICENSE
-      assets/VERSION   # vis-network version and sha256
-  tests/
-    fixtures/          # Python builders only, no static data files
-  docs/
-    adr/
-    sources/france.md
-    flags/F1-same-body.md
-    work-order-phase-1.md
+      model.py  case.py  html.py  templates/              session 6
+  tests/                           [built]  config, paths, http, parquet, cli, the data guard
+  docs/                            [built]  adr/, sources/france.md, flags/, the work order
 ```
+
+No `fr_sirene.py`: the open company API carries the SIRENE fields phase 1 needs,
+so the stock files are not ingested. No vendored asset directory either: ADR-0006 replaced
+vis-network with a server-rendered SVG, so there is nothing to vendor.
 
 ## Data directory ($CRONY_DATA_DIR)
 
@@ -227,8 +222,8 @@ Changing the rule means a new rule id, never an edit in place.
 
 ## HTML output
 
-- one file, JS and CSS inlined, CSP meta tag: `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:`
-- fixed `layout.randomSeed`; physics runs to stabilisation, then turns off
+- one file, CSS inlined, **no JavaScript at all** (ADR-0006), so the CSP meta tag is `default-src 'none'; style-src 'unsafe-inline'; img-src data:`
+- the network is a server-rendered inline `<svg>` with coordinates computed in Python, so the layout is reproducible because it is in the file rather than because a library was seeded
 - node colour and shape by kind; edge colour by kind; edge width from log10 of the amount; `reported` edges dashed
 - every string is escaped before it reaches the template; tooltips are built as DOM text nodes, never `innerHTML` with data in it
 - a legend, and a sources panel listing every edge's source link and retrieval date
@@ -246,7 +241,7 @@ crony base-rate F1 --scope dep:<code>
 crony case build <case_id>
 ```
 
-`crony doctor` checks that the data dir is set, absolute, outside the repo and writable; that the git tree has no data files; that templates carry the CSP tag; and that the vendored asset's hash matches `VERSION`.
+`crony doctor` checks that the data dir is set, absolute, outside the repo and writable, that the git tree has no data files, and that the export template carries the CSP tag once there is one. It reports a check it could not run as `n/a` rather than as a pass, and it says plainly that it cannot verify the volume is encrypted, because no portable check establishes that. There is no vendored-asset hash to check any more (ADR-0006).
 
 ## Conventions
 
@@ -258,10 +253,13 @@ crony case build <case_id>
 
 ## Definition of done for a session
 
-- `uv run pytest` green
-- `uv run ruff check .` and `uv run ruff format --check .` clean
-- `uv run mypy src` clean
-- `uv run python scripts/check_no_data.py --all` clean
+Run from the repository root, which is where CI runs them and where both
+projects' checks run together:
+
+- `uv run --locked pytest` green
+- `uv run --locked ruff check .` and `uv run --locked ruff format --check .` clean
+- `uv run --locked mypy` clean
+- `uv run --locked python crony-eu/scripts/check_no_data.py --all` clean
 - docs updated: observed source schemas, flag spec, a new ADR if a decision changed
 - the session's box ticked in `crony-eu/docs/work-order-phase-1.md`, with one line on what changed
 
