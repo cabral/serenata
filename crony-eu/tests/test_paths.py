@@ -62,3 +62,46 @@ class TestCreate:
         assert (tmp_path / "raw" / "keep-me").is_dir(), (
             "a rerun destroyed existing data"
         )
+
+
+class TestSnapshots:
+    """How `crony stage` finds its input without asking what day it is."""
+
+    def make(self, root: Path, *names: str) -> Layout:
+        layout = Layout(root)
+        for name in names:
+            layout.raw("fr-rne-elus", name).mkdir(parents=True)
+        return layout
+
+    def test_none_fetched_yet(self, tmp_path: Path) -> None:
+        assert Layout(tmp_path).snapshots("fr-rne-elus") == []
+        assert Layout(tmp_path).latest_snapshot("fr-rne-elus") is None
+
+    def test_they_come_back_oldest_first(self, tmp_path: Path) -> None:
+        layout = self.make(tmp_path, "2026-09-16", "2026-08-01", "2026-09-02")
+
+        assert layout.snapshots("fr-rne-elus") == [
+            "2026-08-01",
+            "2026-09-02",
+            "2026-09-16",
+        ]
+
+    def test_the_latest_is_the_most_recent_date(self, tmp_path: Path) -> None:
+        # ISO dates sort lexically the way they sort chronologically, which is
+        # the whole reason the directory is named one.
+        layout = self.make(tmp_path, "2026-09-16", "2026-08-01")
+
+        assert layout.latest_snapshot("fr-rne-elus") == "2026-09-16"
+
+    def test_a_stray_file_is_not_a_snapshot(self, tmp_path: Path) -> None:
+        layout = self.make(tmp_path, "2026-09-16")
+        (tmp_path / "raw" / "fr-rne-elus" / "notes.txt").write_text(
+            "", encoding="utf-8"
+        )
+
+        assert layout.snapshots("fr-rne-elus") == ["2026-09-16"]
+
+    def test_one_source_does_not_see_another(self, tmp_path: Path) -> None:
+        layout = self.make(tmp_path, "2026-09-16")
+
+        assert layout.snapshots("fr-decp") == []

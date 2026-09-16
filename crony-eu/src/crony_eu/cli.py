@@ -19,11 +19,14 @@ import subprocess
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from crony_eu import __version__
 from crony_eu.config import ConfigError, data_dir, repository_root
+from crony_eu.http import build_client
 from crony_eu.paths import Layout
+from crony_eu.sources import REGISTRY, names
 
 
 @dataclass(frozen=True)
@@ -135,6 +138,64 @@ def doctor(_: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def _layout() -> Layout:
+    layout = Layout(data_dir())
+    layout.create()
+    return layout
+
+
+def fetch(arguments: argparse.Namespace) -> int:
+    """Download a source into a dated raw snapshot.
+
+    The only networked subcommand. `--snapshot` defaults to today because fetch
+    is allowed a clock (constraint 4 forbids one below it), and naming the
+    snapshot explicitly is how a rerun targets the bytes it already has.
+    """
+    module = REGISTRY[arguments.source]
+    snapshot = arguments.snapshot or date.today().isoformat()
+    layout = _layout()
+
+    client = build_client(arguments.source)
+    try:
+        entries = module.fetch(client, layout, snapshot)
+    finally:
+        client.client.close()
+
+    if not entries:
+        print(f"{arguments.source}: snapshot {snapshot} was already complete")
+    for entry in entries:
+        print(f"  {entry['bytes']:>12,} bytes  {entry['sha256'][:12]}  {entry['path']}")
+    print(f"\n{arguments.source}: snapshot {snapshot}")
+    print(f"  {layout.raw(arguments.source, snapshot)}")
+    return 0
+
+
+def stage(arguments: argparse.Namespace) -> int:
+    """Read a raw snapshot into typed Parquet. Offline, and clock-free.
+
+    Without `--snapshot` it stages the most recent one present rather than
+    today's, so that staging the morning after a fetch works.
+    """
+    module = REGISTRY[arguments.source]
+    layout = _layout()
+    snapshot = arguments.snapshot or layout.latest_snapshot(arguments.source)
+    if snapshot is None:
+        print(
+            f"{arguments.source}: nothing fetched yet. Run "
+            f"`crony fetch {arguments.source}` first.",
+            file=sys.stderr,
+        )
+        return 1
+
+    written = module.stage(layout, snapshot)
+
+    for table, rows in sorted(written.items()):
+        print(f"  {rows:>10,} rows  {table}")
+    print(f"\n{arguments.source}: staged {snapshot}")
+    print(f"  {layout.staged(arguments.source, snapshot)}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="crony",
@@ -154,6 +215,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="check the data directory, the repository and the environment",
     )
     described.set_defaults(run=doctor)
+
+    downloader = subcommands.add_parser(
+        "fetch",
+        help="download a source into a dated raw snapshot (the networked stage)",
+    )
+    downloader.add_argument("source", choices=names())
+    downloader.add_argument(
+        "--snapshot",
+        metavar="YYYY-MM-DD",
+        help="the snapshot to write; defaults to today",
+    )
+    downloader.set_defaults(run=fetch)
+
+    stager = subcommands.add_parser(
+        "stage", help="read a raw snapshot into typed Parquet (offline)"
+    )
+    stager.add_argument("source", choices=names())
+    stager.add_argument(
+        "--snapshot",
+        metavar="YYYY-MM-DD",
+        help="the snapshot to read; defaults to the most recent one fetched",
+    )
+    stager.set_defaults(run=stage)
 
     return parser
 

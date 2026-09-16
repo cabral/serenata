@@ -12,12 +12,13 @@ role date would be discovered in session 3, on real data, at the worst moment.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-from crony_eu.parquet import ROW_GROUP_SIZE, WRITER, sort_key, write
+from crony_eu.parquet import ROW_GROUP_SIZE, WRITER, sort_key, write, write_arrow
 
 SCHEMA = pa.schema(
     [
@@ -180,3 +181,60 @@ class TestPinnedSettings:
         write(rows(), SCHEMA, tmp_path / "t.parquet", KEY)
         metadata = pq.ParquetFile(tmp_path / "t.parquet").metadata
         assert metadata.row_group(0).column(0).compression == "ZSTD"
+
+
+class TestWriteArrow:
+    """The path the large tables take: DuckDB orders, pyarrow writes."""
+
+    def table(self) -> pa.Table:
+        return pa.table(
+            {
+                "role_end": ["2024-03", None],
+                "commune_code": ["99002", "99001"],
+                "supplier_siren": ["900000002", "900000001"],
+                "amount_eur": pa.array(
+                    [Decimal("1200.00"), Decimal("48200.50")], pa.decimal128(18, 2)
+                ),
+            }
+        )
+
+    def test_a_different_column_order_is_not_an_error(self, tmp_path: Path) -> None:
+        # `Table.cast` matches positionally, so a SELECT that lists grouped
+        # columns before aggregated ones would fail against a schema that lists
+        # them the other way. Selecting by name first makes the declared schema
+        # a contract about the columns rather than about the SQL.
+        write_arrow(self.table(), SCHEMA, tmp_path / "t.parquet")
+
+        assert pq.read_table(tmp_path / "t.parquet").schema.names == SCHEMA.names
+
+    def test_it_writes_the_rows_in_the_order_given(self, tmp_path: Path) -> None:
+        # Unlike `write`, this does not sort: the caller ordered in SQL, and
+        # re-sorting here would hide a caller that forgot to.
+        write_arrow(self.table(), SCHEMA, tmp_path / "t.parquet")
+
+        codes = pq.read_table(tmp_path / "t.parquet").column("commune_code").to_pylist()
+        assert codes == ["99002", "99001"]
+
+    def test_a_rerun_is_byte_identical(self, tmp_path: Path) -> None:
+        write_arrow(self.table(), SCHEMA, tmp_path / "a.parquet")
+        write_arrow(self.table(), SCHEMA, tmp_path / "b.parquet")
+
+        assert (tmp_path / "a.parquet").read_bytes() == (
+            tmp_path / "b.parquet"
+        ).read_bytes()
+
+    def test_a_column_the_schema_does_not_declare_is_dropped(
+        self, tmp_path: Path
+    ) -> None:
+        noisy = self.table().append_column("scratch", pa.array(["x", "y"]))
+        write_arrow(noisy, SCHEMA, tmp_path / "t.parquet")
+
+        assert pq.read_table(tmp_path / "t.parquet").schema.names == SCHEMA.names
+
+    def test_a_missing_column_is_refused(self, tmp_path: Path) -> None:
+        # Silently writing nulls for a column the query forgot would be a
+        # staged table that looks complete and is not.
+        short = self.table().drop_columns(["role_end"])
+
+        with pytest.raises(KeyError):
+            write_arrow(short, SCHEMA, tmp_path / "t.parquet")

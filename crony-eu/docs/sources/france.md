@@ -23,7 +23,107 @@ A source not listed here is not allowed until the maintainer approves a new sect
   - corrections go through prefectures and show up in the next quarterly file
 - History: Regards Citoyens keeps a change history of the register at https://github.com/regardscitoyens/rne-history (phase 2, for replacements during a term).
 
-Observed schema: _session 1_
+### Observed schema, session 1, fetched 2026-09-16
+
+Four files, semicolon-delimited, UTF-8. 1,066,291 rows staging into 994,761
+people. Row and person identifiers are unique.
+
+| file | rows | people | communes |
+|---|---|---|---|
+| elus-conseillers-municipaux-cm.csv | 511,225 | 510,704 | 34,926 |
+| elus-maires-mai.csv | 34,826 | 34,826 | 34,826 |
+| mun2026-cm-sortants-20260227.csv | 485,351 | 484,056 | 34,953 |
+| mun2026-maires-sortants-20260227.csv | 34,889 | 34,889 | 34,888 |
+
+Published columns, verbatim. The conseillers files have 16, the maires files 14.
+
+    Code du département                              both
+    Libellé du département                           both      not read
+    Code de la collectivité à statut particulier     both      not read
+    Libellé de la collectivité à statut particulier  both      not read
+    Code de la commune                               both
+    Libellé de la commune                            both
+    Nom de l'élu                                     both
+    Prénom de l'élu                                  both
+    Code sexe                                        both
+    Date de naissance                                both
+    Code de la catégorie socio-professionnelle       both
+    Libellé de la catégorie socio-professionnelle    both      not read
+    Date de début du mandat                          both
+    Libellé de la fonction                           conseillers only
+    Date de début de la fonction                     both
+    Code nationalité                                 conseillers only
+
+**Four corrections to what this document predicted.**
+
+1. The two `collectivité à statut particulier` columns were not expected. They
+   carry Paris, Lyon, Marseille and Corsica.
+2. `Code nationalité` is in the conseillers files and not the maires files.
+3. **The maires files carry no function column at all.** The function is the
+   file. `function_label` is supplied as `Maire` for those rows rather than left
+   null, which would make a mayor indistinguishable from a councillor holding no
+   delegated function and would quietly stop F1's 432-12 tag firing.
+4. **The two vintages publish dates differently, and the difference is
+   dangerous.** The current files are ISO 8601, `9999-99-99`. The pre-election
+   extracts are `99/99/99`, a **two-digit year**. Reading the second with
+   `%d/%m/%Y` parses without error and returns the year 71 for `03/04/71`. Doing
+   exactly that put all 520,240 pre-election rows in the first century, with
+   mandates starting in the year 20. A mandate beginning in the year 20 precedes
+   every contract ever notified, so F1's `mandate_overlap` would have been true
+   for half the population and the flag would have looked like it worked. The
+   parser now chooses the format by matching the whole string, and a two-digit
+   year takes the century that does not put the date in the future.
+
+**Null rates.** Everything is populated except three columns.
+
+| column | null |
+|---|---|
+| `Code du département` | 0.66% |
+| `Libellé de la fonction` | 64.86% |
+| `Code nationalité` | 6.54% |
+| everything else read | 0.00% |
+
+The département code is empty for commune codes beginning `97` (3,140 rows) and
+`98` (3,848 rows), the overseas départements and collectivities, which fill the
+collectivity columns instead. **A `--scope dep:<code>` run therefore cannot
+reach an overseas commune**, and the capability record has to say so rather than
+leave a silent gap. Phase 1 targets a metropolitan département, so this does not
+block it. The function label is null because most councillors hold no delegated
+function, and the nationality code because the maires files lack that column
+(34,826 + 34,889 = 69,715 rows, exactly 6.54%).
+
+**Date ranges after the century rule**, which is the check that the rule worked:
+
+| | earliest birth | latest birth | earliest mandate | latest mandate |
+|---|---|---|---|---|
+| current | 1072 | 2008 | 2026-03-15 | 2026-08-04 |
+| pre-election | 1927 | 2026 | 2020-05-18 | 2026-01-16 |
+
+The mandate windows are the March 2026 and March 2020 municipal elections, which
+is what they should be.
+
+**What is left wrong, measured rather than claimed away.** One row in cm_current
+has a birth year in the 1000s: a typo in the register, marked
+`dates_plausible = false` and carried rather than dropped. One row in the
+pre-election files has a birth date after its own mandate start, which is the
+century rule's known limit: a two-digit year cannot distinguish 1926 from 2026.
+Both are harmless in the safe direction, because a birth key of `2026-xx` or
+`1072-xx` matches no officer. That is one row in 520,240 and one in 511,225.
+
+**The birth key the matching rule needs is present on 100% of people**, in both
+vintages. `FR-NAME-BIRTHYM-v1` and ADR-0003 assume year and month on the élu
+side, and the élu side delivers it.
+
+**The maires files are redundant with the conseillers files** for the current
+term: 34,826 rows in the maires file, and exactly 34,826 rows in the conseillers
+file carrying the function `Maire`. They are kept because they cost 8MB and
+provide a cross-check, and because nothing establishes the same holds for a
+future refresh. 69,714 people appear in two files; the rest in one.
+
+**Top function labels**, a controlled vocabulary rather than personal data:
+`Maire` 139,429, `1er adjoint au Maire` 69,134, `2ème adjoint au Maire` 63,180,
+then the numbered deputies down a long tail. 691,605 people hold no function,
+301,384 hold one, 1,756 hold two, 17 hold three or four.
 
 ## fr-decp: Données essentielles de la commande publique, consolidated
 

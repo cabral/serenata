@@ -174,3 +174,126 @@ class TestDataDirCheck:
         assert check.ok is False
         assert root is None
         assert "relative" in check.detail
+
+
+class TestFetchAndStage:
+    """The two subcommands session 1 added, driven without a socket."""
+
+    def scripted(self, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+        """Replace the real client with one answering a stand-in data.gouv.fr."""
+        import httpx
+        from crony_eu.http import RateLimiter, SourceClient
+        from crony_eu.sources import fr_rne_elus
+
+        calls: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(str(request.url))
+            if "/api/1/datasets/" in str(request.url):
+                return httpx.Response(
+                    200,
+                    json={
+                        "resources": [
+                            {
+                                "title": f.title,
+                                "url": f"https://files.invalid/{f.title}",
+                            }
+                            for f in fr_rne_elus.FILES
+                        ]
+                    },
+                )
+            return httpx.Response(200, content=b"Code du departement\n")
+
+        monkeypatch.setattr(
+            "crony_eu.cli.build_client",
+            lambda source: SourceClient(
+                source=source,
+                client=httpx.Client(transport=httpx.MockTransport(handler)),
+                limiter=RateLimiter(rate=1000.0, capacity=1000.0),
+            ),
+        )
+        return calls
+
+    def test_fetch_writes_a_dated_snapshot(
+        self,
+        outside_repo: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.scripted(monkeypatch)
+
+        assert main(["fetch", "fr-rne-elus", "--snapshot", "2026-09-16"]) == 0
+
+        assert (
+            outside_repo / "raw" / "fr-rne-elus" / "2026-09-16" / "manifest.json"
+        ).is_file()
+        assert "2026-09-16" in capsys.readouterr().out
+
+    def test_fetch_defaults_to_today(
+        self,
+        outside_repo: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        # Fetch is allowed a clock; constraint 4 forbids one below it.
+        from datetime import date
+
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.scripted(monkeypatch)
+
+        main(["fetch", "fr-rne-elus"])
+        capsys.readouterr()
+
+        assert (
+            outside_repo / "raw" / "fr-rne-elus" / date.today().isoformat()
+        ).is_dir()
+
+    def test_fetching_twice_downloads_nothing_the_second_time(
+        self,
+        outside_repo: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.scripted(monkeypatch)
+        main(["fetch", "fr-rne-elus", "--snapshot", "2026-09-16"])
+        capsys.readouterr()
+
+        assert main(["fetch", "fr-rne-elus", "--snapshot", "2026-09-16"]) == 0
+        assert "already complete" in capsys.readouterr().out
+
+    def test_stage_without_a_fetch_says_so(
+        self,
+        outside_repo: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+
+        assert main(["stage", "fr-rne-elus"]) == 1
+        assert "nothing fetched yet" in capsys.readouterr().err
+
+    def test_stage_defaults_to_the_latest_snapshot(
+        self,
+        outside_repo: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        # Not to today's date. Staging the morning after a fetch has to work.
+        from fakes import Elu, write_rne_snapshot
+
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        write_rne_snapshot(outside_repo, "2026-09-16", cm_current=[Elu()])
+
+        assert main(["stage", "fr-rne-elus"]) == 0
+
+        output = capsys.readouterr().out
+        assert "2026-09-16" in output
+        assert "elus" in output
+
+    def test_an_unknown_source_is_refused_by_the_parser(self) -> None:
+        # Constraint 6: a source with no approved section cannot be fetched by
+        # typing its name.
+        with pytest.raises(SystemExit):
+            build_parser().parse_args(["fetch", "fr-made-up"])

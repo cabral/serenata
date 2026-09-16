@@ -64,6 +64,24 @@ class Layout:
     def logs(self) -> Path:
         return self.root / "logs"
 
+    def snapshots(self, source: str) -> list[str]:
+        """Every raw snapshot of a source, oldest first. Empty when none."""
+        directory = self.root / "raw" / source
+        if not directory.is_dir():
+            return []
+        return sorted(child.name for child in directory.iterdir() if child.is_dir())
+
+    def latest_snapshot(self, source: str) -> str | None:
+        """The most recent snapshot, or `None`.
+
+        How `crony stage` finds its input without reading a clock. Snapshot
+        names are ISO dates, so lexical order is chronological order, and a
+        transform that asked `date.today()` would stage nothing the morning
+        after a fetch.
+        """
+        found = self.snapshots(source)
+        return found[-1] if found else None
+
     def create(self) -> None:
         """Make the fixed directories. Safe to run twice, which is the point.
 

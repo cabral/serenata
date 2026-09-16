@@ -25,7 +25,7 @@ Three things reconnaissance settled before session 1, recorded here so they are 
 Progress:
 
 - [x] Session 0: bootstrap. Package, config, paths, http, parquet, `crony doctor`, both suites from one pytest, the data guard in CI. Two decisions it forced: ADR-0005 (one licence, AGPL-3.0-only) and ADR-0006 (standard library, no typer/rich/jinja2/vis-network).
-- [ ] Session 1: élus
+- [x] Session 1: élus. Four files fetched and staged: 1,066,291 rows, 994,761 people, birth key present on 100%. Found and fixed a silent date bug (the pre-election extracts publish a two-digit year, which `%d/%m/%Y` accepts), and added a plausibility gate that tells a misread file from a register typo. Observed schema in `crony-eu/docs/sources/france.md`.
 - [ ] Session 2: contracts, buyers, populations
 - [ ] Session 3: supplier officers and role history (**feasibility gate**)
 - [ ] Session 4: matching and review

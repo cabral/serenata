@@ -79,15 +79,20 @@ _NOT_REPOSITORY_PATHS = (
 #: `TestPathsNotYetBuilt` below makes the exemption expire on its own: the day
 #: the tree exists, this constant has to shrink or the tests fail.
 #:
-#: It shrank once already. `crony-eu/src/` and `crony-eu/tests/` were here until
-#: session 0 built them, and every path the Crony documents claim inside those
-#: two trees is now checked like any other. What is left is the code the later
-#: sessions are ordered to write.
+#: It has shrunk twice. `crony-eu/src/` and `crony-eu/tests/` went when session 0
+#: built them, and `sources/` went when session 1 built the first adapter. Every
+#: path the Crony documents claim inside those trees is now checked like any
+#: other. What is left is the code the later sessions are ordered to write.
+#: Two of these are whole trees and two are single modules, which is the
+#: exemption getting more specific as the code arrives: `sources/` exists now,
+#: so only the two adapters session 3 is ordered to write are still exempt
+#: inside it.
 _NOT_YET_BUILT = (
-    "crony-eu/src/crony_eu/sources/",
     "crony-eu/src/crony_eu/match/",
     "crony-eu/src/crony_eu/flags/",
     "crony-eu/src/crony_eu/export/",
+    "crony-eu/src/crony_eu/sources/fr_entreprises_api.py",
+    "crony-eu/src/crony_eu/sources/fr_inpi_rne.py",
 )
 
 
@@ -221,7 +226,7 @@ class TestPathsNotYetBuilt:
     """
 
     @pytest.mark.parametrize("prefix", _NOT_YET_BUILT)
-    def test_the_tree_really_is_absent(self, prefix: str) -> None:
+    def test_it_really_is_absent(self, prefix: str) -> None:
         assert not (REPO / prefix).exists(), (
             f"{prefix} exists now, so it is no longer unbuilt. Remove it from "
             "_NOT_YET_BUILT and let the paths inside it be checked like every "

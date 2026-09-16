@@ -67,6 +67,33 @@ def sort_key(row: Mapping[str, Any], columns: Sequence[str]) -> tuple[Any, ...]:
     return tuple(key)
 
 
+def write_arrow(table: pa.Table, schema: pa.Schema, destination: Path) -> int:
+    """Write an already-ordered Arrow table with the pinned settings.
+
+    The row-based `write` below sorts in Python, which is right for a few
+    thousand rows and wrong for the Répertoire national des élus: half a million
+    councillors as Python dicts is most of a gigabyte before anything is
+    written. Those tables are read, transformed and **ordered by DuckDB**, and
+    arrive here as Arrow.
+
+    So the sort is the caller's job, and it is not optional. Order by a key that
+    is unique, so that no tie is left for the query planner to break however it
+    likes on the day. `crony-eu/tests/test_sources_fr_rne_elus.py` stages the
+    same fixture twice and compares bytes, which is the only thing that can
+    establish that the caller did it.
+    """
+    # Selected by name before casting. `Table.cast` matches positionally and
+    # raises on a different order, which makes the declared schema a contract
+    # about the column list and an accident about the order of a SELECT.
+    stored = table.select(list(schema.names)).cast(schema)
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_suffix(destination.suffix + ".partial")
+    pq.write_table(stored, partial, row_group_size=ROW_GROUP_SIZE, **WRITER)
+    os.replace(partial, destination)
+    return int(stored.num_rows)
+
+
 def write(
     rows: Iterable[Mapping[str, Any]],
     schema: pa.Schema,
