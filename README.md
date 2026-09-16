@@ -9,6 +9,36 @@ standard. Dashboards for analysts exist. A continuously running, open pipeline
 that turns those notices into verifiable public flags is this project's goal,
 not a service it operates today.
 
+## This project is being replaced
+
+**Serenata Europa's pipeline is retiring.** In September 2026 the maintainer
+decided that this repository's purpose becomes a different project: Crony, which
+proposes links between elected officials, companies and public money from
+official open data, has a person confirm every person-to-company link, and
+publishes nothing at all. It is specified and not built. Its scope is
+[`scope.md`](scope.md), its specification is [`crony-eu/`](crony-eu/), and the
+decision is [ADR-0014](docs/adr/0014-replace-serenata-with-crony.md).
+
+What that means for a reader of this page:
+
+- **Everything below about the TED pipeline is still true and still runs.** It
+  is not deleted, and the measurements in it were really measured. Retirement
+  happens in groups as the replacement for each group exists, and
+  [`docs/transition-ledger.md`](docs/transition-ledger.md) says which group each
+  part is in.
+- **Milestones 2 to 6 will not happen.** Entity resolution, a public API,
+  versioned bulk releases and a verification interface were this project's
+  answer to "why should anyone trust this". Crony answers it differently, with a
+  much smaller claim: nothing is published, and a person confirms every edge
+  before anyone sees it.
+- **The legal work does not retire.** The TED archive already fetched still
+  exists, its lawful basis and retention period are still unresolved, and no
+  counsel is engaged. Retiring code does not dispose of an archive.
+- **If you backed this project, or are considering it**, the name on the NLnet
+  application and the Patreon campaign is Serenata Europa, and this is a change
+  to what that name is doing. That conversation is owed to those people and has
+  not happened yet.
+
 ## Start here
 
 - **[`docs/architecture.md`](docs/architecture.md)** — the five stages, and why
@@ -162,16 +192,31 @@ what the pipeline does not do, or does incompletely. The milestone plan:
 
 | # | Milestone | Status |
 |---|-----------|--------|
-| 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | eForms prototype built; privacy and correction gaps open; legacy not built |
-| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built and measured; verification pending |
-| 3 | Entity resolution against open national company registers | not started |
-| 4 | Public API and versioned bulk data releases | not started |
-| 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |
-| 6 | Documentation, packaging, contributor onboarding | underway |
+| 1 | Ingestion and normalisation pipeline (TED/eForms to a documented open dataset) | eForms prototype built; privacy and correction gaps open; legacy not built; **retiring** |
+| 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built and measured; verification pending; **retiring** |
+| 3 | Entity resolution against open national company registers | **abandoned** (ADR-0014) |
+| 4 | Public API and versioned bulk data releases | **abandoned** (ADR-0014) |
+| 5 | Verification interface (every flag, its hypothesis, its source notice) | **abandoned** (ADR-0014) |
+| 6 | Documentation, packaging, contributor onboarding | underway, and now carrying the handover |
+
+The replacement has its own plan, in phases rather than milestones, in
+[`scope.md`](scope.md). Phase 1 is France, communes, one département, end to
+end, and it is specified and not started.
 
 ## Layout
 
+Two projects, for as long as the handover takes. `crony-eu/` is the incoming
+one, specification only; everything else in this tree is the outgoing pipeline
+or the repository's own governance.
+
 ```
+scope.md        # the canonical scope: what this repository is for now
+crony-eu/       # the replacement, specified and not built
+  CLAUDE.md     #   its constraints, which are not the same as this project's
+  docs/         #   its ADRs, its source list, its flag spec, its work order
+docs/
+  adr/0014-replace-serenata-with-crony.md  # the decision
+  transition-ledger.md                     # what happens to every piece below
 serenata/
   fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
     client.py   #   throttled, retrying HTTP access to TED's public endpoints
@@ -362,6 +407,12 @@ Early days. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the page to read: setup,
 the constraints and why they exist, when a decision needs an ADR, and how a
 change is expected to arrive.
 
+**Before picking something up, check the
+[transition ledger](docs/transition-ledger.md).** A TED feature that is retiring
+is not worth finishing, and the ledger says which those are. Work on the
+repository's own gates, on documentation honesty, and on
+[`crony-eu/`](crony-eu/) is worth doing today.
+
 What is open, and what each piece requires, is in
 [`docs/open-work.md`](docs/open-work.md) — a few items there are marked as good
 places to start, and each open one has an issue mirroring it. The constraints
@@ -385,7 +436,10 @@ datasets carry.
 
 ## License
 
-[AGPL-3.0](LICENSE) for the code. The original Serenata used MIT; this project
+[AGPL-3.0](LICENSE) for the code. The incoming project's documents say
+AGPL-3.0-**or-later**, and the two statements have not been reconciled; that is
+a licensing change touching every existing contributor's sign-off, so it gets
+its own decision record rather than a quiet edit. The original Serenata used MIT; this project
 uses AGPL so that hosted forks of the pipeline stay open, which matters for a
 project whose entire value is that you can check its work.
 

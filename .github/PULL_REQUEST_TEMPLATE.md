@@ -19,7 +19,15 @@ Delete anything that does not apply. What is left should be true.
 - [ ] **A generated report was regenerated** — `docs/field-usage.md`,
       `docs/dataset-shape.md`, `docs/dropped-fields.md`. They are produced from archived
       packages, not edited.
-- [ ] **This decision constrains future work**, so there is an ADR.
+- [ ] **This decision constrains future work**, so there is an ADR. A record in
+      `docs/adr/` is about this repository or the retiring pipeline; one in
+      `crony-eu/docs/adr/` is about Crony. Both series start at 0001, so say
+      which you mean.
+- [ ] **This touches the TED pipeline**, and
+      [the transition ledger](../docs/transition-ledger.md) says that part is
+      not retiring, or says why finishing it is still worth doing. A retiring
+      feature finished to preserve it is what the ledger exists to prevent;
+      the tag `serenata-europa-pre-transition` preserves it already.
 - [ ] **A classifier**, so its hypothesis has current-version measured evidence,
       the companion query, a completed "this flag is wrong if…", and a negative
       fixture that does not fire. Historical evidence is not current measurement;

@@ -11,6 +11,12 @@ Read [CLAUDE.md](../../CLAUDE.md) first, then [AGENTS.md](../../AGENTS.md),
 there. Follow the shared boundaries and report contract in
 [handoffs.md](../../docs/automation/handoffs.md); these do not override canonical
 instructions.
+This repository is being handed over from Serenata Europa to Crony
+([ADR-0014](../../docs/adr/0014-replace-serenata-with-crony.md)). Read
+[the transition ledger](../../docs/transition-ledger.md) before proposing,
+implementing or approving work on the TED pipeline: a retiring feature is not
+worth finishing. Work under `crony-eu/` follows
+[crony-eu/CLAUDE.md](../../crony-eu/CLAUDE.md) as well as the canonical rules.
 
 Implement only within the user's allowed files and supplied revision scope.
 Read/search explicitly allowlisted code, documentation and synthetic fixtures;

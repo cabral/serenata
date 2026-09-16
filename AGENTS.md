@@ -4,6 +4,31 @@ Read [CLAUDE.md](CLAUDE.md) first: it is canonical for project constraints and
 stack decisions. Use [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks;
 do not duplicate or silently override those rules here.
 
+## Which project is this task for
+
+This repository is being handed over from Serenata Europa to Crony
+([ADR-0014](docs/adr/0014-replace-serenata-with-crony.md);
+[`scope.md`](scope.md) is the canonical scope,
+[`docs/transition-ledger.md`](docs/transition-ledger.md) the inventory).
+Establish which project a task belongs to before routing it, because the two
+have different constraint lists and different data rules.
+
+- **Under `crony-eu/`**: read [crony-eu/CLAUDE.md](crony-eu/CLAUDE.md) as well.
+  That project's model holds personal data by design and keeps all of it outside
+  the repository. Its export rules, not this file's, decide what may leave the
+  machine.
+- **Under `serenata/`, `tools/`, or the TED documents**: this is the retiring
+  pipeline. Check the ledger before building anything new there. Finishing a
+  retiring feature to preserve it is explicitly not wanted; a branch and the
+  `serenata-europa-pre-transition` tag preserve it already.
+- **Repository-wide** (CI, licence, DCO, automation, documentation gates):
+  unchanged by the handover and binding on both.
+
+Retiring code does not retire an obligation. The unresolved lawful basis for the
+TED archive already on disk ([ADR-0010](docs/adr/0010-raw-archive-retention.md))
+and the fact that no counsel is engaged both survive the transition, and no task
+here resolves either by inference.
+
 ## Route the task
 
 Read the relevant skills before acting; more than one may apply:

@@ -7,6 +7,27 @@ reading the whole repository first.
 applies to humans too, despite the name. Where this page and that one disagree,
 that one wins and this page is what needs fixing.
 
+## Read this first: the repository is changing hands
+
+Serenata Europa's TED pipeline is retiring and Crony is taking this repository
+over ([ADR-0014](docs/adr/0014-replace-serenata-with-crony.md)). Before you pick
+something up, read [`docs/transition-ledger.md`](docs/transition-ledger.md): it
+says, file by file, what is kept, what is worth finishing, and what is on its way
+out. **A TED feature that is retiring is not worth finishing**, and a pull
+request doing that will be declined for that reason rather than on its merits.
+
+What is worth doing today: the repository's own gates and documentation, and
+anything under [`crony-eu/`](crony-eu/), which is specified and not built.
+Crony has its own constraint list in
+[`crony-eu/CLAUDE.md`](crony-eu/CLAUDE.md), and it is not the same as the six
+below, because the two projects do not process the same thing. The `CLAUDE.md`
+table at the top of that file says which one governs your change.
+
+Everything below this section is about the retiring pipeline unless it says
+otherwise. The parts that are about the repository rather than the project (the
+DCO, the licence gate, the documentation checks, how a decision becomes an ADR)
+carry over unchanged.
+
 **If you have not read the code yet**, two documents will save you most of the
 time you would otherwise spend reconstructing it:
 [`docs/architecture.md`](docs/architecture.md) for the stages and why the
@@ -127,6 +148,19 @@ us revisit it — rather than burying the reasoning in code. The existing ones a
 the model for length and tone. If it needs more than a page, the decision
 probably is not crisp yet.
 
+**Two series, kept apart by directory.** Decisions about this repository and the
+retiring pipeline are `docs/adr/`, numbered from 0001. Decisions about Crony are
+[`crony-eu/docs/adr/`](crony-eu/docs/adr/), also numbered from 0001. Neither was
+renumbered when the projects met, because renumbering would break every citation
+in both. Say which series you mean when you cite one.
+
+**Every record here says what became of it.** Since ADR-0014, each record taken
+before it carries a `- Transition:` line reading `carried`, `retired` or
+`continuing obligation`, checked by
+[tests/test_transition.py](tests/test_transition.py). The third is the one to
+read carefully: an obligation is not discharged by deleting the code that
+triggered it.
+
 An ADR that turns out to be wrong gets an amendment with a date, not a quiet
 edit. [ADR-0003](docs/adr/0003-xml-parsing-without-defusedxml.md) is the worked
 example.
@@ -224,6 +258,12 @@ send messages on the project's behalf.
 
 ## Tests
 
+- **Crony's documents are checked too.** `tests/test_docs.py` reads
+  [`crony-eu/`](crony-eu/) as a document root, which is what stops a
+  specification written before the code from naming modules nobody built. A path
+  that is ordered rather than existing lives under the narrow `_NOT_YET_BUILT`
+  exemption in that file, and a test makes the exemption expire once the tree
+  appears.
 - Fixtures are **obviously synthetic** — impossible notice ids, names like
   `EXAMPLE BODY` — or real public notices reproduced accurately and named after
   their notice id. Never plausible-looking fabrications: nothing that could be

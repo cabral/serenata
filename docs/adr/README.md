@@ -5,6 +5,31 @@ taken. Each records the context, the decision, its consequences, and what
 would make us revisit it. Design decisions not already covered by
 [`CLAUDE.md`](../../CLAUDE.md) are proposed here before they ship in code.
 
+## Two series, and which one you are reading
+
+This directory holds decisions about this repository and about Serenata Europa's
+TED pipeline. Crony's decisions are in
+[`crony-eu/docs/adr/`](../../crony-eu/docs/adr/), also numbered from 0001.
+Neither series was renumbered when the projects met, because renumbering would
+break every citation in both, so a record citing the other says which it means.
+[ADR-0014](0014-replace-serenata-with-crony.md) is where that arrangement comes
+from.
+
+## Every record taken before ADR-0014 says what became of it
+
+The header of each earlier record carries a `- Transition:` line with one of
+three answers:
+
+- **carried** — the decision governs Crony too
+- **retired** — it governed the TED pipeline and goes with it
+- **continuing obligation** — it binds the maintainer whichever project occupies
+  the repository, and retiring code does not discharge it
+
+`tests/test_transition.py` checks that every earlier record answers, and answers
+with one of those three. The third is the one to read carefully. ADR-0010's
+archive is still on disk and its lawful basis is still unresolved; deleting the
+code that reads it would change neither fact.
+
 ## Every record says what holds it true
 
 The header carries an `Enforced by:` line naming the test class that keeps the

@@ -7,6 +7,25 @@ description: Use when evaluating anything new before it becomes code or a public
 
 Every idea gets a file in `docs/cases/NNN-slug.md` with a status line: idea, scoped, measured, building, live, or rejected. Rejected cases keep their file and the reason for rejection. Half the value of this directory is the record of what was considered and why it didn't fly, both for future contributors and for grant reviewers who want to see method rather than luck.
 
+## Scope note: this repository is changing hands
+
+This skill was written against TED and eForms, and gate 1 below still says so.
+Serenata Europa's pipeline is retiring in favour of Crony
+([ADR-0014](../../../docs/adr/0014-replace-serenata-with-crony.md)).
+
+The four gates survive the change intact, and one of them gets sharper. Crony's
+flags are about named people, so the legal gate stops being a question about a
+company's lawyers and becomes a question about an individual. The data gate
+changes its vocabulary: instead of a structured eForms field, the signal has to
+exist in a source with an approved section in
+[crony-eu/docs/sources/france.md](../../../crony-eu/docs/sources/france.md).
+The base-rate gate and the falsifiability gate are unchanged, except that Crony's
+phase 1 deliberately measures a descriptive rate and defers the comparative
+claim, which is a worked example of the falsifiability gate being honest about
+what a first measurement can support.
+
+Rewriting this skill for Crony is open work.
+
 ## Where cases come from
 
 The procurement red-flag literature (the DIGIWHIST corpus and Fazekas's integrity indicators, the Open Contracting Partnership's red flags guidance), European Court of Auditors and OLAF reports, Odilla's and RESPOND's academic work, journalists, patrons, and patterns noticed in the data itself. Record the origin in the case file; a case sourced from peer-reviewed literature starts with more credibility than a hunch, and reviewers can tell the difference.

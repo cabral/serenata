@@ -9,6 +9,11 @@ body:
         and [`docs/open-work.md`](https://github.com/cabral/serenata/blob/main/docs/open-work.md)
         first — most known gaps are already written down, with the reasoning for
         why they are still open.
+
+        Then check
+        [`docs/transition-ledger.md`](https://github.com/cabral/serenata/blob/main/docs/transition-ledger.md).
+        The TED pipeline is retiring in favour of a different project, so a gap
+        in a part that is on its way out is not a gap worth filling.
   - type: textarea
     id: gap
     attributes:

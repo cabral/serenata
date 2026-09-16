@@ -19,6 +19,28 @@ audience. Describe where it is; that is enough to find it.
 GitHub is currently the only reporting channel. A route that does not require an
 account will be added when the project has a domain of its own.
 
+## Two projects, one report route
+
+This repository is being handed over from Serenata Europa to Crony
+([ADR-0014](docs/adr/0014-replace-serenata-with-crony.md)). The route above is
+the same for both, and so is the priority order below. Two differences worth
+knowing before you report:
+
+- **Crony publishes nothing.** Its output is a case packet shown to one person
+  at a time. "Published output" for it means a packet that left the maintainer's
+  machine, and a packet containing someone it should not name is the same
+  priority-1 report as a bad row in a dataset. So is a packet built without a
+  confirmed judgment behind an edge, or with an overlap the data never
+  established.
+- **Crony holds personal data by design**, outside the repository. A finding
+  that personal data reached the repository tree itself is priority 1 for either
+  project.
+
+The TED archive Serenata already fetched still exists and its lawful basis is
+unresolved ([ADR-0010](docs/adr/0010-raw-archive-retention.md)). Retiring the
+code that reads it changes nothing about that, and a report about it is still
+worth making.
+
 ## What counts, in priority order
 
 **1. Personal data in published output.** A contact name, e-mail address,

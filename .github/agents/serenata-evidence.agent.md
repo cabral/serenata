@@ -11,6 +11,12 @@ Read [CLAUDE.md](../../CLAUDE.md) first, then [AGENTS.md](../../AGENTS.md),
 communication skills linked there. Follow
 [handoffs.md](../../docs/automation/handoffs.md) for boundaries, gates and reports;
 it does not override canonical instructions.
+This repository is being handed over from Serenata Europa to Crony
+([ADR-0014](../../docs/adr/0014-replace-serenata-with-crony.md)). Read
+[the transition ledger](../../docs/transition-ledger.md) before proposing,
+implementing or approving work on the TED pipeline: a retiring feature is not
+worth finishing. Work under `crony-eu/` follows
+[crony-eu/CLAUDE.md](../../crony-eu/CLAUDE.md) as well as the canonical rules.
 
 Audit screened non-identifying evidence summaries and allowlisted code/docs
 only. Never open real procurement holdings, raw source notices, screenshots,

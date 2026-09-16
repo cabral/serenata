@@ -29,6 +29,26 @@ The six constraints, restated so they're in front of you, numbered as CLAUDE.md 
 
 The reason these are hard: every flag this project publishes must be reproducible by a stranger from public data. A journalist, an NLnet reviewer, or a lawyer for a flagged buyer should be able to rerun the code and get the same rows. Nondeterminism, hidden data, or judgment calls buried in text parsing break that, and with it the entire credibility posture.
 
+## Scope note: this repository is changing hands
+
+Serenata Europa's TED pipeline is retiring and Crony is taking this repository
+over ([ADR-0014](../../../docs/adr/0014-replace-serenata-with-crony.md);
+[the ledger](../../../docs/transition-ledger.md) says what happens to each
+piece). This skill was written for the TED pipeline and still describes it:
+eForms fields, `RULE_VERSION`, the twelve-table model, the hypothesis metadata
+format.
+
+What carries over unchanged is the method: a written hypothesis before the
+detection code, a base rate measured before a threshold is chosen, determinism
+checked rather than assumed, and no classifier merged without a false-positive
+profile. What does not carry over is the vocabulary. Crony's equivalents are in
+[crony-eu/CLAUDE.md](../../../crony-eu/CLAUDE.md) and its flag spec, and its
+version of "uncalibrated" is a flag that may not enter a case packet.
+
+**Do not use this skill to finish a retiring TED feature.** Check the ledger
+first. Rewriting this skill for Crony is itself open work, and is worth more
+than any TED change it would otherwise authorise.
+
 ## Building a classifier
 
 Do these steps in order. The order is the point.

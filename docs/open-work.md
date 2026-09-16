@@ -34,6 +34,23 @@ Finished items keep their number and a one-paragraph summary here; the full
 record of how each was built and what it corrected is in the
 [decision log](decision-log.md). This file is meant to stay short enough to read.
 
+## The pipeline these items belong to is retiring
+
+[ADR-0014](adr/0014-replace-serenata-with-crony.md) hands this repository over to
+Crony, and [`transition-ledger.md`](transition-ledger.md) says what happens to
+each part of what it replaces. That splits the list below in two.
+
+**Items 3 and 4** (legacy pre-2024 TED fields and parsing) and **items 17 and 18**
+(verification of individual flags, and validating correction handling against a
+continuous archive) belong to the retiring pipeline. They are not being worked
+on, and finishing them to preserve them is explicitly not wanted. They stay
+listed because closing them by silence would misrepresent what was left undone.
+
+**Items 11, 14 and 15** do not retire. They are legal questions about data that
+exists, and the archive exists whether or not the code that fetched it does.
+Crony widens them rather than replacing them: it processes personal data by
+design. No counsel is engaged for any of the three.
+
 ## Open right now
 
 | # | Item | What it needs |
