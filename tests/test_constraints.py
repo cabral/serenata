@@ -224,10 +224,19 @@ def markdown_files() -> list[Path]:
 
     Including `.claude/skills/`, which are project text now: they state the
     rules, and a rule stated in the words it forbids is a rule that has drifted.
+
+    Including `crony-eu/` since ADR-0014, because constraint 3 is one of the
+    obligations that does not retire with the pipeline. A flag there is a
+    question about an elected official, which is the case where calling it
+    anything stronger would cost the most.
+
+    Top-level documents are discovered rather than listed. They were listed
+    once, as three names, and `SECURITY.md`, `AGENTS.md` and `scope.md` were
+    all added afterwards without the gate noticing any of them.
     """
     root = PACKAGE_ROOT.parent
-    found = [root / name for name in ("README.md", "CONTRIBUTING.md", "CLAUDE.md")]
-    for directory in ("docs", ".claude", "tests", "data"):
+    found = sorted(root.glob("*.md"))
+    for directory in ("docs", ".claude", "tests", "data", "crony-eu"):
         found.extend(sorted((root / directory).rglob("*.md")))
     return [path for path in found if path.is_file()]
 

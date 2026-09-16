@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-01
+- Transition: retired — TED's Search API and daily packages have no counterpart in Crony, which fetches French open data from data.gouv.fr and one DINUM API. The politeness rules it describes (one request per publication day, a User-Agent naming the project, backing off when asked) are restated as Crony's own fetch rules
 - Enforced by: `tests/test_constraints.py::TestNetworkIsolation`, `tests/test_ted_contract.py::TestTheDailyPackage`
 
 ## Context

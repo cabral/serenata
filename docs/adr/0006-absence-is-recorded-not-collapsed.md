@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-02
+- Transition: carried — "not provided" and "not applicable" are different facts in French registry data as much as in eForms. Crony's adapter contract states it for officer role dates, where a missing date means `role_overlap = unknown` and never `true`
 - Enforced by: `tests/test_normalise.py::TestAbsenceIsRecorded`, `tests/test_normalise_model.py::TestCompanionColumns`
 
 ## Context

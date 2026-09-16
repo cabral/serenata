@@ -1,0 +1,118 @@
+# Sources: France
+
+Every source the pipeline may touch in France. Field lists marked "expected" come from documentation or older files. The adapter session replaces them with the observed schema: column names, types and null rates only, never sample values (CLAUDE.md, constraint 13).
+
+Nothing here has been fetched yet. Every "expected" list is a reading of documentation, and the ones that decide whether phase 1 can produce anything at all are the officer fields: birth month precision, and dated role history.
+
+A source not listed here is not allowed until the maintainer approves a new section.
+
+## fr-rne-elus: Répertoire national des élus
+
+- Publisher: Ministère de l'Intérieur
+- Landing page: https://www.data.gouv.fr/datasets/repertoire-national-des-elus-1
+- Pre-election extract (councils in office on 23 February 2026, before the March 2026 municipal elections): https://www.data.gouv.fr/datasets/elections-municipales-2026-maires-et-conseillers-municipaux-sortants
+- Licence: Licence Ouverte 2.0
+- Updates: quarterly. The August 2026 update reflects the March 2026 municipal elections. Dates have been ISO 8601 since that update; older files used DD/MM/YYYY, so the parser accepts both.
+- Access: CSV files. Resolve resource URLs through the data.gouv.fr API (`/api/1/datasets/<slug>/`) instead of hardcoding them.
+- Phase 1 files: conseillers municipaux and maires. Later: conseillers communautaires, départementaux and régionaux, députés, sénateurs, représentants au Parlement européen.
+- Expected columns (seen in older files; verify): Code du département, Libellé du département, Code de la commune, Libellé de la commune, Nom de l'élu, Prénom de l'élu, Code sexe, Date de naissance, Code de la catégorie socio-professionnelle, Libellé de la catégorie socio-professionnelle, Date de début du mandat, Libellé de la fonction, Date de début de la fonction.
+- Gotchas:
+  - an élu with two functions appears twice in the same file; an élu with two mandates appears in two files
+  - profession is self-declared
+  - the files don't say whether `Nom de l'élu` is the birth name or the usage name. Session 4 answers this with aggregate match counts per surname variant, split by sex, and records the answer here.
+  - corrections go through prefectures and show up in the next quarterly file
+- History: Regards Citoyens keeps a change history of the register at https://github.com/regardscitoyens/rne-history (phase 2, for replacements during a term).
+
+Observed schema: _session 1_
+
+## fr-decp: Données essentielles de la commande publique, consolidated
+
+- Dataset: https://www.data.gouv.fr/datasets/donnees-essentielles-de-la-commande-publique-consolidees-format-tabulaire
+- Processing code: https://github.com/ColinMaudry/decp-processing
+- Format: Parquet and CSV. Use Parquet.
+- Updates: roughly daily
+- Licence: check the dataset page and record it here
+- Model: one row per contract version. `donneesActuelles` marks the latest version. A modification can change `titulaire_*`, `montant` and `dureeMois`, and carries its own `dateNotification`.
+- Phase: 1
+- Expected fields (verify): id, acheteur_id (SIRET), acheteur_nom, titulaire_id, titulaire_typeIdentifiant, titulaire_denominationSociale, montant, dateNotification, datePublicationDonnees, procedure, nature, objet, codeCPV, dureeMois, modification_id, donneesActuelles
+- Gotchas:
+  - for framework agreements `montant` is a ceiling, not money spent
+  - duplicate contracts across publishing platforms, implausible amounts, and some platforms have published dates in the future
+  - a contract can have several titulaires (consortia)
+  - DECP only covers contracts at or above the publication threshold set by the arrêtés of 22 December 2022. Record the current threshold here; F1's small-commune tag depends on it.
+
+Observed schema and threshold: _session 2_
+
+## fr-sirene: SIRENE stock (INSEE)
+
+- Dataset: "Base Sirene des entreprises et de leurs établissements (SIREN, SIRET)" on data.gouv.fr. Pin the URLs in session 2 through the data.gouv.fr API. Some SIRENE files moved to new storage in February 2026, and old links return 404.
+- Licence: Licence Ouverte
+- Phase: 1
+- Use: legal category (catégorie juridique) of buyers and suppliers, commune code of a unit's head office, administrative status, creation date, headcount band, diffusion status
+- Needed mappings:
+  - buyer SIREN -> commune INSEE code, for units whose legal category is "commune" (pin the code from INSEE's nomenclature)
+  - supplier legal category, to separate SEM, SPL, public bodies and other entities where élus sit as the commune's representatives (pin the codes and list them in `crony-eu/docs/flags/F1-same-body.md`)
+- Gotchas: the stock files are large, so read only the needed columns with DuckDB. Record the name and values of the diffusion status field here.
+
+Observed schema: _session 2_
+
+## fr-insee-pop: Populations légales
+
+- Publisher: INSEE, populations légales, latest vintage, commune level
+- Licence: record it here in session 2
+- Phase: 1
+- Use: population band of the buying commune, for F1 base rates and the 3,500-inhabitant threshold in Code pénal art. 432-12
+
+Observed schema: _session 2_
+
+## fr-entreprises-api: API Recherche d'entreprises (DINUM)
+
+- Service page: https://www.data.gouv.fr/dataservices/api-recherche-dentreprises
+- Endpoint: https://recherche-entreprises.api.gouv.fr/search (for example `?q=siren:<SIREN>`)
+- Access: open, no key. The limit is 7 calls per second; the client runs at 5 or fewer.
+- Phase: 1, one call per supplier SIREN in scope
+- Content: company identity, officers (dirigeants) taken from INPI, and elected officials for public bodies
+- Limits stated by the publisher: non-diffusible companies are excluded, predecessors and successors of establishments are not available, and it is not the full SIRENE base
+- Expected officer fields (verify against the OpenAPI specification before coding): surname, given names, birth year and month, role (qualité), type (natural or legal person)
+- **Not expected to carry role start and end dates.** The service exposes current officers taken from INPI, and a current-officer list is a snapshot rather than a history. Phase 1 needs the history, so this source alone is not enough (see `fr-inpi-rne` below).
+- Two gates for session 3, both before the matcher is written:
+  - if officer birth dates carry only the year, stop and tell the maintainer, because ADR-0003 assumes month precision
+  - if no officer role start date is available from this source, stop and tell the maintainer, because F1 cannot build a case packet without one
+
+Observed schema: _session 3_
+
+## fr-inpi-rne: INPI, Registre national des entreprises
+
+- Portal: https://data.inpi.fr (free account; API and SFTP access are managed from the account page)
+- API login: https://registre-national-entreprises.inpi.fr/api/sso/login
+- Format: JSON since 1 January 2023; daily updates
+- Phase: **1 for officer role history**, 2 for national scale. The split changed on 2026-09-16: F1 needs a dated officer role to establish overlap, and nothing else in the French stack is expected to carry one. Phase 1 queries it per supplier SIREN in the slice, the same narrow scope as the open API, not in bulk.
+- Unverified, and the first thing session 3 checks: whether the RNE record carries a role start date and a role end date, how often each is populated, and whether the date recorded is when the role began or when the filing was made. A filing date is not a role start date, and a packet claiming otherwise would be wrong in the way that matters most.
+- Access is an account and a registration, not an open endpoint, so the gate is also practical: the account has to exist before session 3 can run.
+- Rules: INPI states that reusers may not redistribute companies marked non-diffusible (`diffusionINSEE` = "N"). Confidential data is reserved for authorised bodies; don't request it. Beneficial ownership data is out of scope.
+
+Observed schema, role date coverage and date semantics: _session 3_
+
+## fr-hatvp: HATVP open data (phase 2)
+
+- Page: https://www.hatvp.fr/open-data/
+- Content: declarations published since July 2017, as XML under the Etalab licence, plus one global XML file and a CSV list of published declarations
+- Use: declarations of interests and activities of MPs, senators and ministers: directorships, direct shareholdings, the spouse's professional activity
+- Rules:
+  - parliamentarians' asset declarations are not published online and must never be ingested from any source (Code électoral art. LO 135-2)
+  - HATVP never publishes spouses' names or personal addresses; don't fill them in from elsewhere
+
+## fr-ted: TED awards (phase 2)
+
+Above-threshold French awards, used to cross-check DECP. Company-level data only.
+
+This section used to say "through Serenata Europa". It no longer does: that project is retiring ([ADR-0014](../../../docs/adr/0014-replace-serenata-with-crony.md)) and nothing here depends on it. If the cross-check happens, it reads TED directly and gets its own section before a line of code, like every other source.
+
+## Not allowed
+
+- parliamentarians' asset declarations from any source, including press articles and leaks that quote them, unless the parliamentarian published the declaration themselves (LO 135-2)
+- commercial aggregators and their APIs (for example Pappers or Societe.com)
+- scraping pages of annuaire-entreprises.data.gouv.fr; use the API
+- the beneficial ownership register
+- leaked datasets
+- anything else until the maintainer approves a new section above

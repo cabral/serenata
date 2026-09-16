@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-01
+- Transition: retired — Crony reads CSV, Parquet and JSON, and parses no XML. The habit behind the record, preferring the standard library to a dependency and refusing what the parser should not be asked to do, is repository practice rather than a TED decision
 - Enforced by: `tests/test_survey.py::TestDoctypeIsRefused`,
   `tests/test_eforms_xml_guard.py::TestXmlInputGuard`
 - Amended: 2026-09-02 — see [Amendment](#amendment-2026-09-02-the-refusal-had-to-cover-the-whole-prolog)

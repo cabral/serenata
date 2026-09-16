@@ -4,6 +4,7 @@
   continuous archive
 - Amendment: 2026-09-05, withdrawals designed once the change reason was measured
 - Date: 2026-09-05
+- Transition: retired — supersession derived from archived TED notices has no counterpart in DECP, which publishes a version chain inside the dataset and marks the current row. Crony reads that marker instead. The stance survives the mechanism: where the data does not decide, refuse rather than pick
 - Enforced by: `tests/test_normalise_corrections.py::TestTheColumnsTheModelBuilds`
   for the link parts and `tests/test_classify_corrections.py` for supersession.
   Withdrawals are not implemented and no test claims they are;

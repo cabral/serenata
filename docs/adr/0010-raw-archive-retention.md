@@ -3,6 +3,7 @@
 - Status: amended — structural suppression retained; lawful basis and retention unresolved
 - Date: 2026-09-03
 - Amendment: 2026-09-05
+- Transition: continuing obligation, and the one that matters most — **the archive still exists on disk and retiring the code that reads it changes nothing about it.** Lawful basis, retention, transparency and the DPIA question stay unresolved, no counsel is engaged, and deletion is itself a processing decision rather than a tidy-up. Crony broadens the question rather than escaping it: it processes personal data by design, where this pipeline processed it by accident. See [`docs/transition-ledger.md`](../transition-ledger.md#data-backups-and-legal-records)
 - Enforced by: nothing mechanical — it is a policy. The structural-drop measurement is checked by
   `tests/test_dropped.py::TestItsOneClaim`
 

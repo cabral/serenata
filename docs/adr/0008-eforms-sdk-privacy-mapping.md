@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-03
+- Transition: retired — the eForms SDK's privacy mapping describes a standard Crony does not read
 - Enforced by: `tests/test_normalise_privacy.py::TestTheVendoredTable`, `tests/test_normalise_privacy.py::TestWhatItRefuses`
 
 ## Context

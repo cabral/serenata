@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-02
+- Transition: carried — a person with two mandates, a commune with two councillors of the same surname and a contract with several titulaires are all the same shape as a notice publishing its buyer's name in three languages. Picking one is the failure this record refuses
 - Enforced by: `tests/test_normalise.py::TestRepeatedValues`, `tests/test_normalise_model.py::TestColumnsMatchMeasuredCardinality`
 
 ## Context

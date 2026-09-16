@@ -2,6 +2,7 @@
 
 - Status: proposed — read-only checker implemented; executor and delegation absent
 - Date: 2026-09-05
+- Transition: continuing obligation — the automation boundary is a property of the repository, not of the project occupying it. The record stays **proposed**, the executor and the standing delegation stay absent, and nothing in the transition activates either
 - Enforced by: `tests/test_merge_guard.py::TestMergeGuard` checks eligibility and read-only revalidation; synthetic tests do not prove hosted enforcement, isolation or authority
 
 ## Context

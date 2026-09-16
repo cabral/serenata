@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-02
+- Transition: retired — **no dataset was ever published under this grant**, so nothing is licensed CC BY 4.0 today and nothing is relicensed by retiring the record. Crony publishes no datasets at all. The repository's AGPL-3.0 code licence is a separate grant and is untouched; [ADR-0014](0014-replace-serenata-with-crony.md) says why aligning the two projects' licence statements needs its own record
 - Enforced by: `tests/test_survey.py::TestRender`
 
 ## Context

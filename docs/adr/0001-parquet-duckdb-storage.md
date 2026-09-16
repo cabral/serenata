@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-12
+- Transition: carried — the storage choice outlives the dataset it was made for. Crony writes typed Parquet between stages and transforms it with DuckDB for the same reasons, and restates the decision in its own `crony-eu/docs/adr/0002-ftm-shaped-tables.md`. The twelve-table eForms dataset this record governed retires with the pipeline
 - Enforced by: `tests/test_normalise_dataset.py::TestRerunIdentity`, `tests/test_normalise_dataset.py::TestDuckDBCanQueryIt`
 
 ## Context

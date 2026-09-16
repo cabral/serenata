@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-04
+- Transition: carried — Crony's F1 is being written to this shape: a flag row carries the baseline it was measured against, so a reader can disagree with it without rerunning anything. Until that baseline is measured the flag's output is marked `uncalibrated` and cannot enter a case packet
 - Enforced by: `tests/test_classify_flags.py::TestAFlagCarriesItsEvidence` and
   `tests/test_classify_flags.py::TestRerunsAreIdentical`
 

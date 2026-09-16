@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-03
+- Transition: continuing obligation — the DCO binds every commit to this repository whoever or whatever wrote it, and the workflow that checks it is unchanged by the transition. What a sign-off certifies does not depend on which project the commit is for
 - Enforced by: `.github/workflows/dco.yml`
 
 ## Context

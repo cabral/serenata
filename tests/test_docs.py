@@ -16,6 +16,12 @@ Two things are checked, both mechanical:
   names a file that is not there teaches the next reader something false. An
   illustrative path is written with a `<placeholder>` and is skipped, which is
   also how a reader tells an example from a claim.
+
+Since [ADR-0014](../docs/adr/0014-replace-serenata-with-crony.md) this also
+reads `crony-eu/`, where the failure mode is the opposite of a rotted claim: a
+specification written before the code, naming modules that were never built. A
+planned path is a `<placeholder>` here too, so the same rule separates what
+exists from what is intended.
 """
 
 from __future__ import annotations
@@ -29,8 +35,11 @@ REPO = Path(__file__).resolve().parent.parent
 
 #: Everything a reader is expected to read. `.claude/skills/` is included
 #: because those files are rules people follow, and a rule naming a file that
-#: does not exist is a rule that cannot be followed.
-DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data", "tools", ".github")
+#: does not exist is a rule that cannot be followed. `crony-eu/` is included
+#: because ADR-0014 makes it this repository's future, and a specification for
+#: a tool nobody has built yet is the document most likely to name a file that
+#: is not there.
+DOCUMENT_ROOTS = ("docs", ".claude", "tests", "data", "tools", ".github", "crony-eu")
 
 #: A markdown link to something other than an absolute URL or a mail address.
 _LINK = re.compile(r"\[[^\]]*\]\((?!https?:|mailto:)([^)]+)\)")
@@ -46,7 +55,11 @@ _FILE_SUFFIXES = (".py", ".md", ".toml", ".yml", ".yaml", ".lock", ".cfg")
 _PLACEHOLDERS = ("<", ">", "*", "NNN", "…", " ", "|")
 
 #: Prefixes that look path-shaped and are not repository paths: the gitignored
-#: data workspace, and eForms element paths, which are full of slashes.
+#: data workspace, eForms element paths, which are full of slashes, and anything
+#: starting with a shell variable, which is by definition somewhere else.
+#: Crony's data directory is written `$CRONY_DATA_DIR/raw/` rather than `raw/`
+#: for that reason — a bare `raw/` reads like a directory here, and the one rule
+#: that project has above all others is that its data never is.
 _NOT_REPOSITORY_PATHS = (
     "data/",
     "notice/",
@@ -57,7 +70,15 @@ _NOT_REPOSITORY_PATHS = (
     "cac:",
     "cbc:",
     "ext:",
+    "$",
 )
+
+#: The tree phase 1 is specified to build and has not built. These are not
+#: illustrations — they are the real intended paths, named by a work order
+#: written before the code, and a `<placeholder>` would be a lie about that.
+#: `TestPathsNotYetBuilt` below makes the exemption expire on its own: the day
+#: the tree exists, this constant has to shrink or the tests fail.
+_NOT_YET_BUILT = ("crony-eu/src/", "crony-eu/tests/")
 
 
 def documents() -> list[Path]:
@@ -105,7 +126,7 @@ def claimed_paths() -> list[tuple[Path, str]]:
             candidate = token.strip()
             if "/" not in candidate or any(mark in candidate for mark in _PLACEHOLDERS):
                 continue
-            if candidate.startswith(_NOT_REPOSITORY_PATHS):
+            if candidate.startswith(_NOT_REPOSITORY_PATHS + _NOT_YET_BUILT):
                 continue
             if not (candidate.endswith(_FILE_SUFFIXES) or candidate.endswith("/")):
                 continue
@@ -178,3 +199,26 @@ class TestClaimsAboutFiles:
         # Proves the skip above is doing what it says rather than swallowing
         # every path in the repository.
         assert any(mark in example for mark in _PLACEHOLDERS)
+
+
+class TestPathsNotYetBuilt:
+    """An exemption for unwritten code has to stop applying once it is written.
+
+    `_NOT_YET_BUILT` lets a work order name the modules it is ordering. The
+    danger is the ordinary one: the code arrives at a slightly different path,
+    the exemption keeps swallowing the old name, and the document goes on
+    describing a module nobody built. So the exemption checks its own premise.
+    """
+
+    @pytest.mark.parametrize("prefix", _NOT_YET_BUILT)
+    def test_the_tree_really_is_absent(self, prefix: str) -> None:
+        assert not (REPO / prefix).exists(), (
+            f"{prefix} exists now, so it is no longer unbuilt. Remove it from "
+            "_NOT_YET_BUILT and let the paths inside it be checked like every "
+            "other claim in this repository."
+        )
+
+    def test_the_exemption_is_narrow(self) -> None:
+        # `crony-eu/` as a whole would exempt the specifications themselves,
+        # which is the opposite of why ADR-0014 brought them in here.
+        assert "crony-eu/" not in _NOT_YET_BUILT

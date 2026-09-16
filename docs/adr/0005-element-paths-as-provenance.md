@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-02
+- Transition: retired — element paths are eForms vocabulary. The obligation underneath it, that every value says where it came from, is carried: Crony requires the source dataset, the most specific source URL and the retrieval timestamp on everything that reaches an export
 - Enforced by: `tests/test_data_model.py::TestEveryColumnTracesToAMeasuredField`
 
 ## Context
