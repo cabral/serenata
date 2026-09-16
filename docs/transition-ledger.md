@@ -20,9 +20,12 @@ exists on `origin` as well as locally.
 serenata-europa-pre-transition` is a deliberate act and has not been performed
 by the session that created it.
 
-Nothing in this ledger deletes code. The only file removed in the reconciliation
-commit is `crony-eu-handover.zip`, and only because it was verified byte-for-byte
-identical to the `crony-eu/` tree committed alongside it.
+**Nothing in this ledger deletes anything.** The reconciliation that produced it
+removed no file. `crony-eu-handover.zip` was going to be removed, on the ground
+that it was verified byte-for-byte identical to the `crony-eu/` tree committed
+beside it, and it stopped being identical the moment that tree was committed with
+corrections applied: ten of its thirteen files now differ. It is the only copy of
+the handover as received, so it stays, and the row below says so.
 
 ## Three words, and what each one means
 
@@ -44,7 +47,7 @@ changes.
 |---|---|---|
 | `crony-eu/` | **keep** | the handover tree; committed in the reconciliation commit, with the corrections in ADR-0014 applied |
 | `scope.md` | **keep** | promoted to the canonical scope of this repository |
-| `crony-eu-handover.zip` | **retire** | verified identical to `crony-eu/`; a transport artifact, not a source |
+| `crony-eu-handover.zip` | **maintainer decides** | it was a transport artifact, byte-identical to `crony-eu/`, right up until the corrected tree was committed. It is now the only copy of the handover as received, and the difference between it and `crony-eu/` is the record of what the reconciliation changed. Two ways to retire it honestly: commit the pristine tree first so the corrections read as a diff, or decide that ADR-0014 and the revision notes in each file already say enough. Deleting it before one of those is a real loss, so it was left alone |
 
 ## Branches with commits not on `main`
 
@@ -124,3 +127,5 @@ no personal data and retires with that test.
 - The GitHub repository name, its issues and its pull requests.
 - Whether Crony eventually moves to the repository root or to a repository of
   its own.
+- Whether the handover's original text is worth having in git history as a
+  reviewable diff. The zip row above is where that question sits.
