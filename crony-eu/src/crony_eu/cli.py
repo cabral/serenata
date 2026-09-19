@@ -5,10 +5,10 @@
 [ADR-0006](../../docs/adr/0006-standard-library-only.md): phase 1 asks for
 subcommands and flags, which is what argparse is.
 
-Only `doctor` exists so far. The other subcommands named in CLAUDE.md arrive
-with the stages they drive, and a subcommand that parsed its arguments and then
-printed "not implemented" would be worse than its absence, because `--help`
-would list it as though it worked.
+`doctor`, `fetch`, `stage` and `survey` exist. The other subcommands named in
+CLAUDE.md arrive with the stages they drive, and a subcommand that parsed its
+arguments and then printed "not implemented" would be worse than its absence,
+because `--help` would list it as though it worked.
 """
 
 from __future__ import annotations
@@ -27,6 +27,11 @@ from crony_eu.config import ConfigError, data_dir, repository_root
 from crony_eu.http import build_client
 from crony_eu.paths import Layout
 from crony_eu.sources import REGISTRY, names
+from crony_eu.survey import SurveyError
+from crony_eu.survey import departements as survey_departements
+from crony_eu.survey import pairs_by_band as survey_pairs_by_band
+from crony_eu.survey import pairs_outside_the_commune_list as survey_pairs_outside
+from crony_eu.survey import write_report as write_survey_report
 
 
 @dataclass(frozen=True)
@@ -196,6 +201,75 @@ def stage(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def survey(arguments: argparse.Namespace) -> int:
+    """Print what each département would give phase 1, and write the table out.
+
+    The work order has the maintainer picking a département before session 1.
+    Picking it from the staged data means the choice can be defended: two slices
+    that look the same on a map differ by an order of magnitude in the only
+    number that decides whether a base rate can be measured at all.
+    """
+    layout = _layout()
+    try:
+        rows, staged = survey_departements(layout)
+        bands = survey_pairs_by_band(layout, arguments.scope)
+    except SurveyError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+    columns = [
+        ("departement_code", "dep", 5),
+        ("communes", "communes", 9),
+        ("population", "population", 12),
+        ("communes_buying", "buying", 8),
+        ("contracts", "contracts", 10),
+        ("suppliers", "suppliers", 10),
+        ("pairs", "pairs", 8),
+        ("pairs_above_432_12", ">=3500", 8),
+        ("people", "people", 8),
+        ("people_with_birth_key", "birth key", 10),
+    ]
+    header = "  ".join(f"{title:>{width}}" for _, title, width in columns)
+    print(header)
+    print("-" * len(header))
+    for row in sorted(rows, key=lambda one: -int(one["pairs"] or 0)):
+        print(
+            "  ".join(
+                f"{row[key] if row[key] is not None else 0:>{width},}"
+                if key != "departement_code"
+                else f"{row[key]:>{width}}"
+                for key, _, width in columns
+            )
+        )
+
+    cut = f" in {arguments.scope}" if arguments.scope else ""
+    print(f"\n  pairs by population band{cut}")
+    for band in bands:
+        print(
+            f"    {band['band']!s:<16} {band['communes']:>7,} communes  "
+            f"{band['communes_buying']:>6,} buying  {band['pairs']:>8,} pairs"
+        )
+
+    outside = survey_pairs_outside(layout)
+    print(
+        f"\n  of {sum(outside.values()):,} commune-supplier pairs nationally, "
+        f"{outside['on_a_commune']:,} land on a commune in the bands above,"
+    )
+    print(
+        f"  {outside['on_an_arrondissement']:,} on an arrondissement municipal "
+        "(Paris, Lyon and Marseille buy under those codes, so those three"
+    )
+    print(
+        f"  read as zero in the table), and {outside['on_no_published_code']:,} "
+        "on a code INSEE does not publish in this vintage."
+    )
+
+    destination = write_survey_report(layout, rows, staged)
+    print(f"\n  staged snapshots read: {staged.as_dict()}")
+    print(f"  {destination}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="crony",
@@ -238,6 +312,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="the snapshot to read; defaults to the most recent one fetched",
     )
     stager.set_defaults(run=stage)
+
+    surveyor = subcommands.add_parser(
+        "survey",
+        help="measure what each departement would give phase 1, before picking one",
+    )
+    surveyor.add_argument("subject", choices=["departements"])
+    surveyor.add_argument(
+        "--scope",
+        metavar="DEP",
+        help="a departement code, to cut the population bands to it",
+    )
+    surveyor.set_defaults(run=survey)
 
     return parser
 

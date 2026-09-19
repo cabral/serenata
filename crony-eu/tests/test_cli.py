@@ -297,3 +297,74 @@ class TestFetchAndStage:
         # typing its name.
         with pytest.raises(SystemExit):
             build_parser().parse_args(["fetch", "fr-made-up"])
+
+
+class TestSurvey:
+    """`crony survey departements`, which ends in a person making a choice.
+
+    The command's whole output is counts, so what is checked here is that it
+    reaches them from staged data and says clearly when it cannot, rather than
+    printing an empty table that reads like a département with nothing in it.
+    """
+
+    def stage_everything(self, root: Path) -> None:
+        from crony_eu.paths import Layout
+        from crony_eu.sources import fr_decp, fr_insee_pop, fr_rne_elus
+        from fakes import (
+            Elu,
+            decp_row,
+            write_decp,
+            write_populations,
+            write_rne_snapshot,
+        )
+
+        layout = Layout(root)
+        layout.create()
+
+        write_decp(
+            layout.raw(fr_decp.SOURCE, "2026-09-19") / "decp.parquet",
+            [decp_row(uid="A", acheteur_commune_code="93001")],
+        )
+        fr_decp.stage(layout, "2026-09-19")
+
+        write_populations(
+            layout.raw(fr_insee_pop.SOURCE, "2026-09-19") / fr_insee_pop.STORED,
+            [("93001", "COM", "PMUN", 1200)],
+        )
+        fr_insee_pop.stage(layout, "2026-09-19")
+
+        write_rne_snapshot(root, "2026-09-16", cm_current=[Elu(commune_code="93001")])
+        fr_rne_elus.stage(layout, "2026-09-16")
+
+    def test_it_prints_a_row_per_departement_and_writes_the_table(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.stage_everything(outside_repo)
+
+        assert main(["survey", "departements"]) == 0
+
+        output = capsys.readouterr().out
+        assert "pairs by population band" in output
+        assert "93" in output
+        assert (
+            outside_repo / "staged" / "_reports" / "survey-departements.json"
+        ).is_file()
+
+    def test_it_says_which_command_to_run_when_nothing_is_staged(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+
+        assert main(["survey", "departements"]) == 1
+        assert "crony fetch fr-decp" in capsys.readouterr().err
+
+    def test_an_unknown_subject_is_refused_by_the_parser(self) -> None:
+        with pytest.raises(SystemExit):
+            build_parser().parse_args(["survey", "communes"])
