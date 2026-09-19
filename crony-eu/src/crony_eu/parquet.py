@@ -27,7 +27,7 @@ direction that record forbids.
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -116,3 +116,50 @@ def write(
     pq.write_table(table, partial, row_group_size=ROW_GROUP_SIZE, **WRITER)
     os.replace(partial, destination)
     return int(table.num_rows)
+
+
+def write_batches(
+    batches: Iterator[pa.RecordBatch], schema: pa.Schema, destination: Path
+) -> int:
+    """Stream an already-ordered sequence of batches out, with the same bytes.
+
+    `write_arrow` needs the whole table in memory, which is fine for a million
+    élus and not for DECP: 3.28 million contract versions with a free-text
+    subject on each is a couple of gigabytes of Arrow before a byte is written.
+
+    **Row groups are cut here, not where the batches happen to end.** The
+    incoming batch sizes come from whatever DuckDB's scan produced, and they are
+    not part of this project's contract; the row group size is. So rows are
+    accumulated and flushed in `ROW_GROUP_SIZE` blocks, and the file is
+    identical to what `write_arrow` would have produced from the same rows in
+    the same order.
+
+    Ordering remains the caller's job, exactly as it is there.
+    """
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_suffix(destination.suffix + ".partial")
+
+    written = 0
+    pending: list[pa.RecordBatch] = []
+    waiting = 0
+
+    def flush(writer: pq.ParquetWriter, everything: bool) -> None:
+        nonlocal pending, waiting, written
+        while waiting >= ROW_GROUP_SIZE or (everything and waiting):
+            block = pa.Table.from_batches(pending, schema=schema)
+            group = block.slice(0, ROW_GROUP_SIZE)
+            writer.write_table(group, row_group_size=ROW_GROUP_SIZE)
+            written += group.num_rows
+            rest = block.slice(group.num_rows)
+            waiting = rest.num_rows
+            pending = rest.to_batches() if waiting else []
+
+    with pq.ParquetWriter(partial, schema, **WRITER) as writer:
+        for batch in batches:
+            pending.append(batch.select(list(schema.names)).cast(schema))
+            waiting += batch.num_rows
+            flush(writer, everything=False)
+        flush(writer, everything=True)
+
+    os.replace(partial, destination)
+    return written

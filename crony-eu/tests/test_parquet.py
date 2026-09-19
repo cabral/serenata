@@ -12,13 +12,21 @@ role date would be discovered in session 3, on real data, at the worst moment.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-from crony_eu.parquet import ROW_GROUP_SIZE, WRITER, sort_key, write, write_arrow
+from crony_eu.parquet import (
+    ROW_GROUP_SIZE,
+    WRITER,
+    sort_key,
+    write,
+    write_arrow,
+    write_batches,
+)
 
 SCHEMA = pa.schema(
     [
@@ -238,3 +246,78 @@ class TestWriteArrow:
 
         with pytest.raises(KeyError):
             write_arrow(short, SCHEMA, tmp_path / "t.parquet")
+
+
+class TestWriteBatches:
+    """Streaming a large table out has to give the file `write_arrow` would.
+
+    The reason to check that rather than assume it: the batches arriving from
+    DuckDB are whatever its scan produced, and if the row groups followed those
+    boundaries instead of `ROW_GROUP_SIZE`, two runs that read the same rows in
+    differently sized chunks would write different bytes for the same data.
+    """
+
+    def schema(self) -> pa.Schema:
+        return pa.schema([pa.field("id", pa.string()), pa.field("value", pa.int32())])
+
+    def rows(self, count: int) -> pa.Table:
+        return pa.table(
+            {
+                "id": pa.array([f"{n:08d}" for n in range(count)], pa.string()),
+                "value": pa.array(list(range(count)), pa.int32()),
+            },
+            schema=self.schema(),
+        )
+
+    def test_it_matches_the_in_memory_writer(self, tmp_path: Path) -> None:
+        table = self.rows(50_000)
+        whole = tmp_path / "whole.parquet"
+        streamed = tmp_path / "streamed.parquet"
+
+        write_arrow(table, self.schema(), whole)
+        written = write_batches(
+            iter(table.to_batches(max_chunksize=7_000)), self.schema(), streamed
+        )
+
+        assert written == table.num_rows
+        assert streamed.read_bytes() == whole.read_bytes()
+
+    def test_the_incoming_batch_size_does_not_change_the_bytes(
+        self, tmp_path: Path
+    ) -> None:
+        table = self.rows(50_000)
+        first = tmp_path / "first.parquet"
+        second = tmp_path / "second.parquet"
+
+        write_batches(iter(table.to_batches(max_chunksize=1_000)), self.schema(), first)
+        write_batches(
+            iter(table.to_batches(max_chunksize=33_333)), self.schema(), second
+        )
+
+        assert first.read_bytes() == second.read_bytes()
+
+    def test_row_groups_are_the_pinned_size(self, tmp_path: Path) -> None:
+        destination = tmp_path / "grouped.parquet"
+        write_batches(
+            iter(self.rows(45_000).to_batches(max_chunksize=999)),
+            self.schema(),
+            destination,
+        )
+        written = pq.ParquetFile(destination)
+        sizes = [
+            written.metadata.row_group(n).num_rows
+            for n in range(written.metadata.num_row_groups)
+        ]
+        assert sizes == [ROW_GROUP_SIZE, ROW_GROUP_SIZE, 5_000]
+
+    def test_an_interrupted_write_leaves_no_file_to_read(self, tmp_path: Path) -> None:
+        destination = tmp_path / "partial.parquet"
+
+        def batches() -> Iterator[pa.RecordBatch]:
+            yield from self.rows(25_000).to_batches(max_chunksize=5_000)
+            raise RuntimeError("the source went away")
+
+        with pytest.raises(RuntimeError):
+            write_batches(batches(), self.schema(), destination)
+
+        assert not destination.exists()
