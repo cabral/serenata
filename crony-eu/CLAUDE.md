@@ -4,25 +4,35 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Session 0 only.** The package exists and one command runs:
+**Sessions 0 to 2 are done.** Four commands run:
 
     uv run crony doctor
+    uv run crony fetch <source>        fr-decp, fr-insee-pop, fr-rne-elus
+    uv run crony stage <source>
+    uv run crony survey departements
 
-What is built: `crony-eu/src/crony_eu/config.py` (the data directory rules),
-`paths.py` (the layout), `http.py` (rate limiting, retries, hashed downloads and
-the manifest), `parquet.py` (byte-stable writes) and `cli.py`. Their tests are
-in `crony-eu/tests/`.
+What is built: `config.py` (the data directory rules), `paths.py` (the layout),
+`http.py` (rate limiting, retries, hashed downloads and the manifest),
+`parquet.py` (byte-stable writes, in memory and streaming), `sql.py` (the
+fragments the staging queries share), `normalize.py` (dates and French company
+identifiers), `survey.py`, `cli.py`, and three source modules: `fr_rne_elus.py`,
+`fr_decp.py` and `fr_insee_pop.py`. Their tests are in `crony-eu/tests/`.
 
-What is not: every source module, matching, judgments, review, flags and the
-export. `crony fetch`, `crony stage`, `crony match`, `crony review`,
-`crony flag`, `crony base-rate` and `crony case` do not exist as commands yet,
-deliberately, because a subcommand that parsed its flags and printed "not
-implemented" would be listed by `--help` as though it worked.
+What is not: matching, judgments, review, flags and the export. `crony match`,
+`crony review`, `crony flag`, `crony base-rate` and `crony case` do not exist as
+commands yet, deliberately, because a subcommand that parsed its flags and
+printed "not implemented" would be listed by `--help` as though it worked.
 
 Everything below describing an unbuilt module is a **specification written
 before the code**, which is the point of it. A document here that reads as
 though something exists when it does not is a bug worth fixing on its own,
-because the reader who believes it wastes an afternoon.
+because the reader who believes it wastes an afternoon. This section said
+"Session 0 only" for the whole of sessions 1 and 2, which is that bug; it is
+worth rereading at the end of a session and not only at the start.
+
+**Phase 1 has not picked its département yet.** `crony survey departements`
+exists to make that choice from measured counts rather than from a map, and the
+work order's STOP for session 2 is where the maintainer makes it.
 
 ## Where this sits
 
@@ -130,16 +140,18 @@ crony-eu/
   scripts/check_no_data.py         [built]  guards this tree; CI runs it
   src/crony_eu/
     __init__.py                    [built]
-    cli.py                         [built]  argparse; only `doctor` so far
+    cli.py                         [built]  doctor, fetch, stage, survey
     config.py                      [built]  CRONY_DATA_DIR rules
     paths.py                       [built]  data directory layout
     http.py                        [built]  rate limit, retries, hashed download, manifest
     parquet.py                     [built]  pinned writer, sorted rows, byte-stable
-    normalize.py                            names, dates, SIREN/SIRET, INSEE codes
+    normalize.py                   [built]  dates, SIREN/SIRET; names in session 4
+    sql.py                         [built]  SQL fragments the sources share
+    survey.py                      [built]  `crony survey departements`
     sources/
-      fr_rne_elus.py                        session 1
-      fr_decp.py                            session 2
-      fr_insee_pop.py                       session 2
+      fr_rne_elus.py               [built]  session 1
+      fr_decp.py                   [built]  session 2
+      fr_insee_pop.py              [built]  session 2
       fr_entreprises_api.py                 session 3: companies and officers
       fr_inpi_rne.py                        session 3, once there is an account
     match/
@@ -233,7 +245,8 @@ Changing the rule means a new rule id, never an edit in place.
 ```
 crony doctor
 crony fetch <source> [--snapshot YYYY-MM-DD]
-crony stage <source> --snapshot YYYY-MM-DD
+crony stage <source> [--snapshot YYYY-MM-DD]
+crony survey departements [--scope <departement code>]
 crony match fr --scope dep:<code>
 crony review [--flag F1] [--sample N --seed S]
 crony flag F1 --scope dep:<code>

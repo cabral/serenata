@@ -27,11 +27,15 @@ Phase 2 may make the excess-risk claim once the pair-level rate exists to compar
 
 ## Definition (phase 1)
 
-Scope: contracts in the consolidated DECP whose buyer is a commune (legal category code pinned in session 2), in the département being processed.
+Scope: contracts in the consolidated DECP whose buyer is a commune, in the département being processed.
+
+The buyer is identified by `acheteur_categorie = 'Commune'`, which is the consolidator's own classification and not a legal category code: DECP carries no catégorie juridique for buyers, and session 2 found none to pin. On the 2026-09-19 snapshot that selects 1,111,211 rows, 12,798 distinct communes and 12,815 distinct buyer SIRENs, and it is 100% populated with a commune code on those rows. It is somebody's join rather than a declaration, so a finding that turns on which commune a buyer is gets checked against the buyer's SIRET in the annuaire.
 
 A contract enters F1 when all of these hold:
 
-1. It is the latest version of the contract (`donneesActuelles` = true). Earlier versions are kept for amount history.
+1. It is the latest version of the contract. Earlier versions are kept for amount history.
+
+   **Not `donneesActuelles` = true**, although that is what this spec said before the file was read. The flag is never wrong where it is set, but 70,277 (contract, titulaire) groups on the real snapshot have no row carrying it, so selecting on it silently drops those contracts. The latest version is the highest `modification_id` per (contract, titulaire), counting a null as zero, and `contracts.parquet` is already cut that way.
 2. The supplier has a SIREN (titulaire identifier of type SIRET or SIREN).
 3. The supplier's legal category is not on the exclusion list below.
 4. An élu of the buying commune was in office on the notification date:
@@ -53,7 +57,23 @@ A hit may be **counted** whatever its overlaps say. A hit may enter a case packe
 
 Suppliers where élus usually sit because the commune appoints them: sociétés d'économie mixte (SEM), sociétés publiques locales (SPL), public bodies and public establishments, and other legal categories where a board seat is held on the commune's behalf.
 
-INSEE codes and labels: _pinned in session 2_
+INSEE codes and labels: **still not pinned, and it moved to session 3.**
+
+Session 2 was to pin them from SIRENE. It could not, and the reason is worth
+recording rather than rescheduling quietly: the only supplier category DECP
+carries is `titulaire_categorie`, and that is the INSEE **size** band (PME, ETI,
+GE), not the catégorie juridique. There is no legal category anywhere in the
+consolidated file, for suppliers or for buyers.
+
+So the exclusion list needs the legal category per supplier SIREN, and the place
+it comes from is the open company API, which session 3 already queries once per
+supplier SIREN in the slice for the officers. Pinning the codes is a session 3
+deliverable now.
+
+**Until it is pinned, F1 cannot run as specified.** Condition 3 is not a
+refinement that can be added later: a SEM whose board seats are held by
+councillors on the commune's behalf is exactly the shape this flag looks for, and
+without the exclusion it would be the flag's most confident and most wrong hit.
 
 ## Tag: possible_432_12_exception
 

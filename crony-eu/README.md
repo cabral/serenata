@@ -4,23 +4,41 @@ Links between elected officials, companies and public contracts, built from offi
 
 The idea comes from Sophie E. Hill's [My Little Crony](https://github.com/sophieehill/my-little-crony), an interactive network of UK politicians and the firms that won government contracts during the pandemic. Her network was assembled by hand from investigative journalism. This project uses public registries to propose links, and a person confirms or rejects each one.
 
-## Status: session 0 of six
+## Status: sessions 0 to 2 of six
 
-**One command runs.** `crony doctor` checks that your data directory is set,
-absolute, outside the repository and writable, that no data file has reached the
-tracked tree, and it tells you plainly which of its checks it could not perform.
+**Four commands run.** Three sources fetch and stage, and a fourth command
+measures what each French département would give phase 1, so that the slice is
+picked from counts rather than from a map.
 
 ```
 uv sync
 export CRONY_DATA_DIR=/absolute/path/outside/this/repo
 uv run crony doctor
+
+uv run crony fetch fr-rne-elus     && uv run crony stage fr-rne-elus
+uv run crony fetch fr-decp         && uv run crony stage fr-decp
+uv run crony fetch fr-insee-pop    && uv run crony stage fr-insee-pop
+uv run crony survey departements
 ```
 
+Against the real sources that gives 994,761 councillors in 34,953 communes,
+3,281,288 published contract versions consolidating to 2,188,458 current ones,
+and 318,582 distinct (commune, supplier) pairs, which is the denominator the
+flag's base rate would be measured over.
+
 Built: the data directory rules, the layout, the fetch client (rate limiting,
-retries including DNS failures, hashed downloads and a manifest), and
-byte-stable Parquet writing. Not built: every source, matching, review, the flag
-and the case packet. The sections below say what phase 1 is specified to do, in
-the future tense they deserve.
+retries including DNS failures, hashed downloads and a manifest), byte-stable
+Parquet writing in memory and streaming, date and French company identifier
+normalisation, the three source adapters and the survey. Not built: matching,
+review, the flag and the case packet. The sections below say what phase 1 is
+specified to do, in the future tense they deserve.
+
+Two things a reader should not have to discover by running it. **No département
+has been chosen yet**, so nothing is scoped to a slice. And **phase 1 is not
+expected to produce a case packet**: the officer role dates that constraint 9
+requires for an overlap have no known French source, which is what session 3 goes
+to find out. A phase 1 that ends in measured rates and no packets is a result,
+not a failure.
 
 The work order is
 [`crony-eu/docs/work-order-phase-1.md`](docs/work-order-phase-1.md).

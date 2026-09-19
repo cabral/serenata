@@ -2,7 +2,13 @@
 
 Every source the pipeline may touch in France. Field lists marked "expected" come from documentation or older files. The adapter session replaces them with the observed schema: column names, types and null rates only, never sample values (CLAUDE.md, constraint 13).
 
-Nothing here has been fetched yet. Every "expected" list is a reading of documentation, and the ones that decide whether phase 1 can produce anything at all are the officer fields: birth month precision, and dated role history.
+Three sources have been fetched and staged: the élus register (session 1), and
+DECP and the INSEE populations (session 2). Their sections carry an observed
+schema and the "expected" lists above them are kept as a record of what the
+documentation led this project to believe, which was wrong in specific ways each
+time. The lists that still decide whether phase 1 can produce anything at all are
+the officer fields, and they are unverified: birth month precision, and dated
+role history.
 
 A source not listed here is not allowed until the maintainer approves a new section.
 
@@ -141,7 +147,150 @@ then the numbered deputies down a long tail. 691,605 people hold no function,
   - a contract can have several titulaires (consortia)
   - DECP only covers contracts at or above the publication threshold set by the arrêtés of 22 December 2022. Record the current threshold here; F1's small-commune tag depends on it.
 
-Observed schema and threshold: _session 2_
+### Observed schema, session 2, fetched 2026-09-19
+
+One Parquet file, 247,431,565 bytes, 66 columns, **3,281,288 rows**, consolidated
+from 10,897 published resources across 63 platforms. The publisher's own
+`schema.json` is archived beside it in the snapshot, because it is the only way a
+later reader can tell a column this project misread from a column that changed.
+
+**The publication threshold**, which F1's small-commune tag depends on. Code de
+la commande publique art. R2196-1: the buyer publishes the données essentielles
+of a marché meeting a need worth **40,000 EUR HT or more**, on the national open
+data portal, within two months of notification. The arrêté of 22 December 2022
+(ECOM2235715A) sets the formats and the list of fields and took effect on
+1 January 2024; contracts notified before then follow the 2019 arrangements. The
+same article also covers marchés concluded under art. R2122-8 worth 25,000 EUR
+HT or more, but for those the buyer may instead publish an annual list in the
+first quarter, on a medium of its choosing, which is not this file.
+
+So **a commune that never signs a contract worth 40,000 EUR HT appears nowhere in
+DECP**, and that is a fact about the denominator rather than about the commune.
+It shows up directly in the survey: of 18,256 communes under 500 inhabitants,
+3,357 appear as buyers, against 129 of the 133 communes over 50,000.
+
+**Two column families, and they are not the same kind of fact.** The `uid`, `id`,
+`acheteur_id`, `titulaire_id`, `objet`, `montant`, `dateNotification` and the
+rest of the DECP fields are what a buyer declared. The `acheteur_*` and
+`titulaire_*` geography, category and activity columns are **enrichment the
+consolidator computed**, not anything a buyer published. Both are staged, in
+separate columns, and a case packet citing one of the second kind has to cite
+the consolidator for it. The buyer declared a SIRET; the commune code beside it
+is somebody's join.
+
+That enrichment is also what removed SIRENE from this session (see below).
+
+**Grain.** One row is one contract version, per titulaire, per lot.
+`(uid, modification_id, titulaire_id)` is **not** unique: 8,485 groups have more
+than one row, and in 8,267 of them the rows differ in `objet`, which makes them
+separate lots rather than duplicates. Collapsing them would lose money.
+`decp_row_id` is a hash of the 20 published fields staged here, and it is unique
+over the file. `titulaire_typeIdentifiant` is in that hash because without it 218
+pairs of rows are identical on every other published field and differ only in
+the case of that one value.
+
+**Choosing the latest version, and why not by the published flag.**
+
+| | rows |
+|---|---|
+| `donneesActuelles` true | 2,114,178 |
+| `donneesActuelles` false | 1,135,302 |
+| `donneesActuelles` null | 31,808 |
+
+Every flagged row does carry the highest `modification_id` for its contract, so
+the flag is never wrong. It is **absent**: 70,277 (contract, titulaire) groups
+have no row flagged at all, 43,726 of them because the flag is false on every
+row including the highest-numbered one, and 26,551 because the group has neither
+a modification id nor a flag. Filtering on the flag drops all of those contracts
+without a word, so staging takes the highest `modification_id` per
+(contract, titulaire) instead, counting a null as zero. That gives
+`contracts.parquet` **2,188,458** rows against `contract_versions.parquet`'s
+3,281,288.
+
+**Vocabularies**, controlled lists rather than data.
+
+| `acheteur_categorie` | rows | | `titulaire_categorie` | rows |
+|---|---|---|---|---|
+| Commune | 1,111,211 | | PME | 1,840,384 |
+| Groupement de communes | 613,434 | | ETI | 669,606 |
+| (null) | 482,936 | | GE | 579,324 |
+| Département | 407,654 | | (null) | 191,974 |
+| EPIC | 189,745 | | | |
+| Établissement hospitalier | 180,103 | | | |
+| Syndicat mixte | 141,402 | | | |
+| Région | 87,101 | | | |
+| État | 54,764 | | | |
+| Département outre-mer | 12,938 | | | |
+
+**`titulaire_categorie` is the INSEE size band, not the catégorie juridique.**
+That matters: the work order expected this session to build F1's exclusion list
+(SEM, SPL, public bodies, and the rest of the entities where élus sit as the
+commune's own representatives) from a legal category, and no column here carries
+one. The exclusion list cannot be built from DECP. It needs the legal category
+per supplier SIREN, which the open company API carries, so it moves to session 3.
+
+**Identifier types.** `titulaire_typeIdentifiant` carries case and punctuation
+variants of the same few types, so staging normalises them and keeps the raw
+value beside the normalised one. The published spellings folded together are
+`SIRET`/`Siret`/`siret` (227 rows in the two lowercase forms) and
+`HORS_UE`/`HORS-UE`/`HORS UE` (one row in the spaced form). A type this project has no name for passes
+through under its own: the file carries `FRW` (37), `RCI` (2) and `AUTRE` (6),
+which are nobody's identifier scheme, and inventing a mapping would be worse.
+
+| staged type | rows | | staged type | rows |
+|---|---|---|---|---|
+| SIRET | 3,181,558 | | IREP | 622 |
+| (null) | 82,444 | | UE | 403 |
+| TVA | 8,182 | | RIDET | 77 |
+| HORS_UE | 7,897 | | TAHITI | 43 |
+
+**Identifier quality.** 96.45% of rows carry a supplier SIREN and 96.22% a SIRET
+that passes its checksum; 7,572 rows carry a fourteen-digit SIRET that fails one.
+A failed checksum marks the row and never drops it: a contract is still a
+contract, and constraint 9 keeps an unverifiable link out of a packet anyway. Of
+206,055 distinct supplier SIRETs, 2,166 (1.05%) fail. The buyer side is cleaner:
+99.91% of rows carry a valid `acheteur_id`, and only 340 are not fourteen digits.
+
+**The La Poste rule, measured rather than assumed.** INSEE documents that La
+Poste's establishments (SIREN 356000000) sit outside the Luhn series and that the
+rule for them is that the fourteen digits sum to a multiple of five. The snapshot
+holds 25 of them: 20 satisfy that rule, 2 satisfy plain Luhn instead, 3 satisfy
+neither, and none satisfies both. Staging applies the documented rule only, so
+those 5 are marked invalid. La Poste's **SIREN** needs no exception; it passes
+Luhn like any other, and the first version of this code special-cased it for
+nothing.
+
+**Dates.** `dateNotification` runs from `0001-01-01` to the snapshot date, with no
+future date at all, which is the opposite of what this document predicted. 928
+rows (0.028%) fall before 1900, which is a platform's empty date rather than a
+misread column, so they are marked `dates_plausible = false` and carried under
+the same 1% rule the élus register taught. 31,808 rows have no notification date.
+
+| notification year | rows |
+|---|---|
+| 2022 | 455,293 |
+| 2023 | 485,691 |
+| 2024 | 542,961 |
+| 2025 | 582,070 |
+| 2026 (to 19 September) | 348,126 |
+
+**Amounts** fit DECIMAL(18,2) with room to spare: the largest is 99,999,999,999.99
+and the smallest is -2,676,107.00, so negative amounts exist. The consolidator
+publishes its own `montant_rationalise` and `montant_anomalie`, both staged. The
+top 0.1% of contracts by amount start at 610,000,000 EUR and number 1,397; they
+are listed by contract id in the snapshot's report.
+
+**Buyers and communes.** 12,798 distinct communes appear as buyers, under 12,815
+distinct SIRENs. Four of those SIRENs carry more than one commune code and one
+carries sixteen, so `commune_buyers.parquet` holds one row per (SIREN, commune)
+with a `commune_code_count` rather than a single value that would invent a fact.
+
+**Paris, Lyon and Marseille buy under arrondissement codes** (`75112`, not
+`75056`), which INSEE publishes as `ARM` and not `COM`. Of 318,582 distinct
+(commune, supplier) pairs nationally, 305,426 land on a commune, 10,779 on an
+arrondissement and 2,377 on a code INSEE does not publish in this vintage, of
+which 2,118 are Mayotte. `crony survey departements` reports all three rather
+than showing those three cities as communes that bought nothing.
 
 ## fr-sirene: SIRENE stock (INSEE)
 
@@ -154,7 +303,27 @@ Observed schema and threshold: _session 2_
   - supplier legal category, to separate SEM, SPL, public bodies and other entities where élus sit as the commune's representatives (pin the codes and list them in `crony-eu/docs/flags/F1-same-body.md`)
 - Gotchas: the stock files are large, so read only the needed columns with DuckDB. Record the name and values of the diffusion status field here.
 
-Observed schema: _session 2_
+**Not ingested. No `fr_sirene.py` exists and none is planned for phase 1.**
+
+Session 2 was to fetch the stock for two things. The first, mapping a buyer SIREN
+to a commune INSEE code, is already in the consolidated DECP file as
+`acheteur_commune_code`, on 99.39% of rows and 100% of the rows whose buyer is a
+commune. Fetching a multi-gigabyte national stock to recompute a column that is
+already there would be work for its own sake.
+
+The second, the supplier's **catégorie juridique** for F1's exclusion list, is
+not in DECP: `titulaire_categorie` is the INSEE size band (PME, ETI, GE). So the
+exclusion list moves to session 3, which queries the open company API once per
+supplier SIREN in the slice and gets the legal category with the officers. That
+is a narrower request than the national stock and it is a call this project was
+making anyway.
+
+What this costs: the commune mapping now comes from a **consolidator's join**
+rather than from INSEE directly, and that is recorded as its provenance wherever
+it is used. If a finding ever turns on which commune a buyer belongs to, the
+check is the buyer's SIRET against the annuaire, not this column.
+
+Observed schema: not applicable; nothing is read from it.
 
 ## fr-insee-pop: Populations légales
 
@@ -163,7 +332,52 @@ Observed schema: _session 2_
 - Phase: 1
 - Use: population band of the buying commune, for F1 base rates and the 3,500-inhabitant threshold in Code pénal art. 432-12
 
-Observed schema: _session 2_
+### Observed schema, session 2, fetched 2026-09-19
+
+**INSEE renamed these figures.** They are published as **populations de
+référence** from the 2021 vintage onward; "populations légales" is the older name
+and the one this section was written with. Same figures.
+
+- Dataset: `populations-de-reference` on data.gouv.fr, published by INSEE
+- Resource: one link to INSEE's Melodi service,
+  `https://api.insee.fr/melodi/file/DS_POPULATIONS_REFERENCE/DS_POPULATIONS_REFERENCE_2023_CSV_FR`,
+  resolved through the data.gouv.fr API like every other source so that a new
+  vintage is picked up by refetching rather than by editing a URL
+- Licence: Licence Ouverte 2.0. Frequency: annual
+- Format: a 985,016-byte zip holding two CSVs, semicolon-delimited, quoted, UTF-8.
+  The metadata one sorts first, so the data one is picked by its `_data.csv`
+  suffix rather than by position
+- Vintage **2023**, which takes legal effect on 1 January 2026. The vintage is
+  staged as a column, because a base rate computed against one vintage and
+  reported against another is off by three years of building
+
+**106,065 rows**, long format, six columns: `GEO`, `GEO_OBJECT`, `FREQ`,
+`POPREF_MEASURE`, `TIME_PERIOD`, `OBS_VALUE`. Every row is staged.
+
+| `GEO_OBJECT` | rows per measure | what it is |
+|---|---|---|
+| COM | 34,858 | communes |
+| ARR | 333 | arrondissements départementaux |
+| DEP | 100 | départements |
+| ARM | 45 | arrondissements municipaux (Paris, Lyon, Marseille) |
+| REG | 17 | régions |
+| FRANCE | 2 | métropole, and France entière |
+
+**Three measures per territory, and they are different numbers.** `PMUN` is the
+population municipale, `PCAP` the population comptée à part, `PTOT` their sum.
+`PMUN` is the one the law refers to, including the 3,500-inhabitant line in Code
+pénal art. 432-12, so it is the one F1 bands on. All three are staged; the choice
+is visible rather than baked in.
+
+**The cross-check that says the file was read right**: the commune rows, the
+arrondissement rows, the département rows and the région rows each sum to
+68,094,280, which is exactly the FRANCE row. That is why the non-commune rows are
+staged instead of filtered out at read time.
+
+**Two gaps worth stating.** This vintage excludes Mayotte (dep 976), which is why
+2,118 commune-supplier pairs land on a code with no population. And the 34,858
+communes here do not match the 34,953 in the élus register, because the two
+publish on different geography dates.
 
 ## fr-entreprises-api: API Recherche d'entreprises (DINUM)
 

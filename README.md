@@ -1,31 +1,27 @@
 # Serenata Europa
 
-An open-source pipeline that reads the EU's public procurement notices and flags
-statistical anomalies anyone can verify against the source.
-
-The EU publishes around 700,000 procurement notices a year through
-[TED](https://ted.europa.eu), since late 2024 in the machine-readable eForms
-standard. Dashboards for analysts exist. A continuously running, open pipeline
-that turns those notices into verifiable public flags is this project's goal,
-not a service it operates today.
-
-## This project is being replaced
-
-**Serenata Europa's pipeline is retiring.** In September 2026 the maintainer
-decided that this repository's purpose becomes a different project: Crony, which
-proposes links between elected officials, companies and public money from
-official open data, has a person confirm every person-to-company link, and
-publishes nothing at all. It is specified and not built. Its scope is
-[`scope.md`](scope.md), its specification is [`crony-eu/`](crony-eu/), and the
+**This repository is being handed over to a different project.** What it is for
+now is Crony: a local-first pipeline that proposes links between elected
+officials, companies and public money from official open data, has a person
+confirm every person-to-company link, and publishes nothing at all. Its scope is
+[`scope.md`](scope.md), it is specified in [`crony-eu/`](crony-eu/), and the
 decision is [ADR-0014](docs/adr/0014-replace-serenata-with-crony.md).
 
-What that means for a reader of this page:
+Serenata Europa's own pipeline, which read the EU's TED procurement notices and
+flagged statistical anomalies, is retiring. It still runs and everything
+measured about it was really measured; it is kept in one place at the end of
+this page, under [The retiring TED pipeline](#the-retiring-ted-pipeline), rather
+than mixed into what is current. [`docs/transition-ledger.md`](docs/transition-ledger.md)
+says which group each part retires in.
 
-- **Everything below about the TED pipeline is still true and still runs.** It
-  is not deleted, and the measurements in it were really measured. Retirement
-  happens in groups as the replacement for each group exists, and
-  [`docs/transition-ledger.md`](docs/transition-ledger.md) says which group each
-  part is in.
+## What the handover means
+
+In September 2026 the maintainer decided that this repository's purpose becomes
+Crony. What that means for a reader of this page:
+
+- **The TED pipeline is not deleted and is not a live concern.** It has its own
+  section at the end. Retirement happens in groups as the replacement for each
+  group exists.
 - **Milestones 2 to 6 will not happen.** Entity resolution, a public API,
   versioned bulk releases and a verification interface were this project's
   answer to "why should anyone trust this". Crony answers it differently, with a
@@ -41,18 +37,27 @@ What that means for a reader of this page:
 
 ## Start here
 
-- **[`docs/architecture.md`](docs/architecture.md)** — the five stages, and why
-  each boundary is where it is. The one page that makes the rest make sense.
-- **[`docs/glossary.md`](docs/glossary.md)** — a lot, a lot result and a lot
-  tender are three different things. This says which is which.
-- **[`docs/data-model.md`](docs/data-model.md)** — what the dataset actually
-  contains, column by column, with a measured source for each.
+**What this repository is for now:**
+
+- **[`scope.md`](scope.md)** — the canonical scope. What Crony does, what it
+  refuses to do, and what would make it not worth building.
+- **[`crony-eu/`](crony-eu/)** — the incoming project: its README, its
+  constraints, its ADRs, its source list and its phase 1 work order.
+- **[ADR-0014](docs/adr/0014-replace-serenata-with-crony.md)** — the decision to
+  replace, and [`docs/transition-ledger.md`](docs/transition-ledger.md) for what
+  happens to each piece of what it replaces.
+
+**Whichever project you are here for:**
+
 - **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — how to land a change.
 - **[`SECURITY.md`](SECURITY.md)** — how to report a problem, and why personal
   data in output is the one that takes priority.
 - **[`docs/corrections-policy.md`](docs/corrections-policy.md)** — what happens
   when a published finding turns out to be wrong. Written before the first
   finding, deliberately.
+
+The TED pipeline's own documents are listed with it, in
+[The retiring TED pipeline](#the-retiring-ted-pipeline).
 
 ## Lineage
 
@@ -77,15 +82,173 @@ published here. The lineage above is shared history, not a partnership.
 ## What a flag means
 
 A flag is a statistical anomaly matched against a documented risk indicator,
-nothing more. Flags can have innocent explanations. Every flag links to the
-source notice so you can check it yourself. The first classifier's hypothesis,
-historical base rates and predicted failure modes are in
-[docs/hypotheses/](docs/hypotheses/); **no empirical false-positive rate has been
-measured**. Project publication is restricted to institutional and company
-patterns, not identifiable natural persons. The current data does not yet
-establish that this restriction can be met for every record.
+nothing more. Flags can have innocent explanations, and a flag is never an
+accusation. That rule survives the handover, because it was never about TED.
 
-## Status
+The two projects then part company on what happens next. Serenata Europa's
+flags were meant to be published, each linking to the source notice so a reader
+could check it; what it measured, and what it never established, is in
+[the retiring pipeline's section](#the-retiring-ted-pipeline). Crony publishes
+nothing: a person confirms every person-to-company link before it can appear in
+any output, and an output goes to a named journalist or research partner rather
+than to a website. Crony's equivalent rule is that a flag whose base rate nobody
+has measured is `uncalibrated` and cannot reach a case packet
+([`crony-eu/docs/flags/`](crony-eu/docs/flags/)).
+
+## Open legal work, which does not retire
+
+Retiring code does not dispose of an archive. The TED notices already fetched
+still exist on the maintainer's machine, and the questions about them are open
+whoever answers them.
+
+**No flag has been published, and none may be yet.** Correction and withdrawal
+handling needs both a design and deterministic implementation and tests, not
+just an ADR. Publication also requires verification and a decision on unknown
+natural-person status. Counsel must review current private
+holdings as well as proposed releases: collection and storage are processing,
+even without publication. Lawful basis, retention, transparency obligations and
+whether a data protection impact assessment (DPIA) is required remain unresolved
+([ADR-0010, amended 2026-09-05](docs/adr/0010-raw-archive-retention.md)).
+This audit is not a certification of legal compliance. Legacy pre-2024 TED
+notices are refused rather than parsed, because the mapping for them has never
+been measured. [`docs/known-issues.md`](docs/known-issues.md) is the full list of
+what the pipeline does not do, or does incompletely.
+
+**Structural suppression does not remove all personal data.** That report
+documents **427 email/address-like values** in retained columns, **139
+personal-address-shaped**, with **359 in lot and procedure descriptions**.
+These are pattern counts, not a complete inventory or a legal classification
+of each value. The natural-person indicator is absent from about **90% of
+notices**; absence means unknown, not a company by default. The current patch
+closes the explicit-natural-person Company/TouchPoint `WebsiteURI` leak, but
+stored datasets still need rebuilding and the broader privacy policy remains
+unresolved. No rebuild or data publication was performed for this audit.
+
+Crony's own legal position is different and narrower, and it is stated in
+[`crony-eu/CLAUDE.md`](crony-eu/CLAUDE.md): no data in git, no personal record
+in the repository at all, elected officials and company officers held only under
+`$CRONY_DATA_DIR` on an encrypted volume, and two French rules (asset
+declarations, non-diffusible companies) enforced in code.
+
+## Layout
+
+Two projects, for as long as the handover takes. `crony-eu/` is the incoming
+one; everything else in this tree is the retiring pipeline or the repository's
+own governance.
+
+```
+scope.md        # the canonical scope: what this repository is for now
+crony-eu/       # the replacement: sessions 0 to 2 of six built, phase 1 France
+  CLAUDE.md     #   its constraints, which are not the same as this project's
+  docs/         #   its ADRs, its source list, its flag spec, its work order
+docs/
+  adr/0014-replace-serenata-with-crony.md  # the decision
+  transition-ledger.md                     # what happens to every piece below
+serenata/
+  fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
+    client.py   #   throttled, retrying HTTP access to TED's public endpoints
+    ojs.py      #   calendar date -> Official Journal S issue
+    archive.py  #   the raw archive and the manifests vouching for it
+    packages.py #   fetch a date range into the archive
+  eforms.py     # the eForms vocabulary and safe reading, shared by parse+survey
+  packages.py   # streaming notices out of an archived package, shared likewise
+  parse/        # archived notices -> typed intermediate records (eForms only)
+    notice.py   #   read one notice with structural privacy suppression
+    packages.py #   an outcome per notice: records, or why there are none
+    records.py  #   the intermediate records, keyed by element path
+    personal_data.py # the fields dropped at ingestion, executable
+  normalise/    # intermediate records -> the documented model -> Parquet
+    model.py    #   the twelve tables and their sources, executable
+    rows.py     #   one notice's records -> the model's rows
+    dataset.py  #   sorted, pinned, partitioned Parquet writing
+  classify/     # hypothesis classifiers, one module each
+  survey/       # measures which eForms fields notices populate (analysis, not a stage)
+  cli.py        # entry point: serenata fetch|normalise|classify
+tests/
+  test_constraints.py  # the hard constraints, executable
+docs/
+  architecture.md # the stages, the boundaries, and what each one guarantees
+  glossary.md   # the procurement and eForms vocabulary, defined
+  adr/          # architecture decision records
+  open-work.md  # what is open, what each item needs, where to start
+  decision-log.md # what is finished, and what building it corrected
+  corrections-policy.md # how a wrong finding gets corrected, and how fast
+  corrections/  # one file per correction made; empty until the first one
+  field-usage.md # measured eForms field usage, generated by serenata.survey
+  dataset-shape.md # what the normalised rows look like, generated likewise
+  personal-data.md # fields that can name a person, and why each is dropped
+  known-issues.md # what the pipeline does not do, or does incompletely
+  data-model.md # the relational contract: entities, provenance, absence
+  data-reuse.md # TED's reuse terms and this project's attribution
+  hypotheses/   # one file per classifier: hypothesis, sources, base rates
+data/sample/    # six notices in package layout: the end-to-end test's input
+.claude/skills/ # the working rules this project is built to, in long form
+```
+
+## Running the tests
+
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/). One command runs
+both projects' suites, which is deliberate: two suites that only ever run apart
+are two suites nobody runs together on the day they disagree.
+
+```
+git clone https://github.com/cabral/serenata
+cd serenata
+uv sync
+uv run pytest
+```
+
+Tests run offline; nothing in the default suite touches the network, and it
+refuses a socket if anything tries. Each project buys its exception separately,
+with a marker that is also excluded by default: `contract` for the TED
+assertions, `live` for Crony's. Reaching the network takes the marker and an
+explicit request for it.
+
+`uv run pytest -m contract` asserts what the TED pipeline assumes about TED (the
+Search API's `limit` cap, the `ojs-number` field, the shape of a daily package)
+against the live service, and runs weekly in CI rather than on every push. A
+stand-in cannot notice TED changing; that is the only thing that can. One of
+those tests runs the whole pipeline over [`data/sample/`](data/sample/): six
+notices in the layout TED delivers a package in, through the archive layer,
+parse, normalise, Parquet and a DuckDB query. They are synthetic, because a real
+notice carries a contact name and e-mail in 99.9% of cases and committing one to
+test that we remove personal data would leave it here permanently. What that
+leaves unproven is in [`docs/known-issues.md`](docs/known-issues.md).
+
+The constraints have automated checks as well as documentation.
+[`tests/test_constraints.py`](tests/test_constraints.py) checks on every
+run that fetch is the only stage that may import a network library, no stage
+downstream of it may read a clock or an unseeded random source, no module may
+import an NLP or LLM library, no user-facing string may call a flagged record
+`corrupt` or `fraudulent`, every classifier must have a complete hypothesis file,
+and every dependency's licence must be AGPL-3.0 compatible. Some of those gates
+have nothing to check yet. These checks cover specified patterns, fixtures and
+metadata; they do not certify privacy, legal compliance, empirical error rates
+or every possible source of nondeterminism.
+
+## The retiring TED pipeline
+
+Everything in this section is the outgoing project. It runs, and the numbers in
+it were measured rather than estimated, but it is not where new work goes. Check
+[`docs/transition-ledger.md`](docs/transition-ledger.md) before picking anything
+up here.
+
+Its documents, kept for the reader who needs them:
+[`docs/architecture.md`](docs/architecture.md) (the five stages and why each
+boundary is where it is), [`docs/glossary.md`](docs/glossary.md) (a lot, a lot
+result and a lot tender are three different things),
+[`docs/data-model.md`](docs/data-model.md) (the dataset column by column, with a
+measured source for each) and
+[`docs/known-issues.md`](docs/known-issues.md) (what it does not do, or does
+incompletely).
+
+The EU publishes around 700,000 procurement notices a year through
+[TED](https://ted.europa.eu), since late 2024 in the machine-readable eForms
+standard. Dashboards for analysts exist. A continuously running, open pipeline
+that turns those notices into verifiable public flags was this project's goal,
+and it is the goal that is being set down.
+
+### Where it got to
 
 **An eForms ingestion and normalisation prototype is built; milestone 1 is
 not complete** (September 2026). `serenata fetch`
@@ -122,16 +285,6 @@ how many withheld sentinels it carries — is
 naming the packages it measured with their checksums. It reports counts and
 never values, which is what lets it also count the contact addresses publishers
 type into fields that are not contact fields.
-
-**Structural suppression does not remove all personal data.** That report
-documents **427 email/address-like values** in retained columns, **139
-personal-address-shaped**, with **359 in lot and procedure descriptions**.
-These are pattern counts, not a complete inventory or a legal classification
-of each value. The natural-person indicator is absent from about **90% of
-notices**; absence means unknown, not a company by default. The current patch
-closes the explicit-natural-person Company/TouchPoint `WebsiteURI` leak, but
-stored datasets still need rebuilding and the broader privacy policy remains
-unresolved. No rebuild or data publication was performed for this audit.
 
 Building the stage against real notices corrected the data model three times,
 which is the point of measuring rather than reading a specification: the notice
@@ -203,62 +356,7 @@ The replacement has its own plan, in phases rather than milestones, in
 [`scope.md`](scope.md). Phase 1 is France, communes, one département, end to
 end, and it is specified and not started.
 
-## Layout
-
-Two projects, for as long as the handover takes. `crony-eu/` is the incoming
-one, specification only; everything else in this tree is the outgoing pipeline
-or the repository's own governance.
-
-```
-scope.md        # the canonical scope: what this repository is for now
-crony-eu/       # the replacement, specified and not built
-  CLAUDE.md     #   its constraints, which are not the same as this project's
-  docs/         #   its ADRs, its source list, its flag spec, its work order
-docs/
-  adr/0014-replace-serenata-with-crony.md  # the decision
-  transition-ledger.md                     # what happens to every piece below
-serenata/
-  fetch/        # TED API + bulk download, raw XML archiving (the only networked stage)
-    client.py   #   throttled, retrying HTTP access to TED's public endpoints
-    ojs.py      #   calendar date -> Official Journal S issue
-    archive.py  #   the raw archive and the manifests vouching for it
-    packages.py #   fetch a date range into the archive
-  eforms.py     # the eForms vocabulary and safe reading, shared by parse+survey
-  packages.py   # streaming notices out of an archived package, shared likewise
-  parse/        # archived notices -> typed intermediate records (eForms only)
-    notice.py   #   read one notice with structural privacy suppression
-    packages.py #   an outcome per notice: records, or why there are none
-    records.py  #   the intermediate records, keyed by element path
-    personal_data.py # the fields dropped at ingestion, executable
-  normalise/    # intermediate records -> the documented model -> Parquet
-    model.py    #   the twelve tables and their sources, executable
-    rows.py     #   one notice's records -> the model's rows
-    dataset.py  #   sorted, pinned, partitioned Parquet writing
-  classify/     # hypothesis classifiers, one module each
-  survey/       # measures which eForms fields notices populate (analysis, not a stage)
-  cli.py        # entry point: serenata fetch|normalise|classify
-tests/
-  test_constraints.py  # the hard constraints, executable
-docs/
-  architecture.md # the stages, the boundaries, and what each one guarantees
-  glossary.md   # the procurement and eForms vocabulary, defined
-  adr/          # architecture decision records
-  open-work.md  # what is open, what each item needs, where to start
-  decision-log.md # what is finished, and what building it corrected
-  corrections-policy.md # how a wrong finding gets corrected, and how fast
-  corrections/  # one file per correction made; empty until the first one
-  field-usage.md # measured eForms field usage, generated by serenata.survey
-  dataset-shape.md # what the normalised rows look like, generated likewise
-  personal-data.md # fields that can name a person, and why each is dropped
-  known-issues.md # what the pipeline does not do, or does incompletely
-  data-model.md # the relational contract: entities, provenance, absence
-  data-reuse.md # TED's reuse terms and this project's attribution
-  hypotheses/   # one file per classifier: hypothesis, sources, base rates
-data/sample/    # six notices in package layout: the end-to-end test's input
-.claude/skills/ # the working rules this project is built to, in long form
-```
-
-## Fetching notices
+### Fetching notices
 
 TED publishes one package per publication day, addressed by its Official
 Journal S issue number. `fetch` resolves the dates you ask for to those issues
@@ -285,7 +383,7 @@ notice, spaces its requests, backs off when asked to, and identifies itself in
 its User-Agent. [ADR-0002](docs/adr/0002-fetch-daily-bulk-packages.md) records
 why, and the verified facts about TED's interfaces behind it.
 
-## Parsing notices
+### Parsing notices
 
 `parse` turns an archived package into typed records, offline. Values are keyed
 by the element path they came from, so every one of them says where it came
@@ -327,7 +425,7 @@ and why. Nothing is skipped quietly: a stage that dropped what it could not read
 would leave gaps nobody could see, and one that raised would end the run at the
 first bad notice — losing the rest just as silently.
 
-## Normalising notices
+### Normalising notices
 
 `normalise` reads archived packages and writes the model in
 [`docs/data-model.md`](docs/data-model.md) as Parquet, partitioned by the
@@ -366,41 +464,6 @@ Rerunning a package rewrites its own files, byte for byte identically. A notice
 that cannot be read, or that the model cannot map, is reported and counted
 rather than dropped, and the command exits non-zero when a run loses one.
 
-## Running the tests
-
-Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
-
-```
-git clone https://github.com/cabral/serenata
-cd serenata
-uv sync
-uv run pytest
-```
-
-Tests run offline; nothing in the default suite touches the network, and it
-refuses a socket if anything tries. The exception asks for itself twice:
-`uv run pytest -m contract` asserts what this project assumes about TED — the
-Search API's `limit` cap, the `ojs-number` field, the shape of a daily package —
-against the live service, and runs weekly in CI rather than on every push. A
-stand-in cannot notice TED changing; that is the only thing that can. One of them runs the whole pipeline over
-[`data/sample/`](data/sample/) — six notices in the layout TED delivers a
-package in, through the archive layer, parse, normalise, Parquet and a DuckDB
-query. They are synthetic, because a real notice carries a contact name and
-e-mail in 99.9% of cases and committing one to test that we remove personal data
-would leave it here permanently. What that leaves unproven is in
-[`docs/known-issues.md`](docs/known-issues.md).
-
-The constraints have automated checks as well as documentation.
-[`tests/test_constraints.py`](tests/test_constraints.py) checks on every
-run that fetch is the only stage that may import a network library, no stage
-downstream of it may read a clock or an unseeded random source, no module may
-import an NLP or LLM library, no user-facing string may call a flagged record
-`corrupt` or `fraudulent`, every classifier must have a complete hypothesis file,
-and every dependency's licence must be AGPL-3.0 compatible. Some of those gates
-have nothing to check yet. These checks cover specified patterns, fixtures and
-metadata; they do not certify privacy, legal compliance, empirical error rates
-or every possible source of nondeterminism.
-
 ## Contributing
 
 Early days. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the page to read: setup,
@@ -436,12 +499,14 @@ datasets carry.
 
 ## License
 
-[AGPL-3.0](LICENSE) for the code. The incoming project's documents say
-AGPL-3.0-**or-later**, and the two statements have not been reconciled; that is
-a licensing change touching every existing contributor's sign-off, so it gets
-its own decision record rather than a quiet edit. The original Serenata used MIT; this project
-uses AGPL so that hosted forks of the pipeline stay open, which matters for a
-project whose entire value is that you can check its work.
+[AGPL-3.0-only](LICENSE), one licence for the whole repository, incoming
+project included. The handover asked for AGPL-3.0-or-later; adopting it would
+relicense every existing contribution and needs every contributor's agreement,
+so it was declined rather than typed
+([crony-eu ADR-0005](crony-eu/docs/adr/0005-one-licence-for-the-repository.md)).
+The original Serenata used MIT; this project uses AGPL so that hosted forks stay
+open, which matters for a project whose entire value is that you can check its
+work.
 
 Published datasets and findings are
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse them, including

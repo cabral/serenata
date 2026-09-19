@@ -26,7 +26,7 @@ Progress:
 
 - [x] Session 0: bootstrap. Package, config, paths, http, parquet, `crony doctor`, both suites from one pytest, the data guard in CI. Two decisions it forced: ADR-0005 (one licence, AGPL-3.0-only) and ADR-0006 (standard library, no typer/rich/jinja2/vis-network).
 - [x] Session 1: élus. Four files fetched and staged: 1,066,291 rows, 994,761 people, birth key present on 100%. Found and fixed a silent date bug (the pre-election extracts publish a two-digit year, which `%d/%m/%Y` accepts), and added a plausibility gate that tells a misread file from a register typo. Observed schema in `crony-eu/docs/sources/france.md`.
-- [ ] Session 2: contracts, buyers, populations
+- [x] Session 2: contracts, buyers, populations. DECP (3,281,288 versions -> 2,188,458 latest, 12,833 commune-buyer mappings) and the INSEE populations de référence 2023 staged; SIREN/SIRET checks with the La Poste rule; `crony survey departements` added so the slice is picked from counts. Three findings changed the plan: `donneesActuelles` is absent on 70,277 contract groups so the latest version is taken from `modification_id`; `titulaire_categorie` is the size band, not the catégorie juridique, so **F1's exclusion list moves to session 3**; and Paris, Lyon and Marseille buy under arrondissement codes, which the survey now reports rather than showing as zero. SIRENE is not ingested. **The département is not picked yet**: that is this session's STOP.
 - [ ] Session 3: supplier officers and role history (**feasibility gate**)
 - [ ] Session 4: matching and review
 - [ ] Session 5: F1 and pair rates
@@ -79,16 +79,16 @@ Tests: a fixture builder that generates élu rows with invented names; stage rou
 
 Accept when: staging runs on the real files for the chosen département, row counts per file appear in the manifest, and `elu_row_id` is unique.
 
-## Session 2: fr-decp, fr-sirene, fr-insee-pop
+## Session 2: fr-decp, fr-insee-pop (and not fr-sirene)
 
 Deliver:
 
 - DECP: fetch the consolidated Parquet; stage `contracts.parquet` (latest version of each contract) and `contract_versions.parquet` (every version)
 - identifiers: SIRET as 14 digits and SIREN as 9, both checked with the Luhn algorithm. La Poste establishments are a known exception to the SIRET checksum; find INSEE's documented rule and test it.
 - amounts as DECIMAL(18,2) in EUR, notification dates as DATE. Contracts whose titulaire has no SIRET or SIREN stay in the table with `supplier_has_siren = false`.
-- SIRENE: stage `units.parquet` with siren, legal_category, admin_status, creation_date, headcount_band, diffusion_status, head_office_commune_code (from head-office establishment rows). Read only the needed columns.
-- `commune_buyers.parquet`: siren -> commune_code, for units whose legal category is commune
-- the F1 exclusion list (SEM, SPL, public bodies and similar): INSEE codes and labels written into `crony-eu/docs/flags/F1-same-body.md`
+- ~~SIRENE: stage `units.parquet`~~ **Not done, and not to be done.** The consolidated DECP already carries `acheteur_commune_code` on 100% of commune-buyer rows, so the national stock is not fetched to recompute it. See `crony-eu/docs/sources/france.md`.
+- `commune_buyers.parquet`: siren -> commune_code, from DECP's `acheteur_categorie = 'Commune'` rather than from a SIRENE legal category, since DECP publishes no legal category at all. One row per (SIREN, commune): four SIRENs carry more than one commune code and one carries sixteen.
+- ~~the F1 exclusion list (SEM, SPL, public bodies and similar)~~ **Moved to session 3.** DECP's only supplier category is the INSEE size band (PME, ETI, GE). The catégorie juridique the exclusion list needs comes from the open company API, which session 3 queries per supplier SIREN anyway. Until it is pinned, F1 cannot run as specified: a SEM whose seats are held by councillors on the commune's behalf is the flag's most confident wrong hit.
 - INSEE population by commune code, latest vintage
 - a data-quality report in `$CRONY_DATA_DIR/staged/_reports/` with aggregates only: DECP rows in scope, share of buyers mapped to a commune, share of suppliers with a SIREN, share of suppliers found in SIRENE, and amount outliers (top 0.1% by amount, listed by contract id)
 - **the pair count**: distinct (commune, supplier) pairs with at least one contract in scope, by population band. This is F1's denominator and it is worth knowing before session 5 that it exists in usable numbers.
