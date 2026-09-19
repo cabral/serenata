@@ -144,3 +144,92 @@ def birth_ym(value: date | None) -> str | None:
     that has one.
     """
     return None if value is None else f"{value.year:04d}-{value.month:02d}"
+
+
+# --- French company identifiers ---------------------------------------------
+#
+# A SIREN identifies a legal unit (9 digits); a SIRET identifies one of its
+# establishments (the same 9 digits, then a 5-digit NIC). Both carry a Luhn
+# check digit, and checking it is worth the lines: DECP's supplier identifier is
+# keyed in by the buyer, and a mistyped SIRET that still matches `\d{14}` would
+# join a contract to whichever company happens to own that number.
+#
+# Validity is recorded, never used to drop a row. A contract whose supplier
+# identifier fails the check is still a contract, and F1 needs it in the
+# denominator; what it must not do is claim that identifier means a company.
+
+#: La Poste's SIREN. Its *establishments* are the documented exception to the
+#: checksum: the SIRET series was allocated outside the Luhn rule, and the
+#: published rule for them is instead that the sum of the fourteen digits is a
+#: multiple of five. Without it, every one of them reads as a typo.
+#:
+#: The SIREN itself needs no exception; it passes Luhn like any other. The first
+#: version of this module special-cased it too, and the test that asserted the
+#: exception was needed is what showed it was not.
+LA_POSTE_SIREN = "356000000"
+
+
+def digits(value: str | None) -> str | None:
+    """The digits in a published identifier, or `None` when there are none.
+
+    Published SIRETs arrive with spaces and non-breaking spaces in them, because
+    that is how they are displayed and how they get pasted. Stripping anything
+    that is not a digit is safe here precisely because the length and the
+    checksum are both checked afterwards.
+    """
+    if value is None:
+        return None
+    kept = "".join(character for character in value if character.isdigit())
+    return kept or None
+
+
+def luhn_ok(number: str) -> bool:
+    """The Luhn check, over a string that is already all digits.
+
+    Every second digit counting from the right is doubled, a doubled value over
+    nine has nine subtracted, and the total is a multiple of ten.
+    """
+    total = 0
+    for offset, character in enumerate(reversed(number)):
+        digit = int(character)
+        if offset % 2 == 1:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        total += digit
+    return total % 10 == 0
+
+
+def siren_valid(value: str | None) -> bool:
+    """Whether `value` is nine digits with a correct check digit."""
+    cleaned = digits(value)
+    if cleaned is None or len(cleaned) != 9:
+        return False
+    return luhn_ok(cleaned)
+
+
+def siret_valid(value: str | None) -> bool:
+    """Whether `value` is fourteen digits with a correct check digit.
+
+    La Poste takes the documented alternative rule rather than an exemption: its
+    establishments are still checked, against the rule that applies to them.
+    """
+    cleaned = digits(value)
+    if cleaned is None or len(cleaned) != 14:
+        return False
+    if cleaned.startswith(LA_POSTE_SIREN):
+        return sum(int(character) for character in cleaned) % 5 == 0
+    return luhn_ok(cleaned)
+
+
+def siren_of(value: str | None) -> str | None:
+    """The SIREN inside a SIRET, or a SIREN passed through.
+
+    Shape only: a nine-digit prefix is what a SIREN is, and whether it checks
+    out is a separate question this does not answer. Callers that need the
+    answer ask `siren_valid`, and the staged tables carry both.
+    """
+    cleaned = digits(value)
+    if cleaned is None or len(cleaned) not in (9, 14):
+        return None
+    return cleaned[:9]

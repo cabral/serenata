@@ -19,10 +19,16 @@ import pytest
 from crony_eu.normalize import (
     DATE_SHAPES,
     EARLIEST_PLAUSIBLE_YEAR,
+    LA_POSTE_SIREN,
     DateFormatError,
     birth_ym,
+    digits,
+    luhn_ok,
     parse_date,
     plausible,
+    siren_of,
+    siren_valid,
+    siret_valid,
 )
 
 #: Any snapshot date does; it is what places a two-digit year in a century.
@@ -158,3 +164,112 @@ class TestTheShapeListIsClosed:
         from crony_eu.sources import fr_rne_elus
 
         assert fr_rne_elus.DATE_SHAPES is DATE_SHAPES
+
+
+# --- identifiers -------------------------------------------------------------
+
+
+def with_luhn(body: str) -> str:
+    """`body` plus the check digit that makes it pass, for generated cases.
+
+    Written out rather than imported from the module under test: a fixture that
+    borrowed the implementation would agree with a wrong implementation.
+    """
+    total = 0
+    for offset, character in enumerate(reversed(body + "0")):
+        digit = int(character)
+        if offset % 2 == 1:
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        total += digit
+    return body + str((10 - total % 10) % 10)
+
+
+class TestDigits:
+    def test_it_keeps_only_digits(self) -> None:
+        assert digits("732 829 320") == "732829320"
+
+    def test_it_survives_the_non_breaking_space_a_paste_brings(self) -> None:
+        # Written as an escape rather than the character: a NO-BREAK SPACE
+        # in a source file is invisible to the next reader, which is the
+        # same property that puts it in a pasted identifier.
+        assert digits("732\u00a0829\u00a0320") == "732829320"
+
+    def test_nothing_to_keep_is_none_rather_than_an_empty_string(self) -> None:
+        assert digits("n/a") is None
+        assert digits("") is None
+        assert digits(None) is None
+
+
+class TestSiren:
+    def test_a_valid_siren_passes(self) -> None:
+        assert siren_valid(with_luhn("73282932")) is True
+
+    def test_a_wrong_check_digit_fails(self) -> None:
+        valid = with_luhn("73282932")
+        wrong = valid[:8] + str((int(valid[8]) + 1) % 10)
+        assert siren_valid(wrong) is False
+
+    def test_the_right_digits_at_the_wrong_length_fail(self) -> None:
+        assert siren_valid(with_luhn("7328293")) is False
+        assert siren_valid(with_luhn("732829321")) is False
+
+    def test_la_poste_needs_no_exception_at_siren_level(self) -> None:
+        # The documented exception is about La Poste's establishments, not its
+        # legal unit. This test is here because the module special-cased the
+        # SIREN too until this assertion said it did not have to.
+        assert luhn_ok(LA_POSTE_SIREN) is True
+        assert siren_valid(LA_POSTE_SIREN) is True
+
+
+class TestSiret:
+    def test_a_valid_siret_passes(self) -> None:
+        assert siret_valid(with_luhn("7328293200007")) is True
+
+    def test_a_transposition_is_caught(self) -> None:
+        # Luhn's reason for existing: two adjacent digits swapped.
+        valid = with_luhn("7328293200007")
+        swapped = valid[:2] + valid[3] + valid[2] + valid[4:]
+        assert valid != swapped
+        assert siret_valid(swapped) is False
+
+    def test_la_poste_follows_the_digit_sum_rule_instead(self) -> None:
+        # INSEE documents this: the sum of the fourteen digits is a multiple of
+        # five, because La Poste's establishment numbers were allocated outside
+        # the Luhn series.
+        establishment = LA_POSTE_SIREN + "00001"
+        assert sum(int(c) for c in establishment) % 5 == 0
+        assert luhn_ok(establishment) is False
+        assert siret_valid(establishment) is True
+
+    def test_a_la_poste_number_failing_that_rule_is_still_invalid(self) -> None:
+        # The exception is another rule, not an exemption from checking.
+        establishment = LA_POSTE_SIREN + "00002"
+        assert sum(int(c) for c in establishment) % 5 != 0
+        assert siret_valid(establishment) is False
+
+
+class TestSirenOf:
+    def test_a_siret_starts_with_its_siren(self) -> None:
+        siren = with_luhn("73282932")
+        siret = with_luhn(siren + "0000")
+        assert siret.startswith(siren)
+        assert siren_of(siret) == siren
+
+    def test_a_siren_passes_through(self) -> None:
+        siren = with_luhn("73282932")
+        assert siren_of(siren) == siren
+
+    def test_any_other_length_has_no_siren_in_it(self) -> None:
+        assert siren_of("1234") is None
+        assert siren_of(None) is None
+
+    def test_it_reports_shape_and_not_validity(self) -> None:
+        # Deliberate: the staged tables carry the digits and the verdict in
+        # separate columns, so a failed checksum is a fact about a contract
+        # rather than a reason to lose it.
+        # Nine zeros are not a company, and they pass Luhn, which is the whole
+        # reason a checksum is a shape check and not an existence check.
+        assert siren_of("000000001") == "000000001"
+        assert siren_valid("000000001") is False

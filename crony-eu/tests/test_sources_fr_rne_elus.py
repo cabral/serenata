@@ -595,3 +595,37 @@ class TestTheFixtureIsHonest:
         assert {entry["path"] for entry in recorded} == {
             published.filename for published in fr_rne_elus.FILES
         }
+
+
+class TestIdentitiesSurviveNulls:
+    """A NULL in a hashed field must not merge two rows into one id.
+
+    64.86% of the real register's rows carry a NULL `Libellé de la fonction`,
+    because most councillors hold no delegated function. The ids were built with
+    `concat_ws`, which drops a NULL argument instead of leaving its separator,
+    so the hashed string for a row with a function start and no label was
+    identical to one with a label and no start. Nothing in the published file
+    collides on it, which is exactly why it needed a test rather than a
+    reported bug.
+    """
+
+    def test_a_missing_label_and_a_missing_start_stay_apart(
+        self, outside_repo: Path
+    ) -> None:
+        Layout(outside_repo).create()
+        write_rne_snapshot(
+            outside_repo,
+            SNAPSHOT,
+            cm_current=[
+                Elu(surname="UNDEUX", function_label="", function_start="2026-03-25"),
+                Elu(surname="UNDEUX", function_label="2026-03-25", function_start=""),
+            ],
+        )
+        stage(Layout(outside_repo), SNAPSHOT)
+
+        counted = (
+            staged(outside_repo, "elus")
+            .aggregate("count(*), count(DISTINCT elu_row_id)")
+            .fetchone()
+        )
+        assert counted == (2, 2)

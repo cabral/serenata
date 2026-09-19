@@ -49,6 +49,7 @@ from crony_eu.normalize import (
 )
 from crony_eu.parquet import write_arrow
 from crony_eu.paths import Layout
+from crony_eu.sql import identity, plausible_date
 
 SOURCE = "fr-rne-elus"
 
@@ -139,14 +140,6 @@ OPTIONAL_COLUMNS = {
 #: parse, the "which row was bad" report and the plausibility gate all walk the
 #: same list.
 DATE_COLUMNS = ("birth_date_raw", "mandate_start_raw", "function_start_raw")
-
-
-def _plausible_sql(expression: str, pivot: str) -> str:
-    """Whether a parsed date falls in the window this project believes."""
-    return (
-        f"({expression} IS NULL OR (year({expression}) >= {EARLIEST_PLAUSIBLE_YEAR} "
-        f"AND {expression} <= DATE '{pivot}'))"
-    )
 
 
 def date_sql(column: str, pivot: str) -> str:
@@ -286,7 +279,8 @@ def _select(published: SourceFile, path: Path, retrieved_at: str, pivot: str) ->
         return date_sql(column, pivot)
 
     plausible_row = " AND ".join(
-        _plausible_sql(as_date(column), pivot) for column in DATE_COLUMNS
+        plausible_date(as_date(column), EARLIEST_PLAUSIBLE_YEAR, pivot)
+        for column in DATE_COLUMNS
     )
     function_label = (
         f"'{published.function_label}'"
@@ -300,18 +294,26 @@ def _select(published: SourceFile, path: Path, retrieved_at: str, pivot: str) ->
     # The identity of a function row, and of the person holding it. The person
     # id drops the two function fields and nothing else, so two rows for one
     # councillor who is also the mayor group together.
-    person_parts = (
-        f"'{published.snapshot_kind}', '{MANDATE}', surname_raw, given_raw, "
-        "birth_date_raw, commune_code, mandate_start_raw"
-    )
-    row_parts = (
-        f"'{published.key}', {person_parts}, {function_label}, function_start_raw"
-    )
+    person_parts = [
+        f"'{published.snapshot_kind}'",
+        f"'{MANDATE}'",
+        "surname_raw",
+        "given_raw",
+        "birth_date_raw",
+        "commune_code",
+        "mandate_start_raw",
+    ]
+    row_parts = [
+        f"'{published.key}'",
+        *person_parts,
+        function_label,
+        "function_start_raw",
+    ]
 
     return f"""
         SELECT
-            sha256(concat_ws('|', {row_parts}))           AS elu_row_id,
-            sha256(concat_ws('|', {person_parts}))        AS elu_person_id,
+            {identity(row_parts)}                         AS elu_row_id,
+            {identity(person_parts)}                      AS elu_person_id,
             '{published.key}'                             AS source_file,
             '{published.snapshot_kind}'                   AS snapshot_kind,
             '{MANDATE}'                                   AS mandate_type,
@@ -400,7 +402,7 @@ def _check_dates(
             continue
 
         parsed = date_sql(column, pivot)
-        believable = _plausible_sql("parsed", pivot)
+        believable = plausible_date("parsed", EARLIEST_PLAUSIBLE_YEAR, pivot)
         counted = connection.execute(
             f"""
             SELECT
