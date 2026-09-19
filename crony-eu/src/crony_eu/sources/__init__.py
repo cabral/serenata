@@ -21,7 +21,7 @@ from typing import Any, Protocol
 
 from crony_eu.http import SourceClient
 from crony_eu.paths import Layout
-from crony_eu.sources import fr_decp, fr_rne_elus
+from crony_eu.sources import fr_decp, fr_insee_pop, fr_rne_elus
 
 
 class Source(Protocol):
@@ -43,6 +43,7 @@ class Source(Protocol):
 #: Name -> module. The CLI's whole knowledge of which sources exist.
 REGISTRY: dict[str, Source] = {
     fr_decp.SOURCE: fr_decp,
+    fr_insee_pop.SOURCE: fr_insee_pop,
     fr_rne_elus.SOURCE: fr_rne_elus,
 }
 
