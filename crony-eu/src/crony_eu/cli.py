@@ -225,7 +225,7 @@ def survey(arguments: argparse.Namespace) -> int:
         ("contracts", "contracts", 10),
         ("suppliers", "suppliers", 10),
         ("pairs", "pairs", 8),
-        ("pairs_above_432_12", ">=3500", 8),
+        ("pairs_above_432_12", ">3500", 8),
         ("people", "people", 8),
         ("people_with_birth_key", "birth key", 10),
     ]

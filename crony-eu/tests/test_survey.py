@@ -110,11 +110,15 @@ class TestDepartements:
         build(
             layout,
             contracts,
-            [("93001", "COM", "PMUN", 1200), ("93002", "COM", "PMUN", 9000)],
+            [
+                ("93001", "COM", "PMUN", survey.ARTICLE_432_12_CEILING),
+                ("93002", "COM", "PMUN", survey.ARTICLE_432_12_CEILING + 1),
+            ],
         )
         rows, _ = survey.departements(layout)
         found = {row["departement_code"]: row for row in rows}["93"]
         assert found["pairs"] == 2
+        # Exactly on the ceiling is inside the exception, so it is not "above".
         assert found["pairs_above_432_12"] == 1
 
     def test_a_departement_that_bought_nothing_still_has_a_row(
@@ -132,18 +136,31 @@ class TestDepartements:
 
 
 class TestBands:
-    def test_the_3500_line_falls_between_two_bands(self, layout: Layout) -> None:
+    def test_the_432_12_line_is_inclusive_at_the_top(self, layout: Layout) -> None:
+        # "3 500 habitants au plus" is 3,500 or fewer, so a commune of exactly
+        # 3,500 belongs in the lower band. The first version banded at
+        # `>= 3500` and put it in the upper one.
         build(
             layout,
             [
                 decp_row(uid="A", acheteur_commune_code="93001"),
                 decp_row(uid="B", acheteur_commune_code="93002"),
             ],
-            [("93001", "COM", "PMUN", 3499), ("93002", "COM", "PMUN", 3500)],
+            [("93001", "COM", "PMUN", 3500), ("93002", "COM", "PMUN", 3501)],
         )
         bands = {row["band"]: row["pairs"] for row in survey.pairs_by_band(layout)}
-        assert bands["500 to 3,499"] == 1
-        assert bands["3,500 to 9,999"] == 1
+        assert bands["501 to 3,500"] == 1
+        assert bands["3,501 to 10,000"] == 1
+
+    def test_the_bands_are_the_ones_the_flag_spec_lists(self) -> None:
+        # Copied from `crony-eu/docs/flags/F1-same-body.md`, not invented here.
+        assert [label for _, label in survey.BANDS] == [
+            "up to 500",
+            "501 to 3,500",
+            "3,501 to 10,000",
+            "10,001 to 50,000",
+            "above 50,000",
+        ]
 
     def test_a_scope_cuts_the_bands_to_one_departement(self, layout: Layout) -> None:
         build(

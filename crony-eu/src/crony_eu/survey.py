@@ -28,16 +28,24 @@ import duckdb
 from crony_eu.paths import Layout
 from crony_eu.sources import fr_decp, fr_insee_pop, fr_rne_elus
 
-#: Population bands, by the lower bound of each. The 3,500 line is not a round
-#: number chosen for readability: it is the threshold in Code pénal art. 432-12,
-#: which changes what the offence requires and is therefore the tag F1 sets.
+#: Population bands, by the lower bound of each, copied from the band list in
+#: `crony-eu/docs/flags/F1-same-body.md` rather than chosen here.
+#:
+#: **Every bound is inclusive at the top.** Code pénal art. 432-12 gives its
+#: exception in communes of "3 500 habitants au plus", 3,500 or fewer, so a
+#: commune of exactly 3,500 is inside the exception and not above it. The first
+#: version of this module banded at `>= 3500` and put it above, which disagreed
+#: with the flag spec by one inhabitant. Two communes sit exactly on the line.
 BANDS: tuple[tuple[int, str], ...] = (
-    (0, "under 500"),
-    (500, "500 to 3,499"),
-    (3_500, "3,500 to 9,999"),
-    (10_000, "10,000 to 49,999"),
-    (50_000, "50,000 and over"),
+    (0, "up to 500"),
+    (501, "501 to 3,500"),
+    (3_501, "3,501 to 10,000"),
+    (10_001, "10,001 to 50,000"),
+    (50_001, "above 50,000"),
 )
+
+#: The population at or below which art. 432-12's exception can apply.
+ARTICLE_432_12_CEILING = 3_500
 
 
 class SurveyError(Exception):
@@ -129,7 +137,9 @@ def departements(layout: Layout) -> tuple[list[dict[str, Any]], Staged]:
     The columns are chosen to answer one question, which is whether a slice can
     produce a measurable rate. `pairs` is F1's denominator, `people_with_birth_key`
     is how much of the élu side can be matched at all, and `pairs_above_432_12`
-    is how many of those pairs sit in a commune over the 3,500-inhabitant line.
+    is how many of those pairs sit in a commune **above** the 3,500-inhabitant
+    line, so a commune of exactly 3,500 is not counted: art. 432-12's exception
+    covers it.
     """
     connection, staged = _connect(layout)
     try:
@@ -169,7 +179,8 @@ def departements(layout: Layout) -> tuple[list[dict[str, Any]], Staged]:
             paired AS (
                 SELECT k.departement_code,
                        count(*)                               AS pairs,
-                       count(*) FILTER (k.population >= 3500) AS pairs_above
+                       count(*) FILTER (
+                           k.population > {ARTICLE_432_12_CEILING}) AS pairs_above
                 FROM (SELECT DISTINCT commune_code, supplier_siren
                       FROM contract WHERE supplier_siren IS NOT NULL) p
                 JOIN commune k USING (commune_code)

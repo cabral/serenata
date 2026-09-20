@@ -166,8 +166,8 @@ first quarter, on a medium of its choosing, which is not this file.
 
 So **a commune that never signs a contract worth 40,000 EUR HT appears nowhere in
 DECP**, and that is a fact about the denominator rather than about the commune.
-It shows up directly in the survey: of 18,256 communes under 500 inhabitants,
-3,357 appear as buyers, against 129 of the 133 communes over 50,000.
+It shows up directly in the survey: of 18,269 communes of up to 500 inhabitants,
+3,360 appear as buyers, against 129 of the 133 communes above 50,000.
 
 **Two column families, and they are not the same kind of fact.** The `uid`, `id`,
 `acheteur_id`, `titulaire_id`, `objet`, `montant`, `dateNotification` and the
