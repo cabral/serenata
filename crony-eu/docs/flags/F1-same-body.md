@@ -51,6 +51,15 @@ Each hit row carries: contract id, buyer SIREN and commune code, supplier SIREN,
 
 A hit may be **counted** whatever its overlaps say. A hit may enter a case packet only when `mandate_overlap` and `role_overlap` are both `true`, the judgment is `confirmed`, the supplier may be redistributed, and this spec's base-rate tables are filled. That is CLAUDE.md constraint 11, restated here because this is the flag it was written for.
 
+[ADR-0007](../adr/0007-consolidator-derived-attributes.md) also requires a
+separate maintainer verification of the contract's buyer SIRET as the claimed
+commune, against archived official evidence. The review is bound to the DECP
+snapshot, row and derived values and to the official evidence. Missing,
+ambiguous or conflicting evidence blocks the packet; a confirmed person-company
+judgment cannot substitute for this check. Exported enrichment still cites the
+consolidator, alongside the separate verification evidence. This gate is not
+implemented yet.
+
 `role_overlap = unknown` is expected to be common, and how common is one of the numbers session 3 reports. A département where it is the usual answer is a département where F1 can describe a rate and cannot produce a single packet, and that outcome is reported rather than worked around.
 
 ## Exclusion list (reported separately, never flagged)
@@ -118,7 +127,7 @@ Method (session 5):
 
 - population bands: up to 500; 501 to 3,500; 3,501 to 10,000; 10,001 to 50,000; above 50,000
 - observed rate: pairs with an F1 hit divided by all pairs, per band, with Wilson 95% intervals
-- reported three times over, because they answer different questions: pairs with a **candidate** judgment, pairs with a **confirmed** judgment, and pairs eligible for a packet (confirmed, both overlaps `true`). The gap between the second and third measures how much the role-date coverage costs
+- reported three times over, because they answer different questions: pairs with a **candidate** judgment, pairs with a **confirmed** judgment, and pairs meeting every case-packet eligibility condition above, including buyer verification under ADR-0007. The gap between the second and third reflects all export gates, not role-date coverage alone; report buyer-verification coverage separately without changing the common denominator
 - `role_overlap` coverage: the share of candidate pairs where role dates resolve at all, per band. A low number here is the headline result, not a footnote
 - precision: a seeded random sample of 100 candidate judgments reviewed by the maintainer; report confirmed divided by reviewed, with the sample size and seed
 

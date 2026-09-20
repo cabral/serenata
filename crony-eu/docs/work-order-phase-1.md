@@ -165,6 +165,69 @@ Tests: generated scenarios for every branch: an élu found only in the pre-elect
 
 ## Session 6: case packets and HTML
 
+### ADR-0007 execution handoff
+
+[ADR-0007](adr/0007-consolidator-derived-attributes.md) is accepted by the
+maintainer; its runtime enforcement is not built. Claude Code should implement
+the following within the relevant sessions, after their existing STOP gates and
+approval of an implementation plan. This handoff does not authorize a fetch,
+merge, push or disclosure, or bypass the role-history feasibility gate.
+
+**Resolve before implementation.** Identify an approved official source and
+documented access method that can archive evidence for the exact buyer SIRET,
+its identity as a commune and the claimed commune code. Verify field semantics
+and temporal limitations, not just field presence. The existing supplier-SIREN
+request is not evidence of buyer-SIRET coverage. If the listed sources cannot
+supply that evidence, stop for source approval; do not scrape the annuaire or
+revive SIRENE stock. Missing historical support remains unknown, not agreement.
+
+**Implementation order.**
+
+1. In the source work, preserve attribute-level lineage for declared fields and
+   enrichment. Bind evidence to the immutable manifest and source row, including
+   source field, URL and fetch-time retrieval timestamp. DECP row identity omits
+   enrichment, so `decp_row_id` alone cannot bind a buyer check to its inputs.
+2. In matching and review, add a separate, append-only buyer-verification record
+   and a maintainer review action over archived official evidence. Retain the
+   exact buyer SIRET, asserted category and commune, input snapshot/hash, evidence
+   references and result. Give each review revision a stable reference and
+   deterministic ordering without adding wall-clock timestamps. A confirmation
+   of the person-company match does not confirm the buyer mapping.
+3. In F1, use this check for packet eligibility and the packet-eligible pair
+   counts. Keep descriptive candidate and confirmed-match counts distinct; do
+   not silently remove unverified buyers from their denominator.
+4. In export, refuse before writing a packet if required provenance or a valid
+   buyer verification is absent. Cite declared and derived attributes distinctly
+   in the CSV attributes, sources list and HTML panel; include the separate
+   verification evidence and review reference. Copy only cited records, including
+   the buyer evidence cited by the contract edge, never a whole API response
+   containing unrelated records. Make `crony case check` report dependent packets
+   invalid when a later buyer review rejects or makes the mapping ambiguous.
+
+**Acceptance tests, generated fixtures only.**
+
+- A derived commune attribute cites the consolidator, while the declaration and
+  official verification retain their own source references. All three preserve
+  fetch-time timestamps; no upstream retrieval time is invented.
+- Missing provenance, missing or adverse review, conflicting commune/category,
+  a head-office-only match, or unresolved historical identity refuses the build
+  without creating a packet. Person-match confirmation cannot bypass this gate.
+- Changing enrichment while retaining `decp_row_id`, or changing the evidence
+  snapshot, cannot reuse an old verification. A later adverse review invalidates
+  dependent packets; unrelated packets remain valid.
+- F1's packet-eligible counts agree with export eligibility. Byte-identical
+  reruns, input-order independence, offline execution and decoy-record exclusion
+  cover the added provenance and review evidence as well as the existing data.
+
+Run focused tests first, then the required checks in `CONTRIBUTING.md` and
+`crony-eu/CLAUDE.md`. Report implemented gates, passing tests and unresolved
+source/temporal limitations separately; passing tests is not disclosure approval.
+The older renderer bullet below is superseded by
+[ADR-0006](adr/0006-standard-library-only.md): standard-library HTML and inline
+SVG, no jinja2, vis-network or JavaScript.
+
+### Deliverables
+
 Deliver:
 
 - `crony-eu/src/crony_eu/export/model.py`: node and edge records matching the export contract in CLAUDE.md, with a test that pins the columns and the allowed `ftm_schema` values

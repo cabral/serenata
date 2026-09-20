@@ -178,6 +178,12 @@ separate columns, and a case packet citing one of the second kind has to cite
 the consolidator for it. The buyer declared a SIRET; the commune code beside it
 is somebody's join.
 
+[ADR-0007](../adr/0007-consolidator-derived-attributes.md) accepts export of
+these attributes with explicit derived provenance. It separately requires a
+maintainer check of archived official buyer-SIRET evidence before the mapping
+can support an exported F1 relationship. Attribution is not verification; the
+review and export gates are specified, not implemented.
+
 That enrichment is also what removed SIRENE from this session (see below).
 
 **Grain.** One row is one contract version, per titulaire, per lot.
