@@ -181,6 +181,36 @@ request is not evidence of buyer-SIRET coverage. If the listed sources cannot
 supply that evidence, stop for source approval; do not scrape the annuaire or
 revive SIRENE stock. Missing historical support remains unknown, not agreement.
 
+**Resolved 2026-09-21, partly. The source is `fr-entreprises-api`**, already
+approved, queried by putting the bare 14-digit SIRET in `q`. It returns that
+exact establishment with its INSEE commune code, the legal-unit
+`nature_juridique` (a commune is `7210`), `etat_administratif`, the
+`[date_creation, date_fermeture]` window and
+`statut_diffusion_etablissement`. A SIREN query returns no establishment at all,
+so the ADR's refusal of head-office-only evidence is enforced by the source
+rather than only by the rule. Verified fields, semantics and measured exposure
+are in
+[`crony-eu/docs/sources/france.md`](sources/france.md#verified-for-adr-0007-2026-09-21-buyer-siret-evidence).
+
+**What is not resolved is the temporal half, and it is a maintainer decision.**
+The source has no as-of parameter and no address history, and its publisher
+describes it as a way to search for a company rather than to retrieve complete
+SIRENE records. A check therefore establishes the mapping **as of the snapshot**
+only. `[date_creation, date_fermeture]` can *refute* a mapping when the
+notification date falls outside the window, and cannot confirm one inside it.
+Read strictly, ADR-0007's "a newer address is not by itself proof of the buyer's
+historical identity" makes the historical question `unknown` for every contract
+notified before the snapshot, which is 53.3% of commune-buyer rows before 2024
+alone, and an `unknown` blocks the packet. Session 5 and 6 need one of:
+
+- accept snapshot-time identity plus the window check as the standard, and record
+  the residual as a stated limitation of every packet; or
+- require true as-of evidence, in which case no approved source provides it, and
+  F1 produces no packets for a second reason independent of INPI role dates.
+
+Do not implement either until the maintainer picks one. Nothing about this
+changes the session 3 feasibility gate, which still runs first.
+
 **Implementation order.**
 
 1. In the source work, preserve attribute-level lineage for declared fields and

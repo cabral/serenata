@@ -388,7 +388,8 @@ publish on different geography dates.
 ## fr-entreprises-api: API Recherche d'entreprises (DINUM)
 
 - Service page: https://www.data.gouv.fr/dataservices/api-recherche-dentreprises
-- Endpoint: https://recherche-entreprises.api.gouv.fr/search (for example `?q=siren:<SIREN>`)
+- Endpoint: https://recherche-entreprises.api.gouv.fr/search. The OpenAPI specification (fetched 2026-09-21) publishes only `/search` and `/near_point`; there is no lookup-by-identifier path.
+- An identifier goes in the free-text `q`. `?q=siren:<SIREN>` is **not** the syntax and returns nothing; a bare SIREN or SIRET works. This document said otherwise until 2026-09-21.
 - Access: open, no key. The limit is 7 calls per second; the client runs at 5 or fewer.
 - Phase: 1, one call per supplier SIREN in scope
 - Content: company identity, officers (dirigeants) taken from INPI, and elected officials for public bodies
@@ -399,7 +400,66 @@ publish on different geography dates.
   - if officer birth dates carry only the year, stop and tell the maintainer, because ADR-0003 assumes month precision
   - if no officer role start date is available from this source, stop and tell the maintainer, because F1 cannot build a case packet without one
 
-Observed schema: _session 3_
+Officer fields, role dates and their coverage: _session 3_
+
+### Verified for ADR-0007, 2026-09-21: buyer-SIRET evidence
+
+[ADR-0007](../adr/0007-consolidator-derived-attributes.md) requires a maintainer
+check of the contract's exact buyer SIRET against archived official evidence
+before DECP's derived commune code can support an exported relationship. The
+work order's handoff asks first whether an approved source can supply that
+evidence at all. This is that answer, from read-only probes of the published
+OpenAPI specification and eleven live queries. Nothing was archived and no
+`$CRONY_DATA_DIR` snapshot was written.
+
+**A SIRET resolves, and that is the part the ADR turns on.** `q=<14 digits>`
+returns exactly one result whose `matching_etablissements` holds that same SIRET
+with the fields a buyer check needs:
+
+| field | where | what it gives the check |
+|---|---|---|
+| `siret` | `matching_etablissements[]` | the exact establishment, not its legal unit |
+| `commune` | `matching_etablissements[]` | the INSEE commune code for that establishment |
+| `nature_juridique` | top level | the catégorie juridique code; a commune is `7210` |
+| `etat_administratif` | `matching_etablissements[]` | `A` open, `F` closed |
+| `date_creation`, `date_fermeture` | `matching_etablissements[]` | the window the establishment existed in |
+| `statut_diffusion_etablissement` | `matching_etablissements[]` | constraint 7's non-diffusion check |
+
+**A SIREN query is not a substitute, which is what ADR-0007 already says.** The
+same request with the nine-digit SIREN returns the legal unit and
+`matching_etablissements: []`. One commune in the sample has 109 establishments,
+so a head-office location would have answered a different question from the one
+asked.
+
+**What this source cannot do: tell you the commune code at notification time.**
+There is no as-of parameter, no address history, and the publisher states the
+service exists "uniquement de rechercher une entreprise par sa dénomination ou
+son adresse" rather than to return complete SIRENE records. So a passing check
+establishes the mapping **as of the snapshot**, not on the notification date, and
+ADR-0007's own rule is that a newer address is not proof of historical identity.
+
+What is available instead is a bracket rather than a history:
+`[date_creation, date_fermeture]` says when the establishment existed, so a
+contract notified outside that window **refutes** the mapping even though a
+contract inside it cannot confirm it.
+
+**Measured exposure, on the 2026-09-19 DECP snapshot.** 14,816 distinct buyer
+SIRETs carry a `Commune` category nationally, which is 49 minutes of calls at 5
+per second for all of France and about a minute for one département. 26 of the
+12,798 buyer commune codes have no row in the current INSEE commune list, and
+they are two different problems:
+
+| cause | codes | contract rows |
+|---|---|---|
+| Mayotte, which this population vintage excludes | 17 | 5,086 |
+| establishments closed or merged since | 9 | 642 |
+
+Five of them were probed. All five resolved, including two whose establishment is
+closed (`etat = F`, `date_fermeture` 2025-01-01), and in all five the API's
+commune code **agreed** with the code DECP derived. The two closed ones carry
+contracts notified before their closure date, so the bracket check passes them.
+That is five records and not a validation of the consolidator's join; it is
+enough to say the check is implementable and not enough to say it is unnecessary.
 
 ## fr-inpi-rne: INPI, Registre national des entreprises
 
