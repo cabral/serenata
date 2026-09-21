@@ -30,9 +30,10 @@ because the reader who believes it wastes an afternoon. This section said
 "Session 0 only" for the whole of sessions 1 and 2, which is that bug; it is
 worth rereading at the end of a session and not only at the start.
 
-**Phase 1 has not picked its département yet.** `crony survey departements`
-exists to make that choice from measured counts rather than from a map, and the
-work order's STOP for session 2 is where the maintainer makes it.
+**Phase 1's slice is `dep:74`**, chosen 2026-09-21 from what
+`crony survey departements` measured. A bounded pilot choice, not a claim that
+the survey established it as optimal. All in-scope historical contracts are
+retained and there is no notification-date cutoff.
 
 ## Where this sits
 
@@ -95,6 +96,14 @@ Pilot country: France. Phase 1 covers communes only, one département at a time.
     - every person-to-company edge carries a `confirmed` judgment
     - `mandate_overlap` and `role_overlap` are both `true`
     - the flag's base rate has been measured, so it is not `uncalibrated`
+    - the buyer's identity is corroborated against archived official evidence
+      ([ADR-0007](docs/adr/0007-consolidator-derived-attributes.md) and its
+      Amendment 1): the evidence returns the exact buyer SIRET, links it to the
+      expected legal unit, identifies that unit as a commune, and agrees with the
+      commune code DECP asserts, and the maintainer has confirmed the mapping.
+      `historical_geography` is recorded apart from this and only `contradicted`
+      blocks; `not_established` travels into the packet as itself and is never
+      rewritten as `true`
     - the evidence copied in is only the source records the packet's own edges cite. Not the slice, not the neighbouring rows, not the officer list the match came out of
 
     A packet records the judgment ids and the rule id it was built under. When a judgment behind a packet later becomes `rejected` or `ambiguous`, that packet is **invalid**: the maintainer is told which packets relied on it and withdraws them from anyone who has a copy. Judgments are append-only so this question stays answerable, and a packet that cannot name its judgments cannot be checked and should never have been built.
@@ -209,10 +218,15 @@ logs/
 | source_dataset, source_url, retrieved_at | provenance |
 | judgment_id | set for confirmed_match edges; the handle that makes a packet withdrawable when the judgment changes |
 | rule_id | the matching rule the judgment was made under, so a rule change does not silently revalue old packets |
+| attribute_origin | `declared` or `derived`, per ADR-0007: a buyer's own field and a consolidator's join are not the same kind of fact and are cited apart |
+| buyer_verification_ref | the buyer review this edge relies on, so an adverse later review can invalidate the packet |
+| historical_geography | `established`, `contradicted` or `not_established`, carried rather than resolved |
 
 `reported` edges come from published journalism, entered by hand with the article URL, and are drawn dashed. None exist in phase 1.
 
-A case packet opens with a status block: flag id, calibration date, judgment status, the rule id, the run id, every overlap and its value, and the verification checklist copied from the flag spec. Under constraint 11 a packet only exists when every overlap is `true`, so the block reads as a record of what was checked rather than a list of caveats. If it ever shows an `unknown`, the packet was built by something that bypassed the export gate and should not be trusted.
+A case packet opens with a status block: flag id, calibration date, judgment status, the rule id, the run id, every overlap and its value, the buyer verification and its two fields, and the verification checklist copied from the flag spec. Under constraint 11 a packet only exists when every overlap is `true`, so the block reads as a record of what was checked rather than a list of caveats. If it ever shows an `unknown` overlap, the packet was built by something that bypassed the export gate and should not be trusted.
+
+The one value a packet may carry without having resolved it is `historical_geography`, and it is there because no approved source carries address history. Every qualifying packet says, verbatim: "Buyer identity was corroborated against a registry snapshot retrieved on [date]. Historical commune-code continuity was not independently established." That is a limited evidentiary standard rather than a disclaimer, and it never appears beside contradictory evidence, which is refused instead.
 
 ## Matching (France, phase 1)
 
@@ -249,6 +263,7 @@ crony stage <source> [--snapshot YYYY-MM-DD]
 crony survey departements [--scope <departement code>]
 crony match fr --scope dep:<code>
 crony review [--flag F1] [--sample N --seed S]
+crony review buyers --scope dep:<code>
 crony flag F1 --scope dep:<code>
 crony base-rate F1 --scope dep:<code>
 crony case build <case_id>

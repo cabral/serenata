@@ -4,6 +4,12 @@ Goal: one département processed end to end. At the end of phase 1 the maintaine
 
 The maintainer picks the département before session 1. Its code is the only thing about the slice that goes into session notes.
 
+**The slice is `dep:74`, chosen 2026-09-21.** A bounded pilot choice, and not a
+claim that the survey established it as optimal: `crony survey departements`
+measured what each département would give, the maintainer read it, and one had to
+be picked for a pilot. All in-scope historical contracts are retained. There is
+no notification-date cutoff, and none is to be introduced.
+
 Revised 2026-09-16. Two changes run through every session below, both from [ADR-0014](../../docs/adr/0014-replace-serenata-with-crony.md):
 
 - **Officer role history is phase 1 work.** It was phase 2, while phase 1's only flag needed it. Session 3 is now a feasibility gate that can stop the phase.
@@ -192,24 +198,67 @@ rather than only by the rule. Verified fields, semantics and measured exposure
 are in
 [`crony-eu/docs/sources/france.md`](sources/france.md#verified-for-adr-0007-2026-09-21-buyer-siret-evidence).
 
-**What is not resolved is the temporal half, and it is a maintainer decision.**
+**The temporal half was decided on 2026-09-21**, in
+[ADR-0007 Amendment 1](adr/0007-consolidator-derived-attributes.md#amendment-1-2026-09-21-snapshot-corroboration-with-its-limits-named).
 The source has no as-of parameter and no address history, and its publisher
 describes it as a way to search for a company rather than to retrieve complete
-SIRENE records. A check therefore establishes the mapping **as of the snapshot**
-only. `[date_creation, date_fermeture]` can *refute* a mapping when the
-notification date falls outside the window, and cannot confirm one inside it.
-Read strictly, ADR-0007's "a newer address is not by itself proof of the buyer's
-historical identity" makes the historical question `unknown` for every contract
-notified before the snapshot, which is 53.3% of commune-buyer rows before 2024
-alone, and an `unknown` blocks the packet. Session 5 and 6 need one of:
+SIRENE records, so a check establishes the mapping as of the snapshot. The
+standard is now **snapshot corroboration**: identity corroborated against the
+archived snapshot and historical geography recorded separately as `established`,
+`contradicted` or `not_established`. Absence of address history alone stops
+blocking; missing exact-identifier evidence, conflicting identity, ambiguous
+succession or merger, and unresolved contradictions still block. Establishment
+dates are consistency checks whose semantics must be read from documentation
+before any boundary is enforced from them.
 
-- accept snapshot-time identity plus the window check as the standard, and record
-  the residual as a stated limitation of every packet; or
-- require true as-of evidence, in which case no approved source provides it, and
-  F1 produces no packets for a second reason independent of INPI role dates.
+Two things this does **not** license. It does not relax officer-role or
+mandate-overlap requirements, which are unchanged under constraint 9. And the
+five successful probes behind it establish feasibility, not accuracy: the 26
+buyer commune codes absent from the population vintage bound nothing about
+mapping errors among the 12,772 that are present.
 
-Do not implement either until the maintainer picks one. Nothing about this
-changes the session 3 feasibility gate, which still runs first.
+**Scoped implementation plan, 2026-09-21.** Engineering readiness and real-data
+feasibility are separated, because they are blocked on different things and
+conflating them is how synthetic completion gets reported as a result. Three
+tiers. Nothing in tier A touches the network or needs an account; nothing in any
+tier is a session 3 pass; nothing in any tier permits a real packet.
+
+**Tier A, buildable now against generated fixtures.** Needs an approved plan and
+nothing else.
+
+| # | work | session | acceptance |
+|---|---|---|---|
+| A1 | attribute-level lineage in staging: declared against derived, bound to the manifest row, source field, URL and fetch-time `retrieved_at`. `decp_row_id` omits enrichment, so the binding carries the asserted values too | 2 | a derived attribute and a declared one carry distinct provenance; changing enrichment while keeping `decp_row_id` changes the binding |
+| A2 | `fr_entreprises_api.py` adapter shape, driven by `httpx.MockTransport`: exact-SIRET resolution, and refusal on zero, several, or no exact match | 3 | one refusal test per failure mode; no best-match path exists to test |
+| A3 | append-only `buyer_verification`, with a stable revision reference and deterministic ordering, no wall-clock field | 4 | append-only and latest-wins; history readable in order; a later adverse review is findable |
+| A4 | `crony review` buyer action over archived evidence, recording the two fields apart | 4 | scripted keypresses; `not_established` reachable and never coerced to `true` |
+| A5 | F1 eligibility and per-gate loss counting, over generated officers | 5 | candidate, confirmed and packet-eligible counted separately; one loss line per gate; eligible count agrees with export eligibility |
+| A6 | export provenance, the verbatim sentence, refusal paths, evidence minimisation with decoys, byte-identical and input-order-independent rebuilds | 6 | one test per condition in constraint 11 plus the ADR-0007 conditions, each naming what failed |
+
+**Tier B, needs real data from an open source. No account, no INPI.** These are
+the numbers the flag spec still has blank, and they are reachable today for
+`dep:74`.
+
+| # | work | blocked on |
+|---|---|---|
+| B1 | supplier legal categories over the slice, pinning F1's exclusion list (SEM, SPL, public bodies) from `nature_juridique` | nothing; a plan and a run |
+| B2 | officer birth-date precision over the slice, which ADR-0003 assumes is month | nothing; same run |
+| B3 | buyer corroboration evidence for the slice's buyer SIRETs, archived under `$CRONY_DATA_DIR` | A1 and A2 first |
+| B4 | establishment date semantics, read from INSEE/SIRENE variable documentation rather than inferred | a documentation read, not a live query |
+
+**Tier C, needs a human or an account.** No code unblocks these.
+
+| # | work | who |
+|---|---|---|
+| C1 | INPI account and credentials, kept outside chat and git and read from the environment | the maintainer |
+| C2 | role-date coverage and semantics over the slice, the session 3 feasibility gate | after C1 |
+| C3 | the buyer-mapping confirmations themselves | the maintainer, in `crony review` |
+| C4 | counsel, and explicit disclosure approval before any packet leaves the machine | the maintainer |
+
+**Retained evidence, not disclosed data.** Permitted in-scope records are kept
+internally with an explicit exclusion reason per record rather than dropped, so
+that a count can say which gate removed what. Non-diffusion, evidence
+minimisation, counsel and disclosure approval are unchanged by any of this.
 
 **Implementation order.**
 
@@ -223,11 +272,26 @@ changes the session 3 feasibility gate, which still runs first.
    references and result. Give each review revision a stable reference and
    deterministic ordering without adding wall-clock timestamps. A confirmation
    of the person-company match does not confirm the buyer mapping.
+
+   The result is **two fields, not one**: `buyer_identity_corroborated`
+   (`true`/`false`/`unknown`) and `historical_geography`
+   (`established`/`contradicted`/`not_established`). Nothing in the pipeline may
+   rewrite `not_established` as `true`, and no default may produce `true`.
+
+   Resolution against the source must match **exactly**: a query returning zero
+   results, more than one result, or no result carrying the exact SIRET is a
+   refusal. Do not take a best match, and do not assume a search returns one
+   usable result.
 3. In F1, use this check for packet eligibility and the packet-eligible pair
    counts. Keep descriptive candidate and confirmed-match counts distinct; do
    not silently remove unverified buyers from their denominator.
 4. In export, refuse before writing a packet if required provenance or a valid
-   buyer verification is absent. Cite declared and derived attributes distinctly
+   buyer verification is absent. Every qualifying packet carries, verbatim and
+   with the retrieval date filled in, in the status block and in machine-readable
+   provenance: "Buyer identity was corroborated against a registry snapshot
+   retrieved on [date]. Historical commune-code continuity was not independently
+   established." It is an evidentiary standard and not a disclaimer, so it never
+   accompanies contradictory evidence; that case is refused. Cite declared and derived attributes distinctly
    in the CSV attributes, sources list and HTML panel; include the separate
    verification evidence and review reference. Copy only cited records, including
    the buyer evidence cited by the contract edge, never a whole API response
@@ -239,6 +303,13 @@ changes the session 3 feasibility gate, which still runs first.
 - A derived commune attribute cites the consolidator, while the declaration and
   official verification retain their own source references. All three preserve
   fetch-time timestamps; no upstream retrieval time is invented.
+- `historical_geography = not_established` does **not** refuse the build, appears
+  in the status block and in provenance as itself, and no code path turns it into
+  `true`. `contradicted` refuses.
+- A search returning zero results, two results, or one result whose
+  `matching_etablissements` lacks the exact SIRET is a refusal in every case.
+- The required sentence appears verbatim in a qualifying packet, with the
+  evidence retrieval date, and is absent from a refused one.
 - Missing provenance, missing or adverse review, conflicting commune/category,
   a head-office-only match, or unresolved historical identity refuses the build
   without creating a packet. Person-match confirmation cannot bypass this gate.

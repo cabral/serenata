@@ -54,11 +54,41 @@ A hit may be **counted** whatever its overlaps say. A hit may enter a case packe
 [ADR-0007](../adr/0007-consolidator-derived-attributes.md) also requires a
 separate maintainer verification of the contract's buyer SIRET as the claimed
 commune, against archived official evidence. The review is bound to the DECP
-snapshot, row and derived values and to the official evidence. Missing,
-ambiguous or conflicting evidence blocks the packet; a confirmed person-company
-judgment cannot substitute for this check. Exported enrichment still cites the
-consolidator, alongside the separate verification evidence. This gate is not
-implemented yet.
+snapshot, row and derived values and to the official evidence. A confirmed
+person-company judgment cannot substitute for this check. Exported enrichment
+still cites the consolidator, alongside the separate verification evidence. This
+gate is not implemented yet.
+
+**Amendment 1 to that record (2026-09-21) sets the standard as snapshot
+corroboration**, and it turns one question into two that are recorded apart:
+
+| fact | values | blocks a packet |
+|---|---|---|
+| `buyer_identity_corroborated` | `true`, `false`, `unknown` | anything but `true` |
+| `historical_geography` | `established`, `contradicted`, `not_established` | `contradicted` only |
+
+Corroboration needs archived official evidence that returns the **exact** buyer
+SIRET, links it to the expected legal unit, identifies that unit as a commune,
+and agrees with the commune code DECP asserts. All four, and the maintainer
+confirms the mapping on top. An establishment's location is not on its own
+evidence of which public body awarded a contract.
+
+`not_established` no longer blocks, because no approved source carries address
+history and blocking on it would have cost every packet. What still blocks:
+missing exact-identifier evidence, conflicting identity, ambiguous succession or
+merger, and unresolved contradictions. **`not_established` is never rewritten as
+`true`**; it travels into the packet as itself.
+
+Establishment dates are consistency checks and not proof, and no boundary is
+enforced from them until their semantics are read from documentation rather than
+inferred from their presence. A closure today does not disqualify a contract that
+predates it, and a missing date establishes no window.
+
+Every qualifying packet carries this sentence, with the retrieval date filled in,
+in the status block and in machine-readable provenance:
+
+> Buyer identity was corroborated against a registry snapshot retrieved on
+> [date]. Historical commune-code continuity was not independently established.
 
 `role_overlap = unknown` is expected to be common, and how common is one of the numbers session 3 reports. A département where it is the usual answer is a département where F1 can describe a rate and cannot produce a single packet, and that outcome is reported rather than worked around.
 
@@ -128,6 +158,7 @@ Method (session 5):
 - population bands: up to 500; 501 to 3,500; 3,501 to 10,000; 10,001 to 50,000; above 50,000
 - observed rate: pairs with an F1 hit divided by all pairs, per band, with Wilson 95% intervals
 - reported three times over, because they answer different questions: pairs with a **candidate** judgment, pairs with a **confirmed** judgment, and pairs meeting every case-packet eligibility condition above, including buyer verification under ADR-0007. The gap between the second and third reflects all export gates, not role-date coverage alone; report buyer-verification coverage separately without changing the common denominator
+- **losses are reported per gate, not netted.** One line per gate saying how many pairs it removed: role overlap unknown, mandate overlap unknown, judgment not confirmed, buyer identity not corroborated, buyer identity contradicted, supplier not redistributable, flag uncalibrated. A single eligible count with a single shortfall hides which gate is actually binding, and after the 2026-09-21 amendment `historical_geography = not_established` is expected on nearly every row while removing none of them, so it is reported as coverage and never as a loss
 - `role_overlap` coverage: the share of candidate pairs where role dates resolve at all, per band. A low number here is the headline result, not a footnote
 - precision: a seeded random sample of 100 candidate judgments reviewed by the maintainer; report confirmed divided by reviewed, with the sample size and seed
 
