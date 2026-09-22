@@ -28,10 +28,16 @@ is a measurement of officer role-date coverage, it needs an INPI account, and th
 account does not exist. The adapter is tier A of the ADR-0007 plan, and the plan
 says in as many words that building it proves nothing about the gate.
 
-What is not: matching, judgments, review, flags and the export. `crony match`,
-`crony review`, `crony flag`, `crony base-rate` and `crony case` do not exist as
-commands yet, deliberately, because a subcommand that parsed its flags and
-printed "not implemented" would be listed by `--help` as though it worked.
+What is not: person-company matching, judgments, review, flags and the export.
+The buyer half of the review, which ADR-0007 requires and which is a different
+question from the person-company match, is built in
+`crony-eu/src/crony_eu/match/buyer_verification.py`; the command that drives it
+is not.
+
+`crony match`, `crony review`, `crony flag`, `crony base-rate` and `crony case`
+do not exist as commands yet, deliberately, because a subcommand that parsed its
+flags and printed "not implemented" would be listed by `--help` as though it
+worked.
 
 Everything below describing an unbuilt module is a **specification written
 before the code**, which is the point of it. A document here that reads as
@@ -174,6 +180,7 @@ crony-eu/
       fr_entreprises_api.py        [built]  companies, officers, buyer evidence
       fr_inpi_rne.py                        session 3, once there is an account
     match/
+      buyer_verification.py        [built]  ADR-0007's buyer check, append-only
       keys.py  candidates.py  judgments.py  review.py     session 4
     flags/
       f1_same_body.py  base_rates.py  dataset.py  sql/    session 5
