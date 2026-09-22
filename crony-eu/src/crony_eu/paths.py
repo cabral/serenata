@@ -8,7 +8,8 @@ instead of joining path fragments and getting one of them subtly wrong.
     raw/<source>/<snapshot>/       bytes exactly as downloaded, plus manifest.json
     staged/<source>/<snapshot>/    typed Parquet
     staged/_reports/               data-quality reports, aggregates only
-    matched/judgments.parquet      append-only; latest row per judgment_id wins
+    matched/judgments.parquet      append-only; latest revision per judgment_id wins
+    matched/candidates/dep-<code>.parquet   rebuilt from staged data; not a log
     flags/<flag>/<run>/            flag output
     cases/<case>/                  a packet: network.html, the two tables, evidence
     logs/
@@ -54,6 +55,16 @@ class Layout:
 
     def judgments(self) -> Path:
         return self.root / "matched" / "judgments.parquet"
+
+    def candidates(self, scope: str) -> Path:
+        """Candidate matches for one slice, rebuilt from staged data on demand.
+
+        Not append-only, unlike the judgments: a candidate is a computed fact
+        about two staged tables and a rule, and rebuilding it from the same
+        inputs gives the same bytes. The decision about it is what must never
+        be overwritten, and that lives in `judgments()`.
+        """
+        return self.root / "matched" / "candidates" / f"dep-{scope}.parquet"
 
     def flags(self, flag: str, run: str) -> Path:
         return self.root / "flags" / flag / run

@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -106,6 +107,32 @@ NOT_FOUND = "not_found"
 SEVERAL_RESULTS = "several_results"
 NO_EXACT_MATCH = "no_exact_match"
 NO_ESTABLISHMENT = "no_establishment_for_siret"
+
+
+#: `nom` as the service publishes it: the birth name, then the usage name in
+#: parentheses when the register holds one. Measured over the `dep:74` slice on
+#: 2026-09-22: 1,366 of 5,164 natural-person officers (26%) carry exactly this
+#: shape and no other parenthesised shape occurs; in 931 of them the two names
+#: are equal. The whole field must never reach a matching key: `DUPONT (DUPONT)`
+#: normalises to `DUPONT DUPONT`, which matches no élu, and nothing raises.
+_BIRTH_AND_USAGE = re.compile(r"^\s*([^()]+?)\s*\(\s*([^()]+?)\s*\)\s*$")
+
+
+def split_surname(published: str | None) -> tuple[str | None, str | None]:
+    """The birth name and the usage name, from one published field.
+
+    ADR-0003 names both as surname variants and the source packs them into one
+    string, so the split happens here, once, and the matching key reads two
+    clean columns. A field with no parenthesised part is a birth name with no
+    usage name recorded; anything that does not fit the one observed shape is
+    kept whole as the birth name rather than guessed at.
+    """
+    if published is None:
+        return None, None
+    found = _BIRTH_AND_USAGE.match(published)
+    if found is None:
+        return published.strip() or None, None
+    return found.group(1), found.group(2)
 
 
 def resolve(payload: dict[str, Any], ask: Ask) -> Resolved | Unresolved:
@@ -458,17 +485,15 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
                 )
                 continue
             birth = officer.get("date_de_naissance")
+            surname_birth, surname_usage = split_surname(officer.get("nom"))
             officers.append(
                 {
                     "officer_row_id": row_id,
                     "siren": unit.get("siren"),
                     "officer_type": kind_of or "unknown",
-                    # This source publishes one surname field and does not say
-                    # whether it is the birth name or the usage name. Recorded as
-                    # the birth name because that is what INPI's RNE calls it,
-                    # and session 4 measures which one it matches like.
-                    "surname_birth_raw": officer.get("nom"),
-                    "surname_usage_raw": None,
+                    # One published field, two names: see `split_surname`.
+                    "surname_birth_raw": surname_birth,
+                    "surname_usage_raw": surname_usage,
                     "given_names_raw": officer.get("prenoms"),
                     "birth_ym": birth if birth and len(str(birth)) == 7 else None,
                     "birth_year_only": officer.get("annee_de_naissance"),

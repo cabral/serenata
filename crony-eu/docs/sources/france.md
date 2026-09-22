@@ -25,7 +25,8 @@ A source not listed here is not allowed until the maintainer approves a new sect
 - Gotchas:
   - an élu with two functions appears twice in the same file; an élu with two mandates appears in two files
   - profession is self-declared
-  - the files don't say whether `Nom de l'élu` is the birth name or the usage name. Session 4 answers this with aggregate match counts per surname variant, split by sex, and records the answer here.
+  - the files don't say whether `Nom de l'élu` is the birth name or the usage name. **Answered in session 4, over `dep:74`: both occur.** Élus match officers through the officer's birth name and through the officer's usage name, and the usage-name matches are all women, which is what the convention predicts. The exact counts per variant and sex are small cells in a single département, so under constraint 12 they stay in `$CRONY_DATA_DIR/staged/_reports/candidates-dep-74.json` until the maintainer has reviewed them; the answer here is the one that does not need the cells.
+  - 810 élu surnames nationally carry `EP`, `EPOUSE`, `NEE` or `VEUVE` inside them and 139 carry a parenthesised name. `FR-NAME-BIRTHYM-v1` takes the élu surname whole, so those élus build a key that matches no officer: 0.1% of the register, measured and left to a future rule id rather than handled by editing this one.
   - corrections go through prefectures and show up in the next quarterly file
 - History: Regards Citoyens keeps a change history of the register at https://github.com/regardscitoyens/rne-history (phase 2, for replacements during a term).
 
@@ -414,11 +415,31 @@ nothing joins a company to an élu.
 |---|---|---|
 | `type_dirigeant` | both | `personne physique` or `personne morale` |
 | `qualite` | both | the role label |
-| `nom`, `prenoms` | natural | one surname field; the service does not say whether it is the birth or usage name |
+| `nom` | natural | the birth name, followed by the usage name in parentheses when the register holds one |
+| `prenoms` | natural | the given names, separated by spaces |
 | `date_de_naissance` | natural | `YYYY-MM` |
 | `annee_de_naissance` | natural | `YYYY` |
 | `nationalite` | natural | present and null on every officer seen |
 | `denomination`, `siren` | legal | the company holding the seat |
+
+**`nom` packs two names into one field, and it nearly cost half the candidates.**
+1,366 of 5,164 natural-person officers (26%) have a surname of exactly the shape
+`BIRTH (USAGE)`; no other parenthesised shape occurs, and in 931 of them the two
+names are equal. ADR-0003 wants the birth name and the usage name as separate
+surname variants, so staging splits the field into `surname_birth_raw` and
+`surname_usage_raw` (`fr_entreprises_api.split_surname`).
+
+Without the split, `DUPONT (DUPONT)` normalises to `DUPONT DUPONT` and matches no
+élu, and nothing raises. Measured after matching `dep:74`: **51 of the 107
+candidates come from an officer published in this shape**, so a pipeline that fed
+the field whole to the key would have lost 48% of its candidates silently. It is
+the same class of error as the two-digit year in the élu register, and it was
+caught the same way, by measuring the shape of the real field before trusting it.
+
+The reading of the parentheses as the usage name is the register's convention
+and not something the service documents. Matching does not depend on it, because
+both variants are tried against the élu surname; the birth-versus-usage
+measurement below does.
 
 **Birth-date precision, which ADR-0003 assumes is month.** It holds:
 

@@ -396,7 +396,7 @@ class TestScopedFetch:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
-        assert main(["fetch", "fr-decp", "--scope", "74"]) == 1
+        assert main(["fetch", "fr-decp", "--scope", "dep:74"]) == 1
         assert "would not change what it fetches" in capsys.readouterr().err
 
     def test_a_scoped_fetch_passes_the_scope_through(
@@ -417,6 +417,83 @@ class TestScopedFetch:
             return []
 
         monkeypatch.setattr(api, "fetch", fake_fetch)
-        assert main(["fetch", "fr-entreprises-api", "--scope", "74"]) == 0
+        assert main(["fetch", "fr-entreprises-api", "--scope", "dep:74"]) == 0
         assert seen == ["74"]
         assert "already complete" in capsys.readouterr().out
+
+
+class TestScopeSpelling:
+    """One spelling for every scoped command: `dep:<code>`."""
+
+    @pytest.mark.parametrize("value", ["dep:74", "dep:2a", "dep:974"])
+    def test_a_departement_scope_is_read(self, value: str) -> None:
+        from crony_eu.cli import departement_scope
+
+        assert departement_scope(value) == value.partition(":")[2].upper()
+
+    @pytest.mark.parametrize(
+        "value", ["74", "dep:", "com:74010", "dep:74;drop", "dep:7400"]
+    )
+    def test_anything_else_is_refused(self, value: str) -> None:
+        import argparse
+
+        from crony_eu.cli import departement_scope
+
+        with pytest.raises(argparse.ArgumentTypeError, match="dep:<code>"):
+            departement_scope(value)
+
+    def test_a_bare_code_is_refused_by_the_parser(self) -> None:
+        # The spelling this project used briefly for `fetch`, and the one most
+        # likely to be typed from memory.
+        with pytest.raises(SystemExit):
+            build_parser().parse_args(["fetch", "fr-entreprises-api", "--scope", "74"])
+
+
+class TestMatch:
+    def test_it_prints_aggregates_and_no_names(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        from crony_eu.paths import Layout
+        from fakes import Elu, api_officer
+        from test_matching import TestCandidates
+
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        layout = Layout(outside_repo)
+        layout.create()
+        TestCandidates().stage(
+            layout,
+            [
+                Elu(
+                    commune_code="74010",
+                    departement_code="74",
+                    surname="NOMDEXEMPLE",
+                    given="Jean",
+                    birth_date="1971-04-03",
+                )
+            ],
+            [api_officer(surname="NOMDEXEMPLE", given="JEAN", birth="1971-04")],
+        )
+
+        assert main(["match", "fr", "--scope", "dep:74"]) == 0
+        output = capsys.readouterr().out
+        assert "1 candidates" in output
+        # Constraint 13: counts, never the names the candidates carry.
+        assert "NOMDEXEMPLE" not in output
+        assert layout.candidates("74").is_file()
+
+    def test_nothing_staged_names_the_command(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["match", "fr", "--scope", "dep:74"]) == 1
+        assert "crony fetch" in capsys.readouterr().err
+
+    def test_match_requires_a_scope(self) -> None:
+        with pytest.raises(SystemExit):
+            build_parser().parse_args(["match", "fr"])

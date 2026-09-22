@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Turning what a source published into what the pipeline compares.
 
-Only dates so far. The name and birth keys that `FR-NAME-BIRTHYM-v1` is built
-on arrive with matching, in session 4; putting them here before anything uses
-them would be a rule nobody could check.
+Dates, French company identifiers, and the name keys `FR-NAME-BIRTHYM-v1` is
+built on. The name rules are specified in `crony-eu/CLAUDE.md` and ADR-0003, and
+they are written here once so that the élu side and the officer side of a match
+cannot be normalised by two slightly different rules.
 
 **Three published shapes, chosen by the shape and not by trying in order.**
 
@@ -36,6 +37,7 @@ never values.
 from __future__ import annotations
 
 import re
+import unicodedata
 from datetime import date
 
 #: Shape -> format, in the order they are tested. The pattern is matched against
@@ -233,3 +235,61 @@ def siren_of(value: str | None) -> str | None:
     if cleaned is None or len(cleaned) not in (9, 14):
         return None
     return cleaned[:9]
+
+
+# --- Names ------------------------------------------------------------------
+#
+# The rule, from `crony-eu/CLAUDE.md`: NFKD, drop combining marks, uppercase,
+# turn apostrophes and hyphens into spaces, keep A-Z and spaces, collapse
+# spaces. The standard library's `unicodedata` does it, rather than `unidecode`,
+# for its licence and because its tables are pinned by the Python version.
+#
+# The élu register publishes given names in mixed case with accents on 19% of
+# them; the company register publishes upper case. Both reach the same key here
+# or neither does.
+
+#: Characters the rule turns into a space. The typographic apostrophes (U+2019
+#: and U+2018) are here because French text uses them, and a key that treated
+#: them differently from the ASCII one would split one surname into two.
+_SEPARATORS = str.maketrans({"'": " ", "\u2019": " ", "\u2018": " ", "-": " "})
+
+_NOT_KEPT = re.compile(r"[^A-Z ]")
+_SPACES = re.compile(r" +")
+
+
+def _fold(value: str) -> str:
+    """NFKD, combining marks dropped, upper case."""
+    decomposed = unicodedata.normalize("NFKD", value)
+    return "".join(c for c in decomposed if not unicodedata.combining(c)).upper()
+
+
+def norm_name(value: str | None) -> str | None:
+    """A surname as the matching key compares it, or `None` if nothing is left.
+
+    Idempotent, which the tests check: a key that changed when normalised twice
+    would make a candidate depend on how many times a value had passed through.
+    """
+    if value is None:
+        return None
+    kept = _NOT_KEPT.sub("", _fold(value).translate(_SEPARATORS))
+    collapsed = _SPACES.sub(" ", kept).strip()
+    return collapsed or None
+
+
+def given_key(value: str | None) -> str | None:
+    """The first given name, with a hyphenated compound kept as one word.
+
+    `JEAN-PIERRE` and `Jean-Pierre Marie` both give `JEANPIERRE`. `JEAN PIERRE`,
+    with a space, gives `JEAN`: a space separates given names and a hyphen joins
+    one, so the two spellings are two different claims about a person and the
+    rule does not guess which one was meant. That costs recall wherever one
+    register hyphenates a compound the other spaces, and ADR-0003 accepts it for
+    precision.
+    """
+    if value is None:
+        return None
+    first = value.strip().split()
+    if not first:
+        return None
+    joined = _NOT_KEPT.sub("", _fold(first[0]))
+    return joined or None

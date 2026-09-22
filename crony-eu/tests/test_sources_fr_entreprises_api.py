@@ -531,3 +531,65 @@ class TestAsksForScope:
     ) -> None:
         with pytest.raises(api.SourceError, match="crony stage fr-decp"):
             api.asks_for_scope(layout, "74")
+
+
+class TestSplitSurname:
+    """One published field holds two names, and the key needs them apart.
+
+    26% of officers in the `dep:74` slice have a surname of the shape
+    `BIRTH (USAGE)`. Fed whole into a matching key, `DUPONT (DUPONT)` normalises to
+    `DUPONT DUPONT`, which matches no élu and raises nothing. Every name here is
+    invented.
+    """
+
+    def test_birth_and_usage_are_separated(self) -> None:
+        assert api.split_surname("NOMDEXEMPLE (AUTRENOM)") == (
+            "NOMDEXEMPLE",
+            "AUTRENOM",
+        )
+
+    def test_equal_names_are_still_separated(self) -> None:
+        # 931 of the 1,366 real cases. The key builder deduplicates; staging
+        # records what was published.
+        assert api.split_surname("NOMDEXEMPLE (NOMDEXEMPLE)") == (
+            "NOMDEXEMPLE",
+            "NOMDEXEMPLE",
+        )
+
+    def test_a_plain_surname_has_no_usage_name(self) -> None:
+        assert api.split_surname("NOMDEXEMPLE") == ("NOMDEXEMPLE", None)
+
+    def test_a_compound_usage_name_is_kept_whole(self) -> None:
+        assert api.split_surname("NOM DEXEMPLE (AUTRE NOM)") == (
+            "NOM DEXEMPLE",
+            "AUTRE NOM",
+        )
+
+    def test_a_shape_nobody_has_seen_is_not_guessed_at(self) -> None:
+        # Two parenthesised parts occur nowhere in the real data. Kept whole as
+        # the birth name rather than split by a rule nobody tested against it.
+        assert api.split_surname("A (B) (C)") == ("A (B) (C)", None)
+
+    def test_missing_is_missing(self) -> None:
+        assert api.split_surname(None) == (None, None)
+        assert api.split_surname("   ") == (None, None)
+
+    def test_staging_writes_the_two_columns(self, layout: Layout) -> None:
+        archive(
+            layout,
+            [api.Ask("siren", SUPPLIER)],
+            [
+                api_response(
+                    [
+                        api_unit(
+                            unit_siren=SUPPLIER,
+                            officers=[api_officer(surname="NOMDEXEMPLE (AUTRENOM)")],
+                        )
+                    ]
+                )
+            ],
+        )
+        api.stage(layout, SNAPSHOT)
+        officer = staged(layout, "officers")[0]
+        assert officer["surname_birth_raw"] == "NOMDEXEMPLE"
+        assert officer["surname_usage_raw"] == "AUTRENOM"

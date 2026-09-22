@@ -34,7 +34,7 @@ Progress:
 - [x] Session 1: élus. Four files fetched and staged: 1,066,291 rows, 994,761 people, birth key present on 100%. Found and fixed a silent date bug (the pre-election extracts publish a two-digit year, which `%d/%m/%Y` accepts), and added a plausibility gate that tells a misread file from a register typo. Observed schema in `crony-eu/docs/sources/france.md`.
 - [x] Session 2: contracts, buyers, populations. DECP (3,281,288 versions -> 2,188,458 latest, 12,833 commune-buyer mappings) and the INSEE populations de référence 2023 staged; SIREN/SIRET checks with the La Poste rule; `crony survey departements` added so the slice is picked from counts. Three findings changed the plan: `donneesActuelles` is absent on 70,277 contract groups so the latest version is taken from `modification_id`; `titulaire_categorie` is the size band, not the catégorie juridique, so **F1's exclusion list moves to session 3**; and Paris, Lyon and Marseille buy under arrondissement codes, which the survey now reports rather than showing as zero. SIRENE is not ingested. **The département is not picked yet**: that is this session's STOP.
 - [ ] Session 3: supplier officers and role history (**feasibility gate**)
-- [ ] Session 4: matching and review
+- [ ] Session 4: matching and review. **Matching is built, review is not.** Keys, candidates and an append-only judgments log exist and run: `dep:74` gives 107 candidates from 10,002 élus and 5,022 keyed officers, 9 on a colliding key. The officer surname turned out to pack birth and usage names as `BIRTH (USAGE)`, and 51 of the 107 candidates depend on splitting it. Open: `crony review` for both judgments and buyer verification, and the maintainer's `crony review --sample 5 --seed 1`, which is this session's acceptance.
 - [ ] Session 5: F1 and pair rates
 - [ ] Session 6: case packets and HTML
 
@@ -144,7 +144,16 @@ Deliver:
 - `normalize.py`: `norm_name`, `given_key`, `birth_ym`, as specified in CLAUDE.md
 - `keys.py`: key variants per élu and per officer, rule id `FR-NAME-BIRTHYM-v1`
 - `candidates.py`: exact join on key variants within scope; `key_collision` flags; output `candidates.parquet`
-- `judgments.py`: append-only `$CRONY_DATA_DIR/matched/judgments.parquet` with judgment_id = sha256(rule_id, elu_person_id, officer_row_id), rule_id, elu_person_id, officer_row_id, siren, status, decided_by, decided_at, note, run_id; plus a `judgments_latest` view
+- `judgments.py`: append-only `$CRONY_DATA_DIR/matched/judgments.parquet` with judgment_id = sha256(rule_id, elu_person_id, officer_row_id), revision, rule_id, elu_person_id, officer_row_id, siren, status, decided_by, note, run_id; plus a `judgments_latest` view
+
+  **No `decided_at`, changed 2026-09-22.** This list originally carried a
+  wall-clock `decided_at`, and constraint 4 says the only timestamps inside data
+  are `retrieved_at` values recorded at fetch time. The ADR-0007 handoff resolved
+  the same conflict for the buyer log with a `revision` counter per id, and both
+  logs now order themselves that way: the latest revision wins, history is read
+  in revision order, and two runs over the same decisions write the same bytes.
+  ADR-0003 never specified the timestamp, so no decision record changes; the
+  work order yields to a hard constraint.
 - new candidates enter as `pending`; an existing judgment is never overwritten, only superseded by a newer row. The full history is the point: a packet built on a judgment that later becomes `rejected` has to be findable, and only an append-only log can answer that.
 - `judgments_history(judgment_id)`: every row for one judgment, oldest first, so the question "what did we believe when that packet was built, and what do we believe now" has an answer that is a query rather than a memory
 - `review.py` (`crony review`): a rich screen with the élu's fields next to the officer's fields, the company name and SIREN, the commune, the role dates and what they mean, the territory hint (same département or not), and links to the company's annuaire-entreprises page and its DECP contracts. Keys: c confirm, r reject, a ambiguous, s skip, n note, q quit. `--flag F1` limits the queue to candidates behind F1 hits. `--sample N --seed S` draws a reproducible random sample for the precision estimate.

@@ -22,9 +22,9 @@ so the historical code is not recorded anywhere in SIRENE at any access level
 **Append-only, ordered by revision rather than by clock.** The handoff asks for a
 stable reference and deterministic ordering without wall-clock timestamps, so a
 revision is an integer that counts up per `verification_id` and the latest one
-wins. `judgments` orders itself differently, by `decided_at`, because ADR-0003
-specifies that; the divergence is deliberate and worth a maintainer's attention
-rather than a quiet unification.
+wins. `judgments` orders itself the same way: constraint 4 allows no timestamp
+in data but `retrieved_at`, and the work order's `decided_at` for judgments was
+removed on 2026-09-22 for that reason. Both logs share `crony_eu.match.log`.
 
 **What a verification binds to.** `verification_id` hashes the DECP assertion
 with the sha256 of the evidence that was examined. So a review cannot be reused
@@ -37,13 +37,13 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import duckdb
 import pyarrow as pa
-import pyarrow.parquet as pq
 
-from crony_eu.parquet import write
+from crony_eu.match.log import Log
 from crony_eu.paths import Layout
 
 #: `identity_corroborated`. Three values, because "no evidence came back" and
@@ -174,71 +174,32 @@ SCHEMA = pa.schema(
 )
 
 
-def path(layout: Layout) -> Any:
+def path(layout: Layout) -> Path:
     return layout.root / "matched" / "buyer_verification.parquet"
+
+
+def _log(layout: Layout) -> Log:
+    return Log(path(layout), SCHEMA, "verification_id")
 
 
 def read(layout: Layout) -> list[dict[str, Any]]:
     """Every revision ever written, oldest first. Empty when none."""
-    destination = path(layout)
-    if not destination.is_file():
-        return []
-    rows = [dict(row) for row in pq.read_table(destination).to_pylist()]
-    return sorted(rows, key=lambda row: (row["verification_id"], row["revision"]))
-
-
-def next_revision(existing: Sequence[dict[str, Any]], identifier: str) -> int:
-    """One past the highest revision this verification already has."""
-    seen = [
-        int(row["revision"]) for row in existing if row["verification_id"] == identifier
-    ]
-    return max(seen) + 1 if seen else 1
+    return _log(layout).read()
 
 
 def append(layout: Layout, decisions: Sequence[dict[str, Any]]) -> int:
-    """Add revisions without rewriting any. Returns the new total row count.
-
-    Append-only is not a style choice. A packet records the verifications it
-    relied on, and constraint 11 says a packet whose evidence later turns out to
-    be wrong has to be findable and withdrawable. That question is only
-    answerable if the old answer is still on disk beside the new one.
-
-    Written whole and renamed by `parquet.write`, so an interrupted append leaves
-    the previous log intact rather than a file that is neither.
-    """
-    existing = read(layout)
-    taken = {(row["verification_id"], int(row["revision"])) for row in existing}
-    rows = list(existing)
-
-    for decision in decisions:
-        identifier = str(decision["verification_id"])
-        revision = next_revision(rows, identifier)
-        if (identifier, revision) in taken:  # pragma: no cover - defensive
-            raise ValueError(f"revision {revision} of {identifier} already exists")
-        rows.append({**decision, "revision": revision})
-
-    return write(rows, SCHEMA, path(layout), key=("verification_id", "revision"))
+    """Add revisions without rewriting any. See `crony_eu.match.log`."""
+    return _log(layout).append(decisions)
 
 
 def latest(layout: Layout) -> list[dict[str, Any]]:
-    """The current answer for each verification: the highest revision of it."""
-    current: dict[str, dict[str, Any]] = {}
-    for row in read(layout):
-        identifier = str(row["verification_id"])
-        held = current.get(identifier)
-        if held is None or int(row["revision"]) > int(held["revision"]):
-            current[identifier] = row
-    return [current[key] for key in sorted(current)]
+    """The current answer for each verification."""
+    return _log(layout).latest()
 
 
 def history(layout: Layout, identifier: str) -> list[dict[str, Any]]:
-    """Every revision of one verification, oldest first.
-
-    "What did we believe when that packet was built, and what do we believe now"
-    is a query rather than a memory, which is the whole reason the log is
-    append-only.
-    """
-    return [row for row in read(layout) if row["verification_id"] == identifier]
+    """Every revision of one verification, oldest first."""
+    return _log(layout).history(identifier)
 
 
 def pending(layout: Layout, evidence: Sequence[dict[str, Any]]) -> list[str]:
@@ -248,7 +209,7 @@ def pending(layout: Layout, evidence: Sequence[dict[str, Any]]) -> list[str]:
     it reappears here rather than inheriting the old decision, which is the point
     of binding the id to the evidence hash.
     """
-    decided = {str(row["verification_id"]) for row in read(layout)}
+    decided = _log(layout).decided()
     return sorted(
         {
             str(row["verification_id"])

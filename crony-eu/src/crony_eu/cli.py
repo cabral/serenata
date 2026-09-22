@@ -5,7 +5,7 @@
 [ADR-0006](../../docs/adr/0006-standard-library-only.md): phase 1 asks for
 subcommands and flags, which is what argparse is.
 
-`doctor`, `fetch`, `stage` and `survey` exist. The other subcommands named in
+`doctor`, `fetch`, `stage`, `survey` and `match` exist. The other subcommands named in
 CLAUDE.md arrive with the stages they drive, and a subcommand that parsed its
 arguments and then printed "not implemented" would be worse than its absence,
 because `--help` would list it as though it worked.
@@ -26,8 +26,10 @@ from typing import cast
 from crony_eu import __version__
 from crony_eu.config import ConfigError, data_dir, repository_root
 from crony_eu.http import build_client
+from crony_eu.match import candidates
 from crony_eu.paths import Layout
 from crony_eu.sources import REGISTRY, ScopedSource, Source, is_scoped, names
+from crony_eu.sources.fr_entreprises_api import SourceError
 from crony_eu.survey import SurveyError
 from crony_eu.survey import departements as survey_departements
 from crony_eu.survey import pairs_by_band as survey_pairs_by_band
@@ -164,7 +166,7 @@ def fetch(arguments: argparse.Namespace) -> int:
     if scoped and not arguments.scope:
         print(
             f"{arguments.source} asks one question per supplier and per buyer in "
-            "a slice, so it needs `--scope <departement code>`. Without one it "
+            "a slice, so it needs `--scope dep:<code>`. Without one it "
             "would mean all of France.",
             file=sys.stderr,
         )
@@ -264,7 +266,7 @@ def survey(arguments: argparse.Namespace) -> int:
             )
         )
 
-    cut = f" in {arguments.scope}" if arguments.scope else ""
+    cut = f" in dep:{arguments.scope}" if arguments.scope else ""
     print(f"\n  pairs by population band{cut}")
     for band in bands:
         print(
@@ -289,6 +291,53 @@ def survey(arguments: argparse.Namespace) -> int:
     destination = write_survey_report(layout, rows, staged)
     print(f"\n  staged snapshots read: {staged.as_dict()}")
     print(f"  {destination}")
+    return 0
+
+
+def departement_scope(value: str) -> str:
+    """`dep:<code>` -> the département code, or an argparse error.
+
+    Every scoped command takes the same spelling, because two spellings of one
+    argument is how a run gets scoped to the wrong thing without anyone noticing.
+    The prefix leaves room for other kinds of scope; phase 1 has only this one.
+    """
+    kind, _, code = value.partition(":")
+    if kind != "dep" or not code or not code.isalnum() or len(code) > 3:
+        raise argparse.ArgumentTypeError(
+            f"a scope is written dep:<code>, for example dep:74; got {value!r}"
+        )
+    return code.upper()
+
+
+def match(arguments: argparse.Namespace) -> int:
+    """Find candidate matches for a slice and enter them as pending judgments.
+
+    Offline. Prints aggregates only, because the candidates carry names and
+    constraint 13 says reading them is the maintainer's job, in `crony review`.
+    """
+    layout = _layout()
+    try:
+        report = candidates.run(layout, arguments.scope)
+    except (candidates.CandidateError, SourceError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+    print(
+        f"  {report.elus:>8,} elus in dep:{arguments.scope}, "
+        f"{report.elus_with_key:,} with a key"
+    )
+    print(
+        f"  {report.officers:>8,} supplier officers, "
+        f"{report.officers_with_key:,} with a key"
+    )
+    print(
+        f"  {report.candidates:>8,} candidates, "
+        f"{report.collisions:,} on a colliding key"
+    )
+    print(f"  {report.entered_pending:>8,} newly entered as pending judgments")
+    for variant_and_sex, count in report.by_variant_and_sex.items():
+        print(f"           {variant_and_sex:<12} {count:,}")
+    print(f"\n  {layout.candidates(arguments.scope)}")
     return 0
 
 
@@ -324,8 +373,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     downloader.add_argument(
         "--scope",
-        metavar="DEP",
-        help="a departement code; required by sources that ask per identifier",
+        type=departement_scope,
+        metavar="dep:CODE",
+        help="dep:<code>; required by sources that ask per identifier",
     )
     downloader.set_defaults(run=fetch)
 
@@ -347,10 +397,21 @@ def build_parser() -> argparse.ArgumentParser:
     surveyor.add_argument("subject", choices=["departements"])
     surveyor.add_argument(
         "--scope",
-        metavar="DEP",
-        help="a departement code, to cut the population bands to it",
+        type=departement_scope,
+        metavar="dep:CODE",
+        help="dep:<code>, to cut the population bands to one departement",
     )
     surveyor.set_defaults(run=survey)
+
+    matcher = subcommands.add_parser(
+        "match",
+        help="find candidate matches in a slice and enter them as pending (offline)",
+    )
+    matcher.add_argument("country", choices=["fr"])
+    matcher.add_argument(
+        "--scope", type=departement_scope, metavar="dep:CODE", required=True
+    )
+    matcher.set_defaults(run=match)
 
     return parser
 

@@ -4,16 +4,19 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Sessions 0 to 2 are done, and session 3's adapter is built.** Four commands run:
+**Sessions 0 to 2 are done, session 3's adapter is built, and session 4's matching
+is built.** Five commands run:
 
     uv run crony doctor
-    uv run crony fetch <source> [--scope DEP]
+    uv run crony fetch <source> [--scope dep:<code>]
     uv run crony stage <source>
-    uv run crony survey departements
+    uv run crony survey departements [--scope dep:<code>]
+    uv run crony match fr --scope dep:<code>
 
 Sources: `fr-decp`, `fr-insee-pop`, `fr-rne-elus` download a published file.
 `fr-entreprises-api` asks one question per supplier and per buyer in a
-département, so it requires `--scope` and refuses without one.
+département, so it requires `--scope` and refuses without one. Every scope is
+written `dep:<code>`; a bare code is refused.
 
 What is built: `config.py` (the data directory rules), `paths.py` (the layout),
 `http.py` (rate limiting, retries, hashed downloads and the manifest),
@@ -28,14 +31,12 @@ is a measurement of officer role-date coverage, it needs an INPI account, and th
 account does not exist. The adapter is tier A of the ADR-0007 plan, and the plan
 says in as many words that building it proves nothing about the gate.
 
-What is not: person-company matching, judgments, review, flags and the export.
-The buyer half of the review, which ADR-0007 requires and which is a different
-question from the person-company match, is built in
-`crony-eu/src/crony_eu/match/buyer_verification.py`; the command that drives it
-is not.
+Matching is built: `crony-eu/src/crony_eu/match/keys.py`, `candidates.py`,
+`judgments.py` and `buyer_verification.py`, the last two on the shared
+append-only `log.py`. What is not: the review screen, flags and the export.
 
-`crony match`, `crony review`, `crony flag`, `crony base-rate` and `crony case`
-do not exist as commands yet, deliberately, because a subcommand that parsed its
+`crony review`, `crony flag`, `crony base-rate` and `crony case` do not exist as
+commands yet, deliberately, because a subcommand that parsed its
 flags and printed "not implemented" would be listed by `--help` as though it
 worked.
 
@@ -179,9 +180,14 @@ crony-eu/
       fr_insee_pop.py              [built]  session 2
       fr_entreprises_api.py        [built]  companies, officers, buyer evidence
       fr_inpi_rne.py                        session 3, once there is an account
+    run.py                         [built]  run_id: input manifests + package version
     match/
-      buyer_verification.py        [built]  ADR-0007's buyer check, append-only
-      keys.py  candidates.py  judgments.py  review.py     session 4
+      log.py                       [built]  append-only, revision-ordered, no clock
+      keys.py                      [built]  FR-NAME-BIRTHYM-v1
+      candidates.py                [built]  exact join in scope, key_collision
+      judgments.py                 [built]  pending -> confirmed/rejected/ambiguous
+      buyer_verification.py        [built]  ADR-0007's buyer check
+      review.py                             session 4: the screen for both logs
     flags/
       f1_same_body.py  base_rates.py  dataset.py  sql/    session 5
     export/
@@ -277,7 +283,7 @@ Changing the rule means a new rule id, never an edit in place.
 crony doctor
 crony fetch <source> [--snapshot YYYY-MM-DD]
 crony stage <source> [--snapshot YYYY-MM-DD]
-crony survey departements [--scope <departement code>]
+crony survey departements [--scope dep:<code>]
 crony match fr --scope dep:<code>
 crony review [--flag F1] [--sample N --seed S]
 crony review buyers --scope dep:<code>

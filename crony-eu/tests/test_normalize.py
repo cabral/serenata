@@ -13,6 +13,7 @@ one file each way and nothing downstream could tell which.
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -23,7 +24,9 @@ from crony_eu.normalize import (
     DateFormatError,
     birth_ym,
     digits,
+    given_key,
     luhn_ok,
+    norm_name,
     parse_date,
     plausible,
     siren_of,
@@ -273,3 +276,93 @@ class TestSirenOf:
         # reason a checksum is a shape check and not an existence check.
         assert siren_of("000000001") == "000000001"
         assert siren_valid("000000001") is False
+
+
+# --- names -------------------------------------------------------------------
+#
+# Every name here is invented (constraint 1). The rule is the one in
+# `crony-eu/CLAUDE.md`, and the tests are the ones the work order lists for
+# session 4: idempotence; accents, apostrophes, hyphens and double spaces; and
+# JEAN-PIERRE against JEAN PIERRE.
+
+
+def generated_names() -> list[str]:
+    """Every combination of the awkward parts, rather than a few examples.
+
+    Built deterministically, so a failure names the exact input and a rerun
+    reproduces it, which a random property test would not promise without a seed.
+    """
+    parts = ["", "d'", "D\u2019", "le ", "Van-", "  "]
+    stems = ["nomdexemple", "ÉLODIE", "çàñö", "ABC", "x"]
+    ends = ["", "-autre", " autre", "'", "  "]
+    return [p + s + e for p in parts for s in stems for e in ends]
+
+
+class TestNormName:
+    def test_accents_are_dropped(self) -> None:
+        assert norm_name("Élodie") == "ELODIE"
+        assert norm_name("çàñö") == "CANO"
+
+    def test_both_apostrophes_become_a_space(self) -> None:
+        assert norm_name("D'EXEMPLE") == norm_name("D\u2019EXEMPLE") == "D EXEMPLE"
+
+    def test_hyphens_become_a_space(self) -> None:
+        assert norm_name("NOM-DEXEMPLE") == "NOM DEXEMPLE"
+
+    def test_spaces_are_collapsed_and_trimmed(self) -> None:
+        assert norm_name("  nom   dexemple ") == "NOM DEXEMPLE"
+
+    def test_nothing_left_is_none(self) -> None:
+        assert norm_name("--'") is None
+        assert norm_name(None) is None
+
+    def test_a_parenthesis_is_not_a_letter(self) -> None:
+        # It should never reach here: staging splits `BIRTH (USAGE)`. If it did,
+        # the key would be the two names run together, which is why the split
+        # exists (`fr_entreprises_api.split_surname`).
+        assert norm_name("A (B)") == "A B"
+
+    def test_it_is_idempotent_over_every_generated_name(self) -> None:
+        for name in generated_names():
+            once = norm_name(name)
+            assert norm_name(once) == once, repr(name)
+
+    def test_it_only_ever_returns_capitals_and_single_spaces(self) -> None:
+        for name in generated_names():
+            got = norm_name(name)
+            if got is None:
+                continue
+            assert re.fullmatch(r"[A-Z]+( [A-Z]+)*", got), repr(name)
+
+
+class TestGivenKey:
+    def test_a_hyphenated_compound_is_one_word(self) -> None:
+        assert given_key("Jean-Pierre") == "JEANPIERRE"
+
+    def test_a_space_separates_given_names(self) -> None:
+        assert given_key("JEAN PIERRE") == "JEAN"
+
+    def test_the_two_spellings_do_not_match(self) -> None:
+        # As specified, and deliberately: a hyphen joins one name, a space
+        # separates two, and the rule does not guess which was meant.
+        assert given_key("JEAN-PIERRE") != given_key("JEAN PIERRE")
+
+    def test_only_the_first_given_name_counts(self) -> None:
+        assert given_key("Jean-Pierre Marie Louis") == "JEANPIERRE"
+
+    def test_case_and_accents_do_not_matter(self) -> None:
+        # The élu register publishes mixed case, the company register capitals.
+        assert given_key("Élodie") == given_key("ELODIE") == "ELODIE"
+
+    def test_an_apostrophe_inside_a_name_joins_it(self) -> None:
+        assert given_key("N'Golo") == "NGOLO"
+
+    def test_empty_is_none(self) -> None:
+        assert given_key("") is None
+        assert given_key("   ") is None
+        assert given_key(None) is None
+
+    def test_it_is_idempotent_over_every_generated_name(self) -> None:
+        for name in generated_names():
+            once = given_key(name)
+            assert given_key(once) == once, repr(name)
