@@ -309,3 +309,97 @@ def write_populations(path: Path, rows: list[tuple[str, str, str, int]]) -> Path
             "DS_POPULATIONS_REFERENCE_2023_data.csv", "\n".join(lines) + "\n"
         )
     return path
+
+
+# --- API Recherche d'entreprises ---------------------------------------------
+#
+# Every name here is invented. Constraint 1: no real person's record goes into
+# this repository, not even with the name changed, so these are not changed
+# names but made-up ones, and they read that way on purpose.
+
+
+def api_officer(
+    *,
+    kind: str = "personne physique",
+    surname: str = "NOMDEXEMPLE",
+    given: str = "PRENOMDEXEMPLE",
+    birth: str | None = "1971-04",
+    role: str = "président",
+    denomination: str | None = None,
+    officer_siren: str | None = None,
+) -> dict[str, Any]:
+    """One `dirigeants` entry, in the shape the service publishes it."""
+    if kind == "personne morale":
+        return {
+            "type_dirigeant": kind,
+            "denomination": denomination or "SOCIETE D EXEMPLE",
+            "siren": officer_siren or siren("81230009"),
+            "qualite": role,
+        }
+    return {
+        "type_dirigeant": kind,
+        "nom": surname,
+        "prenoms": given,
+        "date_de_naissance": birth,
+        "annee_de_naissance": birth[:4] if birth else None,
+        "nationalite": None,
+        "qualite": role,
+    }
+
+
+def api_unit(
+    *,
+    unit_siren: str | None = None,
+    nature_juridique: str = "5710",
+    statut_diffusion: str = "O",
+    establishments: list[dict[str, Any]] | None = None,
+    officers: list[dict[str, Any]] | None = None,
+    head_office_siret: str | None = None,
+    head_office_commune: str = "74010",
+) -> dict[str, Any]:
+    """One `results` entry: a legal unit, its head office and its officers."""
+    value = unit_siren or siren("81230001")
+    return {
+        "siren": value,
+        "nom_complet": "ENTREPRISE D EXEMPLE",
+        "nature_juridique": nature_juridique,
+        "statut_diffusion": statut_diffusion,
+        "etat_administratif": "A",
+        "categorie_entreprise": "PME",
+        "activite_principale": "42.11Z",
+        "date_creation": "2005-03-01",
+        "nombre_etablissements": 1,
+        "siege": {
+            "siret": head_office_siret or (value + "00019"),
+            "commune": head_office_commune,
+            "est_siege": True,
+        },
+        "matching_etablissements": establishments if establishments is not None else [],
+        "dirigeants": officers if officers is not None else [],
+    }
+
+
+def api_establishment(
+    *,
+    establishment_siret: str,
+    commune: str = "74010",
+    state: str = "A",
+    created: str | None = "2017-01-01",
+    closed: str | None = None,
+    head_office: bool = True,
+) -> dict[str, Any]:
+    """One `matching_etablissements` entry."""
+    return {
+        "siret": establishment_siret,
+        "commune": commune,
+        "libelle_commune": "COMMUNE D EXEMPLE",
+        "etat_administratif": state,
+        "date_creation": created,
+        "date_fermeture": closed,
+        "statut_diffusion_etablissement": "O",
+        "est_siege": head_office,
+    }
+
+
+def api_response(results: list[dict[str, Any]]) -> dict[str, Any]:
+    return {"results": results, "total_results": len(results), "page": 1}

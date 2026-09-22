@@ -26,7 +26,7 @@ from pathlib import Path
 import httpx
 import pyarrow.parquet as pq
 import pytest
-from crony_eu.http import RateLimiter, SourceClient
+from crony_eu.http import RateLimiter, SourceClient, append_manifest
 from crony_eu.paths import Layout
 from crony_eu.sources import fr_decp
 from fakes import decp_row, siret, write_decp, write_populations  # noqa: F401
@@ -377,3 +377,104 @@ class TestRowIdentity:
         row = decp_row()
         with pytest.raises(fr_decp.StageError, match="share a decp_row_id"):
             stage(layout, [dict(row), dict(row)])
+
+
+class TestAttributeLineage:
+    """ADR-0007: a buyer's declaration and a consolidator's join are cited apart.
+
+    The split is data rather than prose so that the export can read it, and this
+    class is what stops a new column arriving without anyone deciding which kind
+    of fact it is.
+    """
+
+    def test_every_staged_column_has_an_origin(self) -> None:
+        assert set(fr_decp.ATTRIBUTE_ORIGIN) == set(fr_decp.CONTRACTS.names)
+
+    def test_every_origin_is_one_of_the_three(self) -> None:
+        assert set(fr_decp.ATTRIBUTE_ORIGIN.values()) == {
+            fr_decp.DECLARED,
+            fr_decp.DERIVED,
+            fr_decp.IDENTITY,
+        }
+
+    def test_the_two_columns_the_adr_was_written_about_are_derived(self) -> None:
+        assert fr_decp.ATTRIBUTE_ORIGIN["buyer_category"] == fr_decp.DERIVED
+        assert fr_decp.ATTRIBUTE_ORIGIN["buyer_commune_code"] == fr_decp.DERIVED
+        # And the buyer's own identifier is not.
+        assert fr_decp.ATTRIBUTE_ORIGIN["buyer_siret"] == fr_decp.DECLARED
+
+    def test_derived_columns_are_listed_for_the_export(self) -> None:
+        listed = fr_decp.derived_columns()
+        assert "buyer_commune_code" in listed
+        assert "buyer_siret" not in listed
+        assert listed == tuple(sorted(listed))
+
+
+class TestProvenanceOnEveryRow:
+    def test_a_row_carries_its_source_url_and_retrieval_time(
+        self, layout: Layout
+    ) -> None:
+        # Constraint 2 wants a source, a URL and a retrieval time on anything
+        # exported. Copying them on to the row means an export never has to go
+        # back to a manifest to find out where an attribute came from.
+        raw = layout.raw(fr_decp.SOURCE, SNAPSHOT)
+        write_decp(raw / "decp.parquet", [decp_row()])
+        append_manifest(
+            layout.manifest(fr_decp.SOURCE, SNAPSHOT),
+            {
+                "source": fr_decp.SOURCE,
+                "url": "https://files.invalid/decp.parquet",
+                "path": "decp.parquet",
+                "sha256": "0" * 64,
+                "bytes": 1,
+                "retrieved_at": "2026-09-19T10:43:32+00:00",
+                "licence": fr_decp.LICENCE,
+                "status": 200,
+            },
+        )
+        fr_decp.stage(layout, SNAPSHOT)
+
+        row = staged(layout, "contracts")[0]
+        assert row["source_url"] == "https://files.invalid/decp.parquet"
+        assert row["retrieved_at"] == "2026-09-19T10:43:32+00:00"
+
+
+class TestBuyerAssertionBinding:
+    """The handle a buyer verification attaches to.
+
+    `decp_row_id` hashes only the published fields, so it does not move when the
+    consolidator recomputes a commune code. That is right for a row id and wrong
+    for binding a review to the values it examined, which is what the handoff
+    means by "decp_row_id alone cannot bind a buyer check to its inputs".
+    """
+
+    def test_changing_the_enrichment_changes_the_binding(self, layout: Layout) -> None:
+        stage(layout, [decp_row(acheteur_commune_code="93001")])
+        first = staged(layout, "contracts")[0]
+
+        stage(layout, [decp_row(acheteur_commune_code="93002")])
+        second = staged(layout, "contracts")[0]
+
+        assert first["decp_row_id"] == second["decp_row_id"]
+        assert first["buyer_assertion_id"] != second["buyer_assertion_id"]
+
+    def test_changing_the_category_changes_the_binding(self, layout: Layout) -> None:
+        stage(layout, [decp_row(acheteur_categorie="Commune")])
+        first = staged(layout, "contracts")[0]
+        stage(layout, [decp_row(acheteur_categorie="Groupement de communes")])
+        second = staged(layout, "contracts")[0]
+        assert first["buyer_assertion_id"] != second["buyer_assertion_id"]
+
+    def test_two_rows_asserting_the_same_buyer_share_a_binding(
+        self, layout: Layout
+    ) -> None:
+        # One review can cover every contract that makes the same claim.
+        stage(
+            layout,
+            [
+                decp_row(uid="A", acheteur_commune_code="93001"),
+                decp_row(uid="B", acheteur_commune_code="93001"),
+            ],
+        )
+        ids = {str(row["buyer_assertion_id"]) for row in staged(layout, "contracts")}
+        assert len(ids) == 1

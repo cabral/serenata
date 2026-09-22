@@ -461,6 +461,62 @@ contracts notified before their closure date, so the bracket check passes them.
 That is five records and not a validation of the consolidator's join; it is
 enough to say the check is implementable and not enough to say it is unnecessary.
 
+### Verified 2026-09-22: what the establishment dates and the commune code mean
+
+ADR-0007 Amendment 1 says establishment dates are consistency checks whose
+semantics must be read from documentation before any boundary is enforced from
+them. This is that reading, from INSEE's own "Description des variables du
+fichier StockEtablissement" (version of 25 April 2019), which defines the SIRENE
+variables the annuaire API republishes. No API call was involved.
+
+**The commune code is never historical, by design.** INSEE's definition of
+`codeCommuneEtablissement`:
+
+> Le code commune correspond au code commune existant à la date de la mise à
+> disposition : toute modification du code officiel géographique est répercutée
+> sur la totalité des établissements (même ceux fermés) correspondant à ce code
+> commune.
+
+Read that twice, because it decides the question Amendment 1 was written about.
+The code is the one current **at the date the file was published**, and a change
+to the Code officiel géographique is applied backwards over every establishment
+carrying the old code, **including establishments that are closed**. SIRENE does
+not keep the code an establishment had in 2019; it overwrites it.
+
+So `historical_geography = not_established` is not this project failing to reach
+a fact. **The fact is not recorded anywhere in SIRENE**, for any consumer, at any
+access level. That is a stronger statement than the one Amendment 1 rested on
+(the annuaire API has no as-of parameter), and it means ADR-0007's revisit
+trigger about "official SIRET-level historical coverage" is unlikely to fire from
+this source at all. It also means DECP's derived commune code and SIRENE's code
+are two snapshots normalised to two different dates, so agreement between them is
+agreement between snapshots and never a claim about the past.
+
+**`date_creation` is a declaratory date with a sentinel, not an existence bound.**
+
+> La date de création correspond à la date qui figure dans les statuts de
+> l'entreprise déposés au CFE compétent.
+
+Two things follow. It comes from filed articles rather than from an
+administrative record, and when it is not provided **it is `1900-01-01` rather
+than null**. INSEE also says it "ne correspond pas obligatoirement à dateDebut de
+la première période de l'établissement", so it is not even the start of the
+establishment's first historised period. `dateDebut` itself uses `1900-01-01` to
+mean undetermined.
+
+**Therefore no window is enforced from these dates**, which is the answer
+Amendment 1 asked for rather than a deferral of it. A date that is a filing
+declaration, that defaults to a sentinel this project's own plausibility floor
+would accept as real (`EARLIEST_PLAUSIBLE_YEAR` is 1900), and that is not the
+start of the record, cannot carry a boundary. The dates are staged in
+`buyer_evidence.parquet` because a person reviewing a case should see them; no
+rule reads them.
+
+One consequence worth stating for whoever implements the review: a closed
+establishment is still resolvable and still carries a commune code, so closure is
+not a refusal. The September 2026 probes found exactly that, and the amendment
+already says a current closure does not disqualify an earlier contract.
+
 ## fr-inpi-rne: INPI, Registre national des entreprises
 
 - Portal: https://data.inpi.fr (free account; API and SFTP access are managed from the account page)

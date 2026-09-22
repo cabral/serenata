@@ -21,7 +21,12 @@ from typing import Any, Protocol
 
 from crony_eu.http import SourceClient
 from crony_eu.paths import Layout
-from crony_eu.sources import fr_decp, fr_insee_pop, fr_rne_elus
+from crony_eu.sources import (
+    fr_decp,
+    fr_entreprises_api,
+    fr_insee_pop,
+    fr_rne_elus,
+)
 
 
 class Source(Protocol):
@@ -40,12 +45,39 @@ class Source(Protocol):
     def stage(self, layout: Layout, snapshot: str) -> dict[str, int]: ...
 
 
+class ScopedSource(Protocol):
+    """A source whose fetch is one request per identifier in a slice.
+
+    The published-file sources download the same bytes whoever asks. This one
+    asks a question per supplier and per buyer in the département being
+    processed, so the scope is an argument rather than a setting, and a run
+    without one would quietly mean "all of France" at 5 requests a second.
+
+    `SCOPED` is how the CLI tells the two apart without a list of names.
+    """
+
+    SOURCE: str
+    SCOPED: bool
+
+    def fetch(
+        self, client: SourceClient, layout: Layout, snapshot: str, scope: str
+    ) -> list[dict[str, Any]]: ...
+
+    def stage(self, layout: Layout, snapshot: str) -> dict[str, int]: ...
+
+
 #: Name -> module. The CLI's whole knowledge of which sources exist.
-REGISTRY: dict[str, Source] = {
+REGISTRY: dict[str, Source | ScopedSource] = {
     fr_decp.SOURCE: fr_decp,
+    fr_entreprises_api.SOURCE: fr_entreprises_api,
     fr_insee_pop.SOURCE: fr_insee_pop,
     fr_rne_elus.SOURCE: fr_rne_elus,
 }
+
+
+def is_scoped(source: str) -> bool:
+    """Whether `crony fetch <source>` needs a `--scope`."""
+    return bool(getattr(REGISTRY[source], "SCOPED", False))
 
 
 def names() -> list[str]:

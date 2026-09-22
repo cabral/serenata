@@ -21,12 +21,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+from typing import cast
 
 from crony_eu import __version__
 from crony_eu.config import ConfigError, data_dir, repository_root
 from crony_eu.http import build_client
 from crony_eu.paths import Layout
-from crony_eu.sources import REGISTRY, names
+from crony_eu.sources import REGISTRY, ScopedSource, Source, is_scoped, names
 from crony_eu.survey import SurveyError
 from crony_eu.survey import departements as survey_departements
 from crony_eu.survey import pairs_by_band as survey_pairs_by_band
@@ -158,11 +159,32 @@ def fetch(arguments: argparse.Namespace) -> int:
     """
     module = REGISTRY[arguments.source]
     snapshot = arguments.snapshot or date.today().isoformat()
-    layout = _layout()
+    scoped = is_scoped(arguments.source)
 
+    if scoped and not arguments.scope:
+        print(
+            f"{arguments.source} asks one question per supplier and per buyer in "
+            "a slice, so it needs `--scope <departement code>`. Without one it "
+            "would mean all of France.",
+            file=sys.stderr,
+        )
+        return 1
+    if arguments.scope and not scoped:
+        print(
+            f"{arguments.source} downloads the same published file whoever asks; "
+            "`--scope` would not change what it fetches.",
+            file=sys.stderr,
+        )
+        return 1
+
+    layout = _layout()
     client = build_client(arguments.source)
     try:
-        entries = module.fetch(client, layout, snapshot)
+        if scoped:
+            scoped_module = cast("ScopedSource", module)
+            entries = scoped_module.fetch(client, layout, snapshot, arguments.scope)
+        else:
+            entries = cast("Source", module).fetch(client, layout, snapshot)
     finally:
         client.client.close()
 
@@ -299,6 +321,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--snapshot",
         metavar="YYYY-MM-DD",
         help="the snapshot to write; defaults to today",
+    )
+    downloader.add_argument(
+        "--scope",
+        metavar="DEP",
+        help="a departement code; required by sources that ask per identifier",
     )
     downloader.set_defaults(run=fetch)
 

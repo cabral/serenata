@@ -162,9 +162,84 @@ ID_TYPES = {
 #: rest are phase 2 and are staged but not mapped.
 COMMUNE_CATEGORY = "Commune"
 
+
+#: Staged column -> whether the buyer declared it or the consolidator computed
+#: it. ADR-0007 requires the two to be cited apart in an export, so the split is
+#: data a later stage reads rather than a paragraph a later reader has to
+#: remember. `crony-eu/tests/test_sources_fr_decp.py` pins that every column in
+#: `CONTRACTS` appears here exactly once, so a new column cannot arrive without
+#: someone deciding which kind of fact it is.
+#:
+#: `identity` is the third value and it is neither: those columns are this
+#: project's own, computed from the published fields and carrying no claim about
+#: the world.
+DECLARED = "declared"
+DERIVED = "derived"
+IDENTITY = "identity"
+
+ATTRIBUTE_ORIGIN: dict[str, str] = {
+    "decp_row_id": IDENTITY,
+    "buyer_assertion_id": IDENTITY,
+    "uid": DECLARED,
+    "contract_id": DECLARED,
+    "modification_id": DECLARED,
+    "is_latest_version": IDENTITY,
+    "published_as_current": DECLARED,
+    "buyer_siret": DECLARED,
+    "buyer_siren": IDENTITY,
+    "buyer_siret_valid": IDENTITY,
+    "buyer_label": DECLARED,
+    # The two ADR-0007 was written about. `acheteur_categorie` is the
+    # consolidator's classification of the buyer and `acheteur_commune_code` its
+    # join from the SIRET; the buyer declared neither.
+    "buyer_category": DERIVED,
+    "buyer_commune_code": DERIVED,
+    "buyer_departement_code": DERIVED,
+    "supplier_id_raw": DECLARED,
+    "supplier_id_type_raw": DECLARED,
+    "supplier_id_type": IDENTITY,
+    "supplier_siret": IDENTITY,
+    "supplier_siren": IDENTITY,
+    "supplier_siret_valid": IDENTITY,
+    "supplier_has_siren": IDENTITY,
+    "supplier_label": DECLARED,
+    "supplier_size_category": DERIVED,
+    "supplier_activity_code": DERIVED,
+    "supplier_commune_code": DERIVED,
+    "supplier_departement_code": DERIVED,
+    "subject": DECLARED,
+    "cpv_code": DECLARED,
+    "nature": DECLARED,
+    "procedure": DECLARED,
+    "duration_months": DECLARED,
+    "offers_received": DECLARED,
+    "framework_id": DECLARED,
+    "consortium_type": DECLARED,
+    "execution_place_code": DECLARED,
+    "amount_eur": DECLARED,
+    "amount_rationalised_eur": DERIVED,
+    "amount_anomaly": DERIVED,
+    "date_notification": DECLARED,
+    "date_published": DECLARED,
+    "dates_plausible": IDENTITY,
+    "source_dataset": DECLARED,
+    "source_file": DECLARED,
+    "source_url": IDENTITY,
+    "retrieved_at": IDENTITY,
+}
+
+
+def derived_columns() -> tuple[str, ...]:
+    """The columns an export has to attribute to the consolidator."""
+    return tuple(
+        sorted(name for name, origin in ATTRIBUTE_ORIGIN.items() if origin == DERIVED)
+    )
+
+
 CONTRACTS = pa.schema(
     [
         pa.field("decp_row_id", pa.string()),
+        pa.field("buyer_assertion_id", pa.string()),
         pa.field("uid", pa.string()),
         pa.field("contract_id", pa.string()),
         pa.field("modification_id", pa.int32()),
@@ -206,6 +281,7 @@ CONTRACTS = pa.schema(
         pa.field("dates_plausible", pa.bool_()),
         pa.field("source_dataset", pa.string()),
         pa.field("source_file", pa.string()),
+        pa.field("source_url", pa.string()),
         pa.field("retrieved_at", pa.string()),
     ]
 )
@@ -250,8 +326,15 @@ def _id_type_sql() -> str:
     return f"CASE {branches} ELSE nullif({normalised}, '') END"
 
 
-def _select(path: Path, retrieved_at: str, pivot: str) -> str:
-    """The SQL that turns the consolidated file into the staged columns."""
+def _select(path: Path, retrieved_at: str, url: str, pivot: str) -> str:
+    """The SQL that turns the consolidated file into the staged columns.
+
+    `url` and `retrieved_at` come from the snapshot's manifest and are copied on
+    to every row. That is a lot of identical strings, and Parquet dictionary
+    encodes them to almost nothing; what it buys is a row that carries its own
+    provenance, so an export citing one attribute does not have to go back to a
+    manifest to find out where it came from (constraint 2).
+    """
     buyer_siret = digits_only("acheteur_id", 14)
     supplier_type = _id_type_sql()
     published_siret = digits_only("titulaire_id", 14)
@@ -259,9 +342,24 @@ def _select(path: Path, retrieved_at: str, pivot: str) -> str:
     notified = "dateNotification"
     plausible = plausible_date(notified, EARLIEST_PLAUSIBLE_YEAR, pivot)
 
+    # What a buyer verification binds to. `decp_row_id` deliberately hashes only
+    # the published fields, so it does not change when the consolidator
+    # recomputes a commune code, which is exactly why it cannot bind a check to
+    # the values that check examined. This one hashes the asserted enrichment
+    # with the snapshot, so a changed assertion cannot reuse an old review.
+    buyer_assertion = identity(
+        [
+            f"'{pivot}'",
+            buyer_siret,
+            "nullif(trim(acheteur_categorie), '')",
+            "nullif(trim(acheteur_commune_code), '')",
+        ]
+    )
+
     return f"""
         SELECT
             {identity(IDENTITY_COLUMNS)}                  AS decp_row_id,
+            {buyer_assertion}                             AS buyer_assertion_id,
             nullif(trim(uid), '')                         AS uid,
             nullif(trim(id), '')                          AS contract_id,
             CAST(modification_id AS INTEGER)              AS modification_id,
@@ -307,6 +405,7 @@ def _select(path: Path, retrieved_at: str, pivot: str) -> str:
             {plausible}                                   AS dates_plausible,
             nullif(trim(sourceDataset), '')               AS source_dataset,
             nullif(trim(sourceFile), '')                  AS source_file,
+            '{url}'                                       AS source_url,
             '{retrieved_at}'                              AS retrieved_at
         FROM read_parquet('{path.as_posix()}')
     """
@@ -380,18 +479,22 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
             f"{SOURCE}: snapshot {snapshot} is missing decp.parquet. Fetch it first."
         )
 
-    retrieved = {
-        entry["path"]: entry["retrieved_at"]
+    entries = {
+        entry["path"]: entry
         for entry in read_manifest(layout.manifest(SOURCE, snapshot))
     }
+    published = entries.get("decp.parquet", {})
 
     connection = duckdb.connect()
     try:
         total, implausible = _check_notification_dates(connection, source, snapshot)
-        connection.execute(
-            f"CREATE TEMP TABLE versions AS "
-            f"{_select(source, retrieved.get('decp.parquet', ''), snapshot)}"
+        select = _select(
+            source,
+            published.get("retrieved_at", ""),
+            published.get("url", ""),
+            snapshot,
         )
+        connection.execute(f"CREATE TEMP TABLE versions AS {select}")
 
         duplicated = connection.execute(
             "SELECT count(*) - count(DISTINCT decp_row_id) FROM versions"

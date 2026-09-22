@@ -368,3 +368,55 @@ class TestSurvey:
     def test_an_unknown_subject_is_refused_by_the_parser(self) -> None:
         with pytest.raises(SystemExit):
             build_parser().parse_args(["survey", "communes"])
+
+
+class TestScopedFetch:
+    """`--scope` is required by some sources and refused by others.
+
+    The published-file sources download the same bytes whoever asks. The company
+    API asks one question per supplier and per buyer in a département, so a run
+    without a scope would quietly mean all of France at five requests a second.
+    Both mistakes fail loudly rather than doing something defensible-looking.
+    """
+
+    def test_a_scoped_source_without_a_scope_is_refused(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["fetch", "fr-entreprises-api"]) == 1
+        assert "all of France" in capsys.readouterr().err
+
+    def test_a_scope_on_an_unscoped_source_is_refused(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["fetch", "fr-decp", "--scope", "74"]) == 1
+        assert "would not change what it fetches" in capsys.readouterr().err
+
+    def test_a_scoped_fetch_passes_the_scope_through(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        from crony_eu.sources import fr_entreprises_api as api
+
+        seen: list[str] = []
+
+        def fake_fetch(
+            client: object, layout: object, snapshot: str, scope: str
+        ) -> list[dict[str, object]]:
+            seen.append(scope)
+            return []
+
+        monkeypatch.setattr(api, "fetch", fake_fetch)
+        assert main(["fetch", "fr-entreprises-api", "--scope", "74"]) == 0
+        assert seen == ["74"]
+        assert "already complete" in capsys.readouterr().out

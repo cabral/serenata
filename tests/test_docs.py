@@ -79,19 +79,17 @@ _NOT_REPOSITORY_PATHS = (
 #: `TestPathsNotYetBuilt` below makes the exemption expire on its own: the day
 #: the tree exists, this constant has to shrink or the tests fail.
 #:
-#: It has shrunk twice. `crony-eu/src/` and `crony-eu/tests/` went when session 0
-#: built them, and `sources/` went when session 1 built the first adapter. Every
-#: path the Crony documents claim inside those trees is now checked like any
-#: other. What is left is the code the later sessions are ordered to write.
-#: Two of these are whole trees and two are single modules, which is the
-#: exemption getting more specific as the code arrives: `sources/` exists now,
-#: so only the two adapters session 3 is ordered to write are still exempt
-#: inside it.
+#: It has shrunk three times. `crony-eu/src/` and `crony-eu/tests/` went when
+#: session 0 built them, `sources/` went when session 1 built the first adapter,
+#: and `fr_entreprises_api.py` went when tier A of the ADR-0007 plan built it.
+#: Every path the Crony documents claim inside those trees is now checked like
+#: any other. What is left is the code the later sessions are ordered to write:
+#: three whole trees and one module, the INPI adapter, which cannot be written
+#: until there is an account to write it against.
 _NOT_YET_BUILT = (
     "crony-eu/src/crony_eu/match/",
     "crony-eu/src/crony_eu/flags/",
     "crony-eu/src/crony_eu/export/",
-    "crony-eu/src/crony_eu/sources/fr_entreprises_api.py",
     "crony-eu/src/crony_eu/sources/fr_inpi_rne.py",
 )
 

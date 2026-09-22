@@ -4,19 +4,29 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Sessions 0 to 2 are done.** Four commands run:
+**Sessions 0 to 2 are done, and session 3's adapter is built.** Four commands run:
 
     uv run crony doctor
-    uv run crony fetch <source>        fr-decp, fr-insee-pop, fr-rne-elus
+    uv run crony fetch <source> [--scope DEP]
     uv run crony stage <source>
     uv run crony survey departements
+
+Sources: `fr-decp`, `fr-insee-pop`, `fr-rne-elus` download a published file.
+`fr-entreprises-api` asks one question per supplier and per buyer in a
+département, so it requires `--scope` and refuses without one.
 
 What is built: `config.py` (the data directory rules), `paths.py` (the layout),
 `http.py` (rate limiting, retries, hashed downloads and the manifest),
 `parquet.py` (byte-stable writes, in memory and streaming), `sql.py` (the
 fragments the staging queries share), `normalize.py` (dates and French company
-identifiers), `survey.py`, `cli.py`, and three source modules: `fr_rne_elus.py`,
-`fr_decp.py` and `fr_insee_pop.py`. Their tests are in `crony-eu/tests/`.
+identifiers), `survey.py`, `cli.py`, and four source modules: `fr_rne_elus.py`,
+`fr_decp.py`, `fr_insee_pop.py` and `fr_entreprises_api.py`. Their tests are in
+`crony-eu/tests/`.
+
+**Session 3's adapter existing is not session 3 passing.** The feasibility gate
+is a measurement of officer role-date coverage, it needs an INPI account, and the
+account does not exist. The adapter is tier A of the ADR-0007 plan, and the plan
+says in as many words that building it proves nothing about the gate.
 
 What is not: matching, judgments, review, flags and the export. `crony match`,
 `crony review`, `crony flag`, `crony base-rate` and `crony case` do not exist as
@@ -161,7 +171,7 @@ crony-eu/
       fr_rne_elus.py               [built]  session 1
       fr_decp.py                   [built]  session 2
       fr_insee_pop.py              [built]  session 2
-      fr_entreprises_api.py                 session 3: companies and officers
+      fr_entreprises_api.py        [built]  companies, officers, buyer evidence
       fr_inpi_rne.py                        session 3, once there is an account
     match/
       keys.py  candidates.py  judgments.py  review.py     session 4
