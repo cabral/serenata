@@ -98,6 +98,7 @@ def people_queue(
     scope: str,
     sample: int | None = None,
     seed: int | None = None,
+    only: set[str] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """Pending candidates for the slice, with everything the screen shows.
 
@@ -119,6 +120,8 @@ def people_queue(
     }
 
     chosen = [str(row["judgment_id"]) for row in candidates]
+    if only is not None:
+        chosen = [identifier for identifier in chosen if identifier in only]
     if sample is not None:
         chosen = sample_ids(chosen, sample, seed if seed is not None else 0)
     already = sum(
@@ -242,8 +245,13 @@ def review_people(
     say: Say | None = None,
     sample: int | None = None,
     seed: int | None = None,
+    only: set[str] | None = None,
 ) -> Tally:
     """Walk the pending candidates and record what the reviewer decides.
+
+    `only` restricts the queue to a set of judgment ids; `crony review --flag F1`
+    passes the ones behind the current F1 hits, so the candidates that matter to
+    the flag are decided first.
 
     `ask` and `say` default to `input` and `print` looked up when called, not
     when this module was imported; a default bound at import would ignore
@@ -252,7 +260,7 @@ def review_people(
     """
     ask = ask if ask is not None else input
     say = say if say is not None else print
-    cards, already = people_queue(layout, scope, sample, seed)
+    cards, already = people_queue(layout, scope, sample, seed, only)
     tally = Tally()
     if sample is not None:
         say(

@@ -31,12 +31,17 @@ def test_a_connection_spills_inside_the_data_directory(outside_repo: Path) -> No
 
 def test_nothing_else_in_the_package_opens_duckdb_directly() -> None:
     # A direct `duckdb.connect()` spills into whatever directory the command was
-    # run from, which is how real data reached the repository tree.
+    # run from, which is how real data reached the repository tree. The module
+    # level helpers (`duckdb.sql`, `duckdb.query`, `duckdb.read_parquet`...) use
+    # a default connection that does the same, so they are refused too.
     offenders = [
         str(path.relative_to(SOURCE_TREE))
         for path in sorted(SOURCE_TREE.rglob("*.py"))
         if path.name != "db.py"
-        and re.search(r"\bduckdb\.connect\(", path.read_text(encoding="utf-8"))
+        and re.search(
+            r"\bduckdb\.(connect|sql|query|execute|read_\w+)\(",
+            path.read_text(encoding="utf-8"),
+        )
     ]
     assert not offenders, f"open DuckDB through crony_eu.db.connect: {offenders}"
 

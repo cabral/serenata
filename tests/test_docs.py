@@ -91,7 +91,6 @@ _NOT_REPOSITORY_PATHS = (
 #: and it cannot go on covering a directory that now holds real modules whose
 #: documented paths deserve checking like any other.
 _NOT_YET_BUILT = (
-    "crony-eu/src/crony_eu/flags/",
     "crony-eu/src/crony_eu/export/",
     "crony-eu/src/crony_eu/sources/fr_inpi_rne.py",
 )

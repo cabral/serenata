@@ -45,8 +45,25 @@ BANDS: tuple[tuple[int, str], ...] = (
     (50_001, "above 50,000"),
 )
 
-#: The population at or below which art. 432-12's exception can apply.
+#: The population at or below which art. 432-12's exception can apply. Checked on
+#: Légifrance on 2026-09-22: "dans les communes comptant 3 500 habitants au plus",
+#: in the version in force since 24 December 2025.
 ARTICLE_432_12_CEILING = 3_500
+
+#: The band of a commune with no population row (Mayotte in this vintage, or a
+#: code INSEE no longer publishes).
+UNKNOWN_BAND = "unknown"
+
+
+def band_of(population: int | None) -> str:
+    """The population band, the same one the SQL in `_band_sql` computes."""
+    if population is None:
+        return UNKNOWN_BAND
+    label = BANDS[0][1]
+    for lower, name in BANDS:
+        if population >= lower:
+            label = name
+    return label
 
 
 class SurveyError(Exception):

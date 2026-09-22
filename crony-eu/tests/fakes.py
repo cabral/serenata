@@ -449,37 +449,98 @@ def stage_slice(
     buyer_commune: str = "74010",
     supplier: str | None = None,
     buyer_body: dict[str, Any] | None = None,
+    contracts: list[dict[str, Any]] | None = None,
+    populations: list[tuple[str, str, str, int]] | None = None,
+    pre_election: list[Elu] | None = None,
+    supplier_category: str = "5710",
+    supplier_diffusion: str = "O",
+    other_suppliers: dict[str, list[dict[str, Any]]] | None = None,
 ) -> None:
-    """DECP, the élus and the company API, staged for one generated slice."""
-    from crony_eu.sources import fr_decp, fr_entreprises_api, fr_rne_elus
+    """DECP, the élus, the populations and the company API, staged for one slice.
+
+    `contracts` replaces the single default DECP row; `other_suppliers` adds more
+    companies (SIREN -> officers) for tests with several suppliers.
+    """
+    from crony_eu.sources import fr_decp, fr_entreprises_api, fr_insee_pop, fr_rne_elus
 
     supplier = supplier or siret("81230001")
     buyer = buyer or siret("21740010")
-    write_decp(
-        layout.raw(fr_decp.SOURCE, "2026-09-19") / "decp.parquet",
-        [
-            decp_row(
-                acheteur_id=buyer,
-                acheteur_commune_code=buyer_commune,
-                titulaire_id=supplier,
-            )
-        ],
-    )
+    rows = contracts or [
+        decp_row(
+            acheteur_id=buyer,
+            acheteur_commune_code=buyer_commune,
+            titulaire_id=supplier,
+        )
+    ]
+    write_decp(layout.raw(fr_decp.SOURCE, "2026-09-19") / "decp.parquet", rows)
     fr_decp.stage(layout, "2026-09-19")
 
-    write_rne_snapshot(layout.root, "2026-09-16", cm_current=elus)
+    write_rne_snapshot(
+        layout.root, "2026-09-16", cm_current=elus, cm_pre_election=pre_election or []
+    )
     fr_rne_elus.stage(layout, "2026-09-16")
+
+    write_populations(
+        layout.raw(fr_insee_pop.SOURCE, "2026-09-19") / fr_insee_pop.STORED,
+        populations or [(buyer_commune, "COM", "PMUN", 1200)],
+    )
+    fr_insee_pop.stage(layout, "2026-09-19")
 
     ask = fr_entreprises_api.Ask
     responses = [
         (
             ask("siren", supplier[:9]),
-            api_response([api_unit(unit_siren=supplier[:9], officers=officers)]),
+            api_response(
+                [
+                    api_unit(
+                        unit_siren=supplier[:9],
+                        officers=officers,
+                        nature_juridique=supplier_category,
+                        statut_diffusion=supplier_diffusion,
+                    )
+                ]
+            ),
         )
     ]
+    for other, other_officers in (other_suppliers or {}).items():
+        responses.append(
+            (
+                ask("siren", other[:9]),
+                api_response([api_unit(unit_siren=other[:9], officers=other_officers)]),
+            )
+        )
     if buyer_body is not None:
         responses.append((ask("siret", buyer), buyer_body))
     archive_api(layout, responses)
+
+
+def set_roles(
+    layout: Any,
+    role_start: date | None,
+    role_end: date | None,
+    semantics: str = "role_start",
+) -> None:
+    """Rewrite the staged officers with role dates the company API never carries.
+
+    Tests of `role_overlap` need dates, and no approved source supplies them yet
+    (INPI is the session 3 gate). This writes them into the staged table so the
+    flag's handling of them is tested before a real source exists.
+    """
+    from crony_eu.parquet import write
+    from crony_eu.sources import fr_entreprises_api
+
+    path = layout.staged(fr_entreprises_api.SOURCE, "2026-09-22") / "officers.parquet"
+    rows = [
+        {
+            **row,
+            "role_start": role_start,
+            "role_end": role_end,
+            "role_date_semantics": semantics,
+            "role_date_source": "test",
+        }
+        for row in pq.read_table(path).to_pylist()
+    ]
+    write(rows, fr_entreprises_api.OFFICERS, path, key=("officer_row_id",))
 
 
 def slice_elu(**overrides: str) -> Elu:

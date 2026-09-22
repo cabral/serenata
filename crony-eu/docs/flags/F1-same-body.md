@@ -1,6 +1,6 @@
 # F1: same-body officer
 
-Status: specified. Base rate not measured, so output is `uncalibrated` (CLAUDE.md, constraint 8) and no case packet may be built from it.
+Status: **implemented 2026-09-22, not calibrated.** `crony flag F1` and `crony base-rate F1` run, and the base-rate table has been computed for `dep:74` and shown to the maintainer, not written here: that is the session 5 STOP. Until the maintainer approves the table and `CALIBRATION` is set in `crony-eu/src/crony_eu/flags/f1_same_body.py`, every output row is `uncalibrated` (CLAUDE.md, constraint 8) and no case packet may be built from it.
 
 Revised 2026-09-16 on two points, both recorded in [ADR-0014](../../../docs/adr/0014-replace-serenata-with-crony.md):
 
@@ -42,6 +42,13 @@ A contract enters F1 when all of these hold:
    - élus in the current file: mandate start on or before the notification date
    - élus found only in the pre-election extract: in office until the earliest mandate start of that commune's new council in the current file
    - when neither can be established: `mandate_overlap = unknown`
+
+   So `mandate_overlap` is `true` or `unknown` and never `false`, and that is
+   deliberate. The register records a mandate's start and nothing before it, so
+   it can place someone in office but cannot establish that they were not: an
+   élu first recorded in 2026 may have sat on the council in 2014. A contract
+   notified before the recorded start is therefore `unknown`, and an `unknown`
+   cannot reach a packet (constraint 9).
 5. A judgment, pending or confirmed, links that élu to a natural-person officer of the supplier.
 6. That officer role covers the notification date: role start on or before it, and role end absent or on or after it. When either date is missing: `role_overlap = unknown`.
 
@@ -148,7 +155,27 @@ Set the tag when all of these hold:
 
 If the DECP publication threshold recorded in `crony-eu/docs/sources/france.md` is above EUR 16,000, no DECP contract can fit under this exception on its own amount, and the tag will almost never fire. That is the expected result, not a bug.
 
-Check the article on Légifrance before implementing, since the amount can change.
+**Checked on Légifrance on 2026-09-22**, in the version in force since
+24 December 2025: "dans les communes comptant 3 500 habitants au plus, les maires,
+adjoints ou conseillers municipaux délégués ou agissant en remplacement du maire
+peuvent chacun traiter avec la commune dont ils sont élus pour le transfert de
+biens mobiliers ou immobiliers ou la fourniture de services dans la limite d'un
+montant annuel fixé à 16 000 euros." The amount is 16,000 and the population
+bound is inclusive.
+
+Two limits the implementation found, recorded rather than worked around:
+
+- **The register publishes no `conseiller délégué`.** Its function labels are
+  `Maire`, `Maire délégué` and the numbered `adjoint au Maire`; a councillor
+  holding a delegation is indistinguishable from one who does not. The tag cannot
+  fire for them and under-fires for that reason alone. `Maire délégué`, the mayor
+  of a commune déléguée inside a commune nouvelle, is treated as a maire, because
+  the tag marks a possible innocent explanation and setting it too broadly errs
+  toward caution about the person rather than against it.
+- **The exception names goods and services, not works.** "Le transfert de biens
+  … ou la fourniture de services" does not mention a marché de travaux. The tag
+  as specified does not look at the contract's type and is implemented as
+  specified; whether it should is a question for the maintainer, not an edit.
 
 ## Innocent explanations to rule out
 
@@ -171,7 +198,7 @@ Check the article on Légifrance before implementing, since the amount can chang
 
 ## Base rate
 
-Unit: distinct (commune, supplier) pairs with at least one contract in scope. One pair, however many contracts it carries. Every number below uses this unit, including the precision sample, so that nothing in this spec compares two denominators.
+Unit: distinct (commune, supplier) pairs with at least one contract meeting conditions 1 to 3. One pair, however many contracts it carries. Every **rate** below uses this unit, so that nothing in this spec compares two denominators. Precision is the exception, and says so: it is measured on sampled candidate *judgments*, as ADR-0003 and the precision line below define it and as `crony review --sample` draws it. An earlier version of this paragraph put the precision sample in the pair unit too, which contradicted the line that specifies it.
 
 Method (session 5):
 
@@ -184,9 +211,9 @@ Method (session 5):
 
 No expected rate is computed in phase 1. The two comparators the first bundle proposed, the département's whole supplier pool and the subset with a head office in the commune, both need officer data for companies that won nothing, which is INPI at national scale and therefore phase 2.
 
-Query: `crony-eu/src/crony_eu/flags/sql/f1_base_rate.sql` (session 5, not written)
+Query: `crony-eu/src/crony_eu/flags/sql/f1_base_rate.sql`, run by `crony base-rate F1 --scope dep:<code>`. The precision sample is 100 judgments with seed 1, the same draw `crony review --scope dep:<code> --sample 100 --seed 1` puts in front of the maintainer.
 
-Measured values: _not measured yet_
+Measured values: _computed for `dep:74` on 2026-09-22 and awaiting the maintainer's review; not filled in until approved_
 
 | band | pairs | F1 pairs (candidates) | F1 pairs (confirmed) | packet-eligible | role dates resolved |
 |---|---|---|---|---|---|
@@ -196,4 +223,4 @@ Measured values: _not measured yet_
 | 10,001 to 50,000 | | | | | |
 | above 50,000 | | | | | |
 
-Precision: _not measured yet_ (sample size, seed, confirmed, rejected, ambiguous)
+Precision: _not measured yet_: the sample (100 judgments, seed 1) has not been reviewed. Report sample size, seed, confirmed, rejected, ambiguous

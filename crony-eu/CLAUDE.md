@@ -4,15 +4,18 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Sessions 0 to 2 are done, session 3's adapter is built, and session 4 is built
-up to its acceptance, which is a person running the review.** Six commands run:
+**Sessions 0 to 2 are done, session 3's adapter is built, session 4 is built up to
+its acceptance (a person running the review), and session 5 is built up to its
+STOP (the maintainer approving the base-rate table).** Eight commands run:
 
     uv run crony doctor
     uv run crony fetch <source> [--scope dep:<code>]
     uv run crony stage <source>
     uv run crony survey departements [--scope dep:<code>]
     uv run crony match fr --scope dep:<code>
-    uv run crony review [buyers] --scope dep:<code> [--sample N --seed S]
+    uv run crony review [buyers] --scope dep:<code> [--sample N --seed S] [--flag F1]
+    uv run crony flag F1 --scope dep:<code>
+    uv run crony base-rate F1 --scope dep:<code>
 
 Sources: `fr-decp`, `fr-insee-pop`, `fr-rne-elus` download a published file.
 `fr-entreprises-api` asks one question per supplier and per buyer in a
@@ -34,16 +37,18 @@ says in as many words that building it proves nothing about the gate.
 
 Matching and review are built: `crony-eu/src/crony_eu/match/keys.py`,
 `candidates.py`, `judgments.py`, `buyer_verification.py` and `review.py`, the two
-logs on the shared append-only `log.py`. What is not: flags and the export.
+logs on the shared append-only `log.py`. F1 is built in
+`crony-eu/src/crony_eu/flags/`, uncalibrated until the maintainer approves its
+base rates. What is not: the export.
 
 **`crony review` shows real names, birth dates and roles, and it is meant to.**
 Constraint 13 makes reading real records the maintainer's job in this command.
 An agent session tests it on generated records and never runs it on the data
 directory.
 
-`crony flag`, `crony base-rate` and `crony case` do not exist as commands yet, deliberately, because a subcommand that parsed its
-flags and printed "not implemented" would be listed by `--help` as though it
-worked.
+`crony case` does not exist as a command yet, deliberately, because a subcommand
+that parsed its flags and printed "not implemented" would be listed by `--help`
+as though it worked.
 
 Everything below describing an unbuilt module is a **specification written
 before the code**, which is the point of it. A document here that reads as
@@ -171,7 +176,8 @@ crony-eu/
   scripts/check_no_data.py         [built]  guards this tree; CI runs it
   src/crony_eu/
     __init__.py                    [built]
-    cli.py                         [built]  doctor, fetch, stage, survey
+    cli.py                         [built]  doctor fetch stage survey match review flag base-rate
+    db.py                          [built]  the only way DuckDB is opened
     config.py                      [built]  CRONY_DATA_DIR rules
     paths.py                       [built]  data directory layout
     http.py                        [built]  rate limit, retries, hashed download, manifest
@@ -194,7 +200,9 @@ crony-eu/
       buyer_verification.py        [built]  ADR-0007's buyer check
       review.py                    [built]  the maintainer's screen for both logs
     flags/
-      f1_same_body.py  base_rates.py  dataset.py  sql/    session 5
+      f1_same_body.py              [built]  F1's six conditions, the tag, every gate
+      base_rates.py                [built]  Wilson intervals, per-gate losses, precision
+      sql/f1_base_rate.sql         [built]  the query the flag spec cites
     export/
       model.py  case.py  html.py  templates/              session 6
   tests/                           [built]  config, paths, http, parquet, cli, the data guard
@@ -291,7 +299,7 @@ crony fetch <source> [--snapshot YYYY-MM-DD]
 crony stage <source> [--snapshot YYYY-MM-DD]
 crony survey departements [--scope dep:<code>]
 crony match fr --scope dep:<code>
-crony review [--flag F1] [--sample N --seed S]
+crony review --scope dep:<code> [--flag F1] [--sample N --seed S]
 crony review buyers --scope dep:<code>
 crony flag F1 --scope dep:<code>
 crony base-rate F1 --scope dep:<code>

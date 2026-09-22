@@ -645,3 +645,136 @@ class TestStagedTablesCheck:
 
         for source, module in REGISTRY.items():
             assert module.TABLES, f"{source} declares no staged tables"
+
+
+class TestFlagCommands:
+    """`crony flag F1` and `crony base-rate F1`: aggregates only, never names."""
+
+    def slice(self, outside_repo: Path) -> None:
+        from crony_eu.match import candidates
+        from crony_eu.paths import Layout
+        from fakes import decp_row, siret, slice_elu, slice_officer, stage_slice
+
+        layout = Layout(outside_repo)
+        layout.create()
+        stage_slice(
+            layout,
+            [slice_elu(mandate_start="2020-05-18")],
+            [slice_officer()],
+            contracts=[
+                decp_row(
+                    acheteur_id=siret("21740010"),
+                    acheteur_commune_code="74010",
+                    titulaire_id=siret("81230001"),
+                )
+            ],
+        )
+        candidates.run(layout, "74")
+
+    def test_flag_prints_counts_and_the_calibration(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        assert main(["flag", "F1", "--scope", "dep:74"]) == 0
+        output = capsys.readouterr().out
+        assert "1 hit rows" in output
+        assert "0 packet-eligible" in output
+        assert "calibration: uncalibrated" in output
+        assert "NOMDEXEMPLE" not in output
+
+    def test_base_rate_prints_the_table_gates_and_precision(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        main(["flag", "F1", "--scope", "dep:74"])
+        capsys.readouterr()
+        assert main(["base-rate", "F1", "--scope", "dep:74"]) == 0
+        output = capsys.readouterr().out
+        assert "501 to 3,500" in output
+        assert "pairs removed per gate" in output
+        assert "judgment not confirmed" in output
+        assert "nothing reviewed yet" in output
+        assert "awaiting the maintainer" in output
+
+    def test_base_rate_reports_a_reviewed_precision(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        from crony_eu.match import judgments
+        from crony_eu.paths import Layout
+
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        layout = Layout(outside_repo)
+        (row,) = judgments.latest(layout)
+        judgments.decide(layout, str(row["judgment_id"]), judgments.CONFIRMED, "m")
+        main(["flag", "F1", "--scope", "dep:74"])
+        capsys.readouterr()
+        main(["base-rate", "F1", "--scope", "dep:74"])
+        assert "1.00 confirmed" in capsys.readouterr().out
+
+    def test_flag_without_matching_names_the_command(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["flag", "F1", "--scope", "dep:74"]) == 1
+        assert "crony fetch" in capsys.readouterr().err
+
+    def test_base_rate_without_a_flag_run_names_the_command(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        assert main(["base-rate", "F1", "--scope", "dep:74"]) == 1
+        assert "crony flag F1" in capsys.readouterr().err
+
+    def test_review_flag_limits_the_queue_to_f1_hits(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        main(["flag", "F1", "--scope", "dep:74"])
+        keys = iter(["s"])
+        monkeypatch.setattr("builtins.input", lambda prompt: next(keys))
+        assert main(["review", "--scope", "dep:74", "--flag", "F1"]) == 0
+        assert "shown 1" in capsys.readouterr().out
+
+    def test_review_flag_without_a_flag_run_names_the_command(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        self.slice(outside_repo)
+        assert main(["review", "--scope", "dep:74", "--flag", "F1"]) == 1
+        assert "crony flag F1" in capsys.readouterr().err
+
+    def test_buyers_cannot_be_narrowed_by_flag(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["review", "buyers", "--scope", "dep:74", "--flag", "F1"]) == 1
+        assert "every buyer" in capsys.readouterr().err

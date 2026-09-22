@@ -5,7 +5,8 @@
 [ADR-0006](../../docs/adr/0006-standard-library-only.md): phase 1 asks for
 subcommands and flags, which is what argparse is.
 
-`doctor`, `fetch`, `stage`, `survey`, `match` and `review` exist. The other
+`doctor`, `fetch`, `stage`, `survey`, `match`, `review`, `flag` and `base-rate`
+exist. The other
 subcommands named in CLAUDE.md arrive with the stages they drive, and a
 subcommand that parsed its arguments and then printed "not implemented" would be
 worse than its absence, because `--help` would list it as though it worked.
@@ -28,8 +29,12 @@ import pyarrow.parquet as pq
 
 from crony_eu import __version__
 from crony_eu.config import ConfigError, data_dir, repository_root
+from crony_eu.flags import base_rates
+from crony_eu.flags import f1_same_body as f1
+from crony_eu.flags.base_rates import current_run_directory
 from crony_eu.http import build_client
 from crony_eu.match import candidates
+from crony_eu.match.candidates import CandidateError
 from crony_eu.match.review import ReviewError, review_buyers, review_people
 from crony_eu.paths import Layout
 from crony_eu.sources import REGISTRY, ScopedSource, Source, is_scoped, names
@@ -394,15 +399,24 @@ def review(arguments: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
-    if arguments.subject == "buyers" and arguments.sample is not None:
+    if arguments.subject == "buyers" and (
+        arguments.sample is not None or arguments.flag is not None
+    ):
         print(
-            "--sample is for the precision estimate on person-company candidates; "
-            "every buyer assertion in a slice is reviewed.",
+            "--sample and --flag narrow the person-company candidates; every buyer "
+            "assertion in a slice is reviewed.",
             file=sys.stderr,
         )
         return 1
 
     layout = _layout()
+    only: set[str] | None = None
+    if arguments.flag is not None:
+        try:
+            only = f1_judgments(layout, arguments.scope)
+        except (FileNotFoundError, f1.FlagError) as error:
+            print(str(error), file=sys.stderr)
+            return 1
     try:
         if arguments.subject == "buyers":
             tally = review_buyers(layout, arguments.scope, arguments.reviewer)
@@ -413,6 +427,7 @@ def review(arguments: argparse.Namespace) -> int:
                 arguments.reviewer,
                 sample=arguments.sample,
                 seed=arguments.seed,
+                only=only,
             )
     except ReviewError as error:
         print(str(error), file=sys.stderr)
@@ -425,6 +440,91 @@ def review(arguments: argparse.Namespace) -> int:
         f"\n  shown {tally.shown}, decided {decided or 'none'}, skipped {tally.skipped}"
         + ("; stopped early" if tally.stopped else "")
     )
+    return 0
+
+
+def f1_judgments(layout: Layout, scope: str) -> set[str]:
+    """The judgment ids behind the current F1 run's hits."""
+    import pyarrow.parquet as parquet
+
+    run = current_run_directory(layout, scope)
+    return {
+        str(value)
+        for value in parquet.read_table(run / "hits.parquet", columns=["judgment_id"])
+        .column("judgment_id")
+        .to_pylist()
+    }
+
+
+def flag(arguments: argparse.Namespace) -> int:
+    """Evaluate F1 over a slice. Offline. Prints aggregates only.
+
+    Every row the flag writes says `uncalibrated` until the maintainer has
+    approved its base rates, and none of them is packet-eligible before then.
+    """
+    layout = _layout()
+    try:
+        result = f1.run(layout, arguments.scope)
+    except (f1.FlagError, CandidateError, SourceError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    print(f"  {result.pairs:>8,} (commune, supplier) pairs in dep:{arguments.scope}")
+    print(f"  {result.hits:>8,} hit rows, from pending or confirmed judgments")
+    print(f"  {result.excluded:>8,} would-be hits on an excluded legal category")
+    print(f"  {result.packet_eligible:>8,} packet-eligible")
+    print(
+        f"\n  run {result.run_id[:12]}  calibration: {f1.CALIBRATION or 'uncalibrated'}"
+    )
+    return 0
+
+
+def base_rate(arguments: argparse.Namespace) -> int:
+    """The F1 base-rate table for a slice, for the maintainer to review.
+
+    Writes to the data directory's reports and to the terminal, never into the
+    flag spec: that is the session 5 STOP, and filling the spec waits for the
+    maintainer's approval.
+    """
+    layout = _layout()
+    try:
+        body = base_rates.report(layout, arguments.scope)
+    except (FileNotFoundError, f1.FlagError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+    header = (
+        f"  {'band':<17}{'pairs':>7}{'cand.':>7}{'conf.':>7}{'elig.':>7}"
+        f"{'roles':>7}{'buyer':>7}"
+    )
+    print(header)
+    print("  " + "-" * (len(header) - 2))
+    for row in body["bands"]:
+        print(
+            f"  {row['band']:<17}{row['pairs']:>7,}{row['candidate_pairs']:>7,}"
+            f"{row['confirmed_pairs']:>7,}{row['eligible_pairs']:>7,}"
+            f"{row['role_resolved_pairs']:>7,}{row['buyer_verified_pairs']:>7,}"
+        )
+    print("\n  pairs removed per gate (not netted; one pair can fail several)")
+    gates = (
+        [key for key in body["bands"][0] if key.startswith("lost_")]
+        if body["bands"]
+        else []
+    )
+    for gate in gates:
+        total = sum(int(row[gate]) for row in body["bands"])
+        print(f"    {gate.removeprefix('lost_').replace('_', ' '):<28}{total:>7,}")
+    measured = body["precision"]
+    estimate = measured["estimate"]
+    print(
+        f"\n  precision: {measured['reviewed']} of a sample of "
+        f"{measured['sample_size']} (seed {measured['seed']}) reviewed"
+        + (
+            f", {estimate:.2f} confirmed"
+            if estimate is not None
+            else ", nothing reviewed yet"
+        )
+    )
+    print(f"\n  {body['status']}")
     return 0
 
 
@@ -509,6 +609,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--scope", type=departement_scope, metavar="dep:CODE", required=True
     )
     reviewer.add_argument("--sample", type=int, metavar="N")
+    reviewer.add_argument(
+        "--flag",
+        choices=["F1"],
+        help="only the candidates behind the current F1 hits",
+    )
     reviewer.add_argument("--seed", type=int, metavar="S")
     reviewer.add_argument(
         "--reviewer",
@@ -516,6 +621,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="who is deciding; recorded on every decision (default: your login)",
     )
     reviewer.set_defaults(run=review)
+
+    flagger = subcommands.add_parser(
+        "flag", help="evaluate a flag over a slice (offline, aggregates only)"
+    )
+    flagger.add_argument("flag_id", choices=["F1"])
+    flagger.add_argument(
+        "--scope", type=departement_scope, metavar="dep:CODE", required=True
+    )
+    flagger.set_defaults(run=flag)
+
+    rater = subcommands.add_parser(
+        "base-rate",
+        help="a flag's base-rate table for the maintainer to review (offline)",
+    )
+    rater.add_argument("flag_id", choices=["F1"])
+    rater.add_argument(
+        "--scope", type=departement_scope, metavar="dep:CODE", required=True
+    )
+    rater.set_defaults(run=base_rate)
 
     return parser
 

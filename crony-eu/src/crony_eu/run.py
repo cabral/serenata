@@ -15,13 +15,18 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Sequence
+from pathlib import Path
 
 from crony_eu import __version__
 from crony_eu.http import read_manifest
 from crony_eu.paths import Layout
 
 
-def run_id(layout: Layout, inputs: Sequence[tuple[str, str]]) -> str:
+def run_id(
+    layout: Layout,
+    inputs: Sequence[tuple[str, str]],
+    decisions: Sequence[Path] = (),
+) -> str:
     """sha256 over each input's manifest hashes and the package version.
 
     `inputs` is (source, snapshot) pairs. Order does not matter: they are sorted,
@@ -37,4 +42,12 @@ def run_id(layout: Layout, inputs: Sequence[tuple[str, str]]) -> str:
         )
         for line in hashes:
             digest.update(f"|{line}".encode())
+
+    # A flag run also reads what people decided, which no manifest vouches for.
+    # The decision logs' bytes are folded in, so a changed judgment is a new run
+    # rather than an old id attached to new output. Byte-stable writes
+    # (`parquet.write`) make that well defined.
+    for path in decisions:
+        content = path.read_bytes() if path.is_file() else b"absent"
+        digest.update(f"|{path.name}:{hashlib.sha256(content).hexdigest()}".encode())
     return digest.hexdigest()
