@@ -232,6 +232,7 @@ nothing else.
 | A2 | `fr_entreprises_api.py` adapter shape, driven by `httpx.MockTransport`: exact-SIRET resolution, and refusal on zero, several, or no exact match | 3 | one refusal test per failure mode; no best-match path exists to test |
 | A3 | append-only `buyer_verification`, with a stable revision reference and deterministic ordering, no wall-clock field | 4 | append-only and latest-wins; history readable in order; a later adverse review is findable |
 | A4 | `crony review` buyer action over archived evidence, recording the two fields apart | 4 | scripted keypresses; `not_established` reachable and never coerced to `true` |
+| A4b | session 4's own matching core: `keys.py`, `candidates.py`, `judgments.py` and the person-company half of `crony review`. Not named in the first version of this plan, and A5 cannot be built without it. Not blocked by INPI | 4 | `FR-NAME-BIRTHYM-v1` key variants; exact join within scope; `key_collision`; append-only judgments with latest-wins |
 | A5 | F1 eligibility and per-gate loss counting, over generated officers | 5 | candidate, confirmed and packet-eligible counted separately; one loss line per gate; eligible count agrees with export eligibility |
 | A6 | export provenance, the verbatim sentence, refusal paths, evidence minimisation with decoys, byte-identical and input-order-independent rebuilds | 6 | one test per condition in constraint 11 plus the ADR-0007 conditions, each naming what failed |
 
@@ -241,10 +242,10 @@ the numbers the flag spec still has blank, and they are reachable today for
 
 | # | work | blocked on |
 |---|---|---|
-| B1 | supplier legal categories over the slice, pinning F1's exclusion list (SEM, SPL, public bodies) from `nature_juridique` | nothing; a plan and a run |
-| B2 | officer birth-date precision over the slice, which ADR-0003 assumes is month | nothing; same run |
-| B3 | buyer corroboration evidence for the slice's buyer SIRETs, archived under `$CRONY_DATA_DIR` | A1 and A2 first |
-| B4 | establishment date semantics, read from INSEE/SIRENE variable documentation rather than inferred | a documentation read, not a live query |
+| B1 | **done 2026-09-22.** SEM (5415, 5515, 5615) and the public-law families 4xxx and 7xxx are pinned in the flag spec. SPL has no INSEE code and cannot be excluded by category, which is recorded as a limit rather than worked around | |
+| B2 | **done 2026-09-22.** `date_de_naissance` is `YYYY-MM` on 97.31% of 5,164 officers, and no role date exists under any name | |
+| B3 | buyer corroboration evidence for the slice's buyer SIRETs, archived under `$CRONY_DATA_DIR` | **fetched**; the review that reads it is A3 and A4 |
+| B4 | **done 2026-09-22.** SIRENE overwrites the commune code forward for all establishments including closed ones, so no as-of code exists at any access level; `dateCreationEtablissement` is declaratory with a `1900-01-01` sentinel, so no window is enforced | |
 
 **Tier C, needs a human or an account.** No code unblocks these.
 

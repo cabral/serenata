@@ -96,23 +96,43 @@ in the status block and in machine-readable provenance:
 
 Suppliers where élus usually sit because the commune appoints them: sociétés d'économie mixte (SEM), sociétés publiques locales (SPL), public bodies and public establishments, and other legal categories where a board seat is held on the commune's behalf.
 
-INSEE codes and labels: **still not pinned, and it moved to session 3.**
+INSEE codes and labels, **pinned 2026-09-22** from `nature_juridique` on the
+3,425 suppliers of the `dep:74` slice. DECP could not supply these: its only
+supplier category is the INSEE size band (PME, ETI, GE), and it publishes no
+catégorie juridique for anyone. The open company API does, as the 4-digit INSEE
+code, which is why pinning them moved to session 3's source rather than waiting
+for SIRENE.
 
-Session 2 was to pin them from SIRENE. It could not, and the reason is worth
-recording rather than rescheduling quietly: the only supplier category DECP
-carries is `titulaire_categorie`, and that is the INSEE **size** band (PME, ETI,
-GE), not the catégorie juridique. There is no legal category anywhere in the
-consolidated file, for suppliers or for buyers.
+| code | label | in the slice | of those, with a natural-person officer |
+|---|---|---|---|
+| 5415 | SARL d'économie mixte | 0 | 0 |
+| 5515 | SA d'économie mixte à conseil d'administration | 7 | 7 |
+| 5615 | SA d'économie mixte à directoire | 1 | 1 |
+| 4xxx | personne morale de droit public soumise au droit commercial | 2 | 2 |
+| 7xxx | personne morale soumise au droit administratif | 11 | 0 |
 
-So the exclusion list needs the legal category per supplier SIREN, and the place
-it comes from is the open company API, which session 3 already queries once per
-supplier SIREN in the slice for the officers. Pinning the codes is a session 3
-deliverable now.
+21 suppliers of 3,425, which is 0.61% of the slice, and **10 of them carry a
+natural-person officer**. Those 10 are the point of the list. A SEM whose board
+seats are held by councillors on the commune's behalf is the exact shape F1 looks
+for, so without the exclusion they would be its most confident hits and its
+wrongest.
 
-**Until it is pinned, F1 cannot run as specified.** Condition 3 is not a
-refinement that can be added later: a SEM whose board seats are held by
-councillors on the commune's behalf is exactly the shape this flag looks for, and
-without the exclusion it would be the flag's most confident and most wrong hit.
+The 7xxx family carries no natural-person officers here at all, which is what it
+should look like: a commune appears in the register as an institution, and the
+API returns élus for public bodies rather than officers. It stays on the list
+because "none this quarter" is not a rule.
+
+**The gap, and it does not close with more codes.** There is no INSEE catégorie
+juridique for a **société publique locale**. An SPL is a société anonyme, and the
+register files it as one: a probe on 2026-09-21 returned `5599`, "Autre SA à
+conseil d'administration", which 64 suppliers in this slice also carry. So an SPL
+cannot be told from an ordinary SA by legal category, and the exclusion list
+cannot catch it.
+
+That leaves SPLs to the reviewer rather than to the rule. `crony review` shows
+the company name and SIREN, and an SPL usually says so in its name; a hit on one
+is a hit the maintainer rejects with a note. Recording the limit here because a
+list that looks complete and is not is worse than one that says where it stops.
 
 ## Tag: possible_432_12_exception
 

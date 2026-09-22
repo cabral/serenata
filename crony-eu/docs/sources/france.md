@@ -400,7 +400,61 @@ publish on different geography dates.
   - if officer birth dates carry only the year, stop and tell the maintainer, because ADR-0003 assumes month precision
   - if no officer role start date is available from this source, stop and tell the maintainer, because F1 cannot build a case packet without one
 
-Officer fields, role dates and their coverage: _session 3_
+### Observed schema, 2026-09-22, over the `dep:74` slice
+
+3,742 requests, one per identifier: 3,432 supplier SIRENs and 310 buyer SIRETs,
+18MB of archived JSON. 3,425 of the 3,432 suppliers resolved; the other 7 came
+back `not_found`, which is 0.2% and is recorded rather than retried.
+
+**Officer fields**, from `dirigeants`. `type_dirigeant` splits them: 5,164
+natural persons and 2,741 legal ones, the second kind staged apart so that
+nothing joins a company to an élu.
+
+| field | kind | what it is |
+|---|---|---|
+| `type_dirigeant` | both | `personne physique` or `personne morale` |
+| `qualite` | both | the role label |
+| `nom`, `prenoms` | natural | one surname field; the service does not say whether it is the birth or usage name |
+| `date_de_naissance` | natural | `YYYY-MM` |
+| `annee_de_naissance` | natural | `YYYY` |
+| `nationalite` | natural | present and null on every officer seen |
+| `denomination`, `siren` | legal | the company holding the seat |
+
+**Birth-date precision, which ADR-0003 assumes is month.** It holds:
+
+| | officers | share |
+|---|---|---|
+| `YYYY-MM` | 5,025 | 97.31% |
+| year only | 19 | 0.37% |
+| no birth date | 120 | 2.32% |
+
+The élu side carries the key on 100% of people, so the binding constraint on
+`FR-NAME-BIRTHYM-v1` is the officer side at 97.31%. A year-only value is staged
+in `birth_year_only` and **not** in `birth_ym`, because a key built from a year
+matches twelve times as many people as one built from a month.
+
+**No role dates, confirmed at scale rather than sampled.** 5,164 officers, zero
+start dates, zero end dates, no field of any name carrying one. Every officer
+stages with `role_date_source = 'none'` and `role_date_semantics = 'absent'`.
+Under constraint 9 that makes `role_overlap` unknown for every hit built on this
+source alone, and an unknown overlap cannot reach a case packet. Whether INPI's
+own register carries the history is the session 3 gate and needs an account.
+
+**Officer coverage of the slice.** 3,354 of 3,425 resolved suppliers (97.9%)
+list at least one officer of either kind; 2,750 (80.3%) list a natural person.
+
+**Two fields constraint 7 and the export gate need.** `statut_diffusion` is `O`
+on 3,405 suppliers and `P` on 20. `etat_administratif` is `A` on 3,220 and `C`
+on 205. Neither is interpreted at staging; both are recorded for the gates that
+read them.
+
+**Catégorie juridique** arrives as `nature_juridique`, the 4-digit INSEE code,
+and it is what pinned F1's exclusion list (see
+[`crony-eu/docs/flags/F1-same-body.md`](../flags/F1-same-body.md)). Labels come
+from INSEE's own enumeration, not from this service, which returns the code
+alone. Worth recording that `5785` is "Société d'exercice libéral par action
+simplifiée" and has nothing to do with économie mixte, which is the guess a
+reader of the numbers alone would make.
 
 ### Verified for ADR-0007, 2026-09-21: buyer-SIRET evidence
 
