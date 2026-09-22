@@ -33,8 +33,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-import duckdb
-
+from crony_eu import db
 from crony_eu.match import buyer_verification as bv
 from crony_eu.match import judgments
 from crony_eu.paths import Layout
@@ -80,8 +79,8 @@ def sample_ids(ids: Sequence[str], size: int, seed: int) -> list[str]:
     return random.Random(seed).sample(ordered, min(size, len(ordered)))
 
 
-def _rows(sql: str) -> list[dict[str, Any]]:
-    connection = duckdb.connect()
+def _rows(layout: Layout, sql: str) -> list[dict[str, Any]]:
+    connection = db.connect(layout)
     try:
         values = connection.execute(sql).fetchall()
         names = [description[0] for description in connection.description or []]
@@ -112,7 +111,9 @@ def people_queue(
         raise ReviewError(
             f"no candidates for dep:{scope}. Run `crony match fr --scope dep:{scope}`."
         )
-    candidates = _rows(f"SELECT * FROM '{path.as_posix()}' ORDER BY judgment_id")
+    candidates = _rows(
+        layout, f"SELECT * FROM '{path.as_posix()}' ORDER BY judgment_id"
+    )
     status = {
         str(row["judgment_id"]): row["status"] for row in judgments.latest(layout)
     }
@@ -139,15 +140,21 @@ def people_queue(
     staged_api = layout.staged(fr_entreprises_api.SOURCE, api_snapshot)
 
     elus = _by(
-        _rows(f"SELECT * FROM '{(staged_elus / 'elu_person.parquet').as_posix()}'"),
+        _rows(
+            layout, f"SELECT * FROM '{(staged_elus / 'elu_person.parquet').as_posix()}'"
+        ),
         "elu_person_id",
     )
     officers = _by(
-        _rows(f"SELECT * FROM '{(staged_api / 'officers.parquet').as_posix()}'"),
+        _rows(
+            layout, f"SELECT * FROM '{(staged_api / 'officers.parquet').as_posix()}'"
+        ),
         "officer_row_id",
     )
     companies = _by(
-        _rows(f"SELECT * FROM '{(staged_api / 'companies.parquet').as_posix()}'"),
+        _rows(
+            layout, f"SELECT * FROM '{(staged_api / 'companies.parquet').as_posix()}'"
+        ),
         "siren",
     )
 

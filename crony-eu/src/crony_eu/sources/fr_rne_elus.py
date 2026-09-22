@@ -40,6 +40,7 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 
+from crony_eu import db
 from crony_eu.http import SourceClient, download, read_manifest
 from crony_eu.normalize import (
     DATE_SHAPES,
@@ -465,7 +466,7 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
             f"{SOURCE}: snapshot {snapshot} is missing {missing}. Fetch it first."
         )
 
-    connection = duckdb.connect()
+    connection = db.connect(layout)
     try:
         selects = []
         for published in FILES:

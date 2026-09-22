@@ -27,9 +27,9 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-import duckdb
 import pyarrow as pa
 
+from crony_eu import db
 from crony_eu.match import judgments
 from crony_eu.match.keys import RULE_ID, elu_keys, officer_keys
 from crony_eu.parquet import write
@@ -82,8 +82,8 @@ def _latest(layout: Layout, source: str, table: str) -> str:
     )
 
 
-def _rows(sql: str) -> list[dict[str, Any]]:
-    connection = duckdb.connect()
+def _rows(layout: Layout, sql: str) -> list[dict[str, Any]]:
+    connection = db.connect(layout)
     try:
         values = connection.execute(sql).fetchall()
         names = [description[0] for description in connection.description or []]
@@ -110,23 +110,25 @@ def build(layout: Layout, scope: str) -> tuple[list[dict[str, Any]], Report]:
     }
 
     elus = _rows(
+        layout,
         f"""
         SELECT elu_person_id, surname_raw, given_raw, birth_ym, commune_code,
                snapshot_kind, sex
         FROM '{people.as_posix()}'
         WHERE {departement_of("commune_code")} = '{scope}'
         ORDER BY elu_person_id
-        """
+        """,
     )
     officers = [
         row
         for row in _rows(
+            layout,
             f"""
             SELECT officer_row_id, siren, surname_birth_raw, surname_usage_raw,
                    given_names_raw, birth_ym
             FROM '{officers_path.as_posix()}'
             ORDER BY officer_row_id
-            """
+            """,
         )
         if row["siren"] in suppliers
     ]

@@ -25,6 +25,7 @@ from typing import Any
 
 import duckdb
 
+from crony_eu import db
 from crony_eu.paths import Layout
 from crony_eu.sources import fr_decp, fr_insee_pop, fr_rne_elus
 
@@ -115,7 +116,7 @@ def _connect(layout: Layout) -> tuple[duckdb.DuckDBPyConnection, Staged]:
     pop_snapshot, populations = _latest(layout, fr_insee_pop.SOURCE, "populations")
     elus_snapshot, people = _latest(layout, fr_rne_elus.SOURCE, "elu_person")
 
-    connection = duckdb.connect()
+    connection = db.connect(layout)
     connection.execute(f"CREATE VIEW contracts AS SELECT * FROM '{contracts}'")
     connection.execute(
         f"CREATE VIEW communes AS SELECT geo_code AS commune_code, population "

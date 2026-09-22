@@ -40,9 +40,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import duckdb
 import pyarrow as pa
 
+from crony_eu import db
 from crony_eu.match.log import Log
 from crony_eu.paths import Layout
 
@@ -242,7 +242,7 @@ def queue(
         / "buyer_evidence.parquet"
     ).as_posix()
 
-    connection = duckdb.connect()
+    connection = db.connect(layout)
     try:
         rows = connection.execute(
             f"""

@@ -215,6 +215,7 @@ matched/judgments.parquet         # append-only log; latest row per judgment_id 
 flags/<FLAG_ID>/<run_id>/         # flag outputs
 cases/<case_id>/                  # network.html, nodes.csv, edges.csv, sources.md, evidence/
 logs/
+tmp/                              # DuckDB spill space; see crony_eu.db
 ```
 
 `manifest.json` records, per file: url, sha256, bytes, retrieved_at (UTC, ISO 8601), licence, HTTP status. `$CRONY_DATA_DIR/raw/` is never modified after writing. Each stage reads only the stage before it. A `run_id` is a hash of the input manifests plus the package version.
@@ -302,6 +303,8 @@ crony case build <case_id>
 ## Conventions
 
 - type hints everywhere; mypy strict on `crony-eu/src/`
+- DuckDB is opened only through `crony_eu.db.connect(layout)`, which puts its spill space in `$CRONY_DATA_DIR/tmp/`. A bare `duckdb.connect()` spills into the working directory, and on 2026-09-22 that put 455MB of real contract data into this repository tree and into a commit. A test forbids the bare call; ad-hoc inspection from the repository root is covered only by `.gitignore`, so prefer running it from the data directory
+- stage commits by explicit path and run the data guard on the staged set (`git diff --cached --name-only -z | xargs -0 uv run python crony-eu/scripts/check_no_data.py`). `git add -A` is how the spill above got in, and the guard's `--all` checks tracked files, not what is about to be committed
 - each source module exposes `fetch()`, `stage()` and a `SCHEMA` dict (column -> DuckDB type) that a test pins
 - logs go to `$CRONY_DATA_DIR/logs/` only; INFO-level messages carry ids and counts, never names
 - tests use generated fixtures; tests that hit the network are marked `live`, skipped by default, and never write outside a temp dir

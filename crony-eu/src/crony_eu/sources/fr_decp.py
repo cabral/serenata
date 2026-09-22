@@ -37,6 +37,7 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 
+from crony_eu import db
 from crony_eu.http import SourceClient, download, read_manifest
 from crony_eu.normalize import (
     EARLIEST_PLAUSIBLE_YEAR,
@@ -485,7 +486,7 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
     }
     published = entries.get("decp.parquet", {})
 
-    connection = duckdb.connect()
+    connection = db.connect(layout)
     try:
         total, implausible = _check_notification_dates(connection, source, snapshot)
         select = _select(

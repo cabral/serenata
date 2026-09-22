@@ -42,6 +42,7 @@ from typing import Any
 
 import pyarrow as pa
 
+from crony_eu import db
 from crony_eu.http import SourceClient, append_manifest, now, read_manifest
 from crony_eu.parquet import write
 from crony_eu.paths import Layout
@@ -268,7 +269,6 @@ def asks_for_scope(layout: Layout, scope: str) -> list[Ask]:
     ADR-0007 check. Both come from `contracts.parquet`, so the set is a function
     of a staged snapshot rather than of whatever the API happens to hold today.
     """
-    import duckdb
 
     from crony_eu.sources import fr_decp
     from crony_eu.survey import departement_of
@@ -281,7 +281,7 @@ def asks_for_scope(layout: Layout, scope: str) -> list[Ask]:
         )
 
     path = (layout.staged(fr_decp.SOURCE, snapshot) / "contracts.parquet").as_posix()
-    connection = duckdb.connect()
+    connection = db.connect(layout)
     try:
         rows = connection.execute(
             f"""

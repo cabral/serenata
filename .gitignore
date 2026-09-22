@@ -229,3 +229,13 @@ data/*
 # permissions, not project standards.
 .claude/settings.local.json
 .claude/*.local.json
+
+# DuckDB spill space. An in-memory DuckDB connection spills to `.tmp/` under the
+# working directory when a query outgrows memory, and what it spills is the data
+# being queried. On 2026-09-22 a DECP stage run from this directory spilled 455MB
+# of real contract data here and it was committed (never pushed; GitHub refused
+# it for size). Crony's own code now spills into $CRONY_DATA_DIR (crony_eu.db);
+# this line is for everything else that opens DuckDB from the repository root,
+# including ad-hoc inspection, and for the other project in this tree, which
+# uses DuckDB too. Ignored because it is a legal risk, not a holding pen.
+.tmp/

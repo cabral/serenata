@@ -13,6 +13,7 @@ instead of joining path fragments and getting one of them subtly wrong.
     flags/<flag>/<run>/            flag output
     cases/<case>/                  a packet: network.html, the two tables, evidence
     logs/
+    tmp/                           DuckDB spill space; see crony_eu.db
 
 Two properties the rest of the pipeline relies on. `raw/` is never modified
 after writing, because it is the ground truth a result is checked against. And a
@@ -74,6 +75,14 @@ class Layout:
 
     def logs(self) -> Path:
         return self.root / "logs"
+
+    def scratch(self) -> Path:
+        """Where DuckDB spills when a query outgrows memory (`crony_eu.db`).
+
+        Inside the data directory because a spill is the data, and the data's
+        place is the encrypted volume, never the working directory.
+        """
+        return self.root / "tmp"
 
     def snapshots(self, source: str) -> list[str]:
         """Every raw snapshot of a source, oldest first. Empty when none."""
