@@ -70,10 +70,10 @@ class Staged:
 
 def _latest(layout: Layout, source: str, table: str) -> tuple[str, str]:
     """The newest staged snapshot of one source, and the path to one table."""
-    for snapshot in reversed(layout.snapshots(source)):
+    snapshot = layout.latest_staged(source, table)
+    if snapshot is not None:
         path = layout.staged(source, snapshot) / f"{table}.parquet"
-        if path.is_file():
-            return snapshot, path.as_posix()
+        return snapshot, path.as_posix()
     raise SurveyError(
         f"{source} has no staged {table}.parquet. Run `crony fetch {source}` "
         f"and `crony stage {source}` first."

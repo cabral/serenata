@@ -73,9 +73,9 @@ class Report:
 
 
 def _latest(layout: Layout, source: str, table: str) -> str:
-    for snapshot in reversed(layout.snapshots(source)):
-        if (layout.staged(source, snapshot) / f"{table}.parquet").is_file():
-            return snapshot
+    snapshot = layout.latest_staged(source, table)
+    if snapshot is not None:
+        return snapshot
     raise CandidateError(
         f"{source} has no staged {table}.parquet. Run `crony fetch {source}` and "
         f"`crony stage {source}` first."

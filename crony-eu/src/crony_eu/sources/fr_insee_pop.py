@@ -187,3 +187,9 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
         key=("geo_object", "geo_code", "measure"),
     )
     return {"populations": written}
+
+
+#: Staged table -> the schema it is written with. `crony doctor` compares what is
+#: on disk against this, so a table staged by older code is reported as stale
+#: rather than discovered as a missing-column error three stages later.
+TABLES: dict[str, pa.Schema] = {"populations": POPULATIONS}

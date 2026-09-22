@@ -4,14 +4,15 @@ Read this file at the start of every session. It overrides anything a task descr
 
 ## What exists today
 
-**Sessions 0 to 2 are done, session 3's adapter is built, and session 4's matching
-is built.** Five commands run:
+**Sessions 0 to 2 are done, session 3's adapter is built, and session 4 is built
+up to its acceptance, which is a person running the review.** Six commands run:
 
     uv run crony doctor
     uv run crony fetch <source> [--scope dep:<code>]
     uv run crony stage <source>
     uv run crony survey departements [--scope dep:<code>]
     uv run crony match fr --scope dep:<code>
+    uv run crony review [buyers] --scope dep:<code> [--sample N --seed S]
 
 Sources: `fr-decp`, `fr-insee-pop`, `fr-rne-elus` download a published file.
 `fr-entreprises-api` asks one question per supplier and per buyer in a
@@ -31,12 +32,16 @@ is a measurement of officer role-date coverage, it needs an INPI account, and th
 account does not exist. The adapter is tier A of the ADR-0007 plan, and the plan
 says in as many words that building it proves nothing about the gate.
 
-Matching is built: `crony-eu/src/crony_eu/match/keys.py`, `candidates.py`,
-`judgments.py` and `buyer_verification.py`, the last two on the shared
-append-only `log.py`. What is not: the review screen, flags and the export.
+Matching and review are built: `crony-eu/src/crony_eu/match/keys.py`,
+`candidates.py`, `judgments.py`, `buyer_verification.py` and `review.py`, the two
+logs on the shared append-only `log.py`. What is not: flags and the export.
 
-`crony review`, `crony flag`, `crony base-rate` and `crony case` do not exist as
-commands yet, deliberately, because a subcommand that parsed its
+**`crony review` shows real names, birth dates and roles, and it is meant to.**
+Constraint 13 makes reading real records the maintainer's job in this command.
+An agent session tests it on generated records and never runs it on the data
+directory.
+
+`crony flag`, `crony base-rate` and `crony case` do not exist as commands yet, deliberately, because a subcommand that parsed its
 flags and printed "not implemented" would be listed by `--help` as though it
 worked.
 
@@ -187,7 +192,7 @@ crony-eu/
       candidates.py                [built]  exact join in scope, key_collision
       judgments.py                 [built]  pending -> confirmed/rejected/ambiguous
       buyer_verification.py        [built]  ADR-0007's buyer check
-      review.py                             session 4: the screen for both logs
+      review.py                    [built]  the maintainer's screen for both logs
     flags/
       f1_same_body.py  base_rates.py  dataset.py  sql/    session 5
     export/
@@ -292,7 +297,7 @@ crony base-rate F1 --scope dep:<code>
 crony case build <case_id>
 ```
 
-`crony doctor` checks that the data dir is set, absolute, outside the repo and writable, that the git tree has no data files, and that the export template carries the CSP tag once there is one. It reports a check it could not run as `n/a` rather than as a pass, and it says plainly that it cannot verify the volume is encrypted, because no portable check establishes that. There is no vendored-asset hash to check any more (ADR-0006).
+`crony doctor` checks that the data dir is set, absolute, outside the repo and writable, that the git tree has no data files, that every staged table has the columns the current code writes (each source declares its `TABLES`), and that the export template carries the CSP tag once there is one. It reports a check it could not run as `n/a` rather than as a pass, and it says plainly that it cannot verify the volume is encrypted, because no portable check establishes that. There is no vendored-asset hash to check any more (ADR-0006).
 
 ## Conventions
 

@@ -403,3 +403,103 @@ def api_establishment(
 
 def api_response(results: list[dict[str, Any]]) -> dict[str, Any]:
     return {"results": results, "total_results": len(results), "page": 1}
+
+
+# --- a whole staged slice ----------------------------------------------------
+#
+# Matching, review and the flag all read three staged sources at once. Building
+# them here, once, keeps every test that needs a slice building the same one.
+
+
+def archive_api(layout: Any, asks_and_bodies: list[tuple[Any, dict[str, Any]]]) -> None:
+    """Write company API responses into a raw snapshot as `fetch` would, then stage."""
+    import hashlib
+    import json
+
+    from crony_eu.http import append_manifest
+    from crony_eu.sources import fr_entreprises_api as api
+
+    raw = layout.raw(api.SOURCE, "2026-09-22")
+    raw.mkdir(parents=True, exist_ok=True)
+    for ask, body in asks_and_bodies:
+        text = json.dumps(body)
+        (raw / ask.filename).write_text(text, encoding="utf-8")
+        append_manifest(
+            layout.manifest(api.SOURCE, "2026-09-22"),
+            {
+                "source": api.SOURCE,
+                "url": f"{api.ENDPOINT}?q={ask.value}",
+                "path": ask.filename,
+                "sha256": hashlib.sha256(text.encode()).hexdigest(),
+                "bytes": len(text),
+                "retrieved_at": "2026-09-22T09:00:00+00:00",
+                "licence": api.LICENCE,
+                "status": 200,
+            },
+        )
+    api.stage(layout, "2026-09-22")
+
+
+def stage_slice(
+    layout: Any,
+    elus: list[Elu],
+    officers: list[dict[str, Any]],
+    *,
+    buyer: str | None = None,
+    buyer_commune: str = "74010",
+    supplier: str | None = None,
+    buyer_body: dict[str, Any] | None = None,
+) -> None:
+    """DECP, the élus and the company API, staged for one generated slice."""
+    from crony_eu.sources import fr_decp, fr_entreprises_api, fr_rne_elus
+
+    supplier = supplier or siret("81230001")
+    buyer = buyer or siret("21740010")
+    write_decp(
+        layout.raw(fr_decp.SOURCE, "2026-09-19") / "decp.parquet",
+        [
+            decp_row(
+                acheteur_id=buyer,
+                acheteur_commune_code=buyer_commune,
+                titulaire_id=supplier,
+            )
+        ],
+    )
+    fr_decp.stage(layout, "2026-09-19")
+
+    write_rne_snapshot(layout.root, "2026-09-16", cm_current=elus)
+    fr_rne_elus.stage(layout, "2026-09-16")
+
+    ask = fr_entreprises_api.Ask
+    responses = [
+        (
+            ask("siren", supplier[:9]),
+            api_response([api_unit(unit_siren=supplier[:9], officers=officers)]),
+        )
+    ]
+    if buyer_body is not None:
+        responses.append((ask("siret", buyer), buyer_body))
+    archive_api(layout, responses)
+
+
+def slice_elu(**overrides: str) -> Elu:
+    """An élu of commune 74010 whose key matches `slice_officer()`."""
+    fields = {
+        "commune_code": "74010",
+        "departement_code": "74",
+        "surname": "NOMDEXEMPLE",
+        "given": "Jean",
+        "birth_date": "1971-04-03",
+    }
+    fields.update(overrides)
+    return Elu(**fields)
+
+
+def slice_officer(**overrides: Any) -> dict[str, Any]:
+    fields: dict[str, Any] = {
+        "surname": "NOMDEXEMPLE",
+        "given": "JEAN",
+        "birth": "1971-04",
+    }
+    fields.update(overrides)
+    return api_officer(**fields)

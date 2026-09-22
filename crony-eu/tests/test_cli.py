@@ -112,7 +112,10 @@ class TestItDoesNotClaimWhatItCannotCheck:
         main(["doctor"])
 
         summary = capsys.readouterr().out.strip().splitlines()[-1]
-        assert "2 not checked" in summary
+        # Encryption, the export template, and the staged tables of a data
+        # directory nothing has been staged into: three checks with nothing to
+        # check, reported as such rather than as passes.
+        assert "3 not checked" in summary
 
     def test_checks_that_depend_on_the_data_directory_skip_without_one(self) -> None:
         # Cascading a failure into three more failures buries the one that
@@ -497,3 +500,148 @@ class TestMatch:
     def test_match_requires_a_scope(self) -> None:
         with pytest.raises(SystemExit):
             build_parser().parse_args(["match", "fr"])
+
+
+class TestReviewCommand:
+    def test_a_sample_without_a_seed_is_refused(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["review", "--scope", "dep:74", "--sample", "5"]) == 1
+        assert "--sample needs --seed" in capsys.readouterr().err
+
+    def test_buyers_are_not_sampled(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        code = main(
+            ["review", "buyers", "--scope", "dep:74", "--sample", "5", "--seed", "1"]
+        )
+        assert code == 1
+        assert "every buyer assertion" in capsys.readouterr().err
+
+    def test_nothing_to_review_names_the_command(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        assert main(["review", "--scope", "dep:74"]) == 1
+        assert "crony match fr" in capsys.readouterr().err
+
+    @pytest.mark.parametrize("subject", [None, "buyers"])
+    def test_a_sitting_ends_with_a_tally(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        outside_repo: Path,
+        capsys: pytest.CaptureFixture[str],
+        subject: str | None,
+    ) -> None:
+        from crony_eu.match import candidates
+        from crony_eu.paths import Layout
+        from fakes import (
+            api_establishment,
+            api_response,
+            api_unit,
+            siret,
+            slice_elu,
+            slice_officer,
+            stage_slice,
+        )
+
+        monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
+        layout = Layout(outside_repo)
+        layout.create()
+        buyer = siret("21740010")
+        stage_slice(
+            layout,
+            [slice_elu()],
+            [slice_officer()],
+            buyer=buyer,
+            buyer_body=api_response(
+                [
+                    api_unit(
+                        unit_siren=buyer[:9],
+                        nature_juridique="7210",
+                        establishments=[api_establishment(establishment_siret=buyer)],
+                    )
+                ]
+            ),
+        )
+        candidates.run(layout, "74")
+
+        keys = iter(["s"])
+        monkeypatch.setattr("builtins.input", lambda prompt: next(keys))
+        argv = ["review", *([subject] if subject else []), "--scope", "dep:74"]
+        assert main(argv) == 0
+        assert "shown 1, decided none, skipped 1" in capsys.readouterr().out
+
+
+class TestStagedTablesCheck:
+    """Doctor notices a table staged by older code, before a later stage trips on it."""
+
+    def test_nothing_staged_is_not_a_pass(self, outside_repo: Path) -> None:
+        from crony_eu.cli import check_staged_tables
+
+        assert check_staged_tables(outside_repo).ok is None
+
+    def test_no_data_directory_is_not_checked(self) -> None:
+        from crony_eu.cli import check_staged_tables
+
+        assert check_staged_tables(None).ok is None
+
+    def test_a_table_the_code_would_write_passes(self, outside_repo: Path) -> None:
+        from crony_eu.cli import check_staged_tables
+        from crony_eu.parquet import write
+        from crony_eu.paths import Layout
+        from crony_eu.sources import fr_insee_pop
+
+        layout = Layout(outside_repo)
+        layout.raw(fr_insee_pop.SOURCE, "2026-09-19").mkdir(parents=True)
+        write(
+            [],
+            fr_insee_pop.POPULATIONS,
+            layout.staged(fr_insee_pop.SOURCE, "2026-09-19") / "populations.parquet",
+            key=("geo_code",),
+        )
+        found = check_staged_tables(outside_repo)
+        assert found.ok is True
+        assert "1 tables match" in found.detail
+
+    def test_a_table_missing_a_column_is_named_with_the_fix(
+        self, outside_repo: Path
+    ) -> None:
+        import pyarrow as pa
+        from crony_eu.cli import check_staged_tables
+        from crony_eu.parquet import write
+        from crony_eu.paths import Layout
+        from crony_eu.sources import fr_insee_pop
+
+        older = pa.schema(
+            [field for field in fr_insee_pop.POPULATIONS if field.name != "vintage"]
+        )
+        layout = Layout(outside_repo)
+        layout.raw(fr_insee_pop.SOURCE, "2026-09-19").mkdir(parents=True)
+        write(
+            [],
+            older,
+            layout.staged(fr_insee_pop.SOURCE, "2026-09-19") / "populations.parquet",
+            key=("geo_code",),
+        )
+        found = check_staged_tables(outside_repo)
+        assert found.ok is False
+        assert "fr-insee-pop populations (2026-09-19)" in found.detail
+        assert "crony stage" in found.detail
+
+    def test_every_source_declares_its_tables(self) -> None:
+        from crony_eu.sources import REGISTRY
+
+        for source, module in REGISTRY.items():
+            assert module.TABLES, f"{source} declares no staged tables"

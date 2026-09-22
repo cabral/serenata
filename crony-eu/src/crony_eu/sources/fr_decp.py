@@ -703,3 +703,13 @@ def _write_report(
         encoding="utf-8",
     )
     return destination
+
+
+#: Staged table -> the schema it is written with. `crony doctor` compares what is
+#: on disk against this, so a table staged by older code is reported as stale
+#: rather than discovered as a missing-column error three stages later.
+TABLES: dict[str, pa.Schema] = {
+    "contracts": CONTRACTS,
+    "contract_versions": CONTRACTS,
+    "commune_buyers": COMMUNE_BUYERS,
+}

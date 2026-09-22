@@ -85,13 +85,12 @@ _NOT_REPOSITORY_PATHS = (
 #: Every path the Crony documents claim inside those trees is now checked like
 #: any other. What is left is the code the later sessions are ordered to write.
 #:
-#: `match/` stopped being a whole tree when `buyer_verification.py` arrived in
-#: it, and the matching modules followed; only the review screen is left.
+#: `match/` stopped being exempt module by module as session 4 built it, and is
+#: now checked in full like `sources/`.
 #: That is the exemption doing its job: it gets narrower every time code lands,
 #: and it cannot go on covering a directory that now holds real modules whose
 #: documented paths deserve checking like any other.
 _NOT_YET_BUILT = (
-    "crony-eu/src/crony_eu/match/review.py",
     "crony-eu/src/crony_eu/flags/",
     "crony-eu/src/crony_eu/export/",
     "crony-eu/src/crony_eu/sources/fr_inpi_rne.py",

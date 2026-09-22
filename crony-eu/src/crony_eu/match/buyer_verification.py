@@ -220,14 +220,19 @@ def pending(layout: Layout, evidence: Sequence[dict[str, Any]]) -> list[str]:
 
 
 def queue(
-    layout: Layout, decp_snapshot: str, api_snapshot: str
+    layout: Layout, decp_snapshot: str, api_snapshot: str, scope: str
 ) -> list[dict[str, Any]]:
-    """Join the DECP assertions to the archived evidence, one row per buyer.
+    """Join the slice's DECP assertions to the archived evidence, one per buyer.
 
     Offline, and it decides nothing: every row carries the mechanical assessment
     as a proposal for the maintainer to accept or override.
+
+    Scoped to one département, because the join is a LEFT one on purpose (a buyer
+    nobody fetched evidence for must appear as `unknown`, not vanish), and an
+    unscoped LEFT join would queue every commune buyer in France as unknown.
     """
     from crony_eu.sources import fr_decp, fr_entreprises_api
+    from crony_eu.survey import departement_of
 
     contracts = (
         layout.staged(fr_decp.SOURCE, decp_snapshot) / "contracts.parquet"
@@ -252,6 +257,8 @@ def queue(
             LEFT JOIN '{buyers}' e ON e.buyer_siret = c.buyer_siret
             WHERE c.buyer_category = '{fr_decp.COMMUNE_CATEGORY}'
               AND c.buyer_siret IS NOT NULL
+              AND c.buyer_commune_code IS NOT NULL
+              AND {departement_of("c.buyer_commune_code")} = '{scope}'
             ORDER BY c.buyer_assertion_id
             """
         ).fetchall()

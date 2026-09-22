@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+import pyarrow as pa
+
 from crony_eu.http import SourceClient
 from crony_eu.paths import Layout
 from crony_eu.sources import (
@@ -37,6 +39,7 @@ class Source(Protocol):
     """
 
     SOURCE: str
+    TABLES: dict[str, pa.Schema]
 
     def fetch(
         self, client: SourceClient, layout: Layout, snapshot: str
@@ -58,6 +61,7 @@ class ScopedSource(Protocol):
 
     SOURCE: str
     SCOPED: bool
+    TABLES: dict[str, pa.Schema]
 
     def fetch(
         self, client: SourceClient, layout: Layout, snapshot: str, scope: str

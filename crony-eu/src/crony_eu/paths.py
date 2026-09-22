@@ -93,6 +93,18 @@ class Layout:
         found = self.snapshots(source)
         return found[-1] if found else None
 
+    def latest_staged(self, source: str, table: str) -> str | None:
+        """The newest snapshot of `source` that has `<table>.parquet` staged.
+
+        Not the newest *fetched* snapshot: a fetch that has not been staged yet
+        must not make a later stage read nothing. Every consumer of staged data
+        asks this rather than keeping its own loop.
+        """
+        for snapshot in reversed(self.snapshots(source)):
+            if (self.staged(source, snapshot) / f"{table}.parquet").is_file():
+                return snapshot
+        return None
+
     def create(self) -> None:
         """Make the fixed directories. Safe to run twice, which is the point.
 

@@ -5,15 +5,16 @@
 [ADR-0006](../../docs/adr/0006-standard-library-only.md): phase 1 asks for
 subcommands and flags, which is what argparse is.
 
-`doctor`, `fetch`, `stage`, `survey` and `match` exist. The other subcommands named in
-CLAUDE.md arrive with the stages they drive, and a subcommand that parsed its
-arguments and then printed "not implemented" would be worse than its absence,
-because `--help` would list it as though it worked.
+`doctor`, `fetch`, `stage`, `survey`, `match` and `review` exist. The other
+subcommands named in CLAUDE.md arrive with the stages they drive, and a
+subcommand that parsed its arguments and then printed "not implemented" would be
+worse than its absence, because `--help` would list it as though it worked.
 """
 
 from __future__ import annotations
 
 import argparse
+import getpass
 import os
 import subprocess
 import sys
@@ -23,10 +24,13 @@ from datetime import date
 from pathlib import Path
 from typing import cast
 
+import pyarrow.parquet as pq
+
 from crony_eu import __version__
 from crony_eu.config import ConfigError, data_dir, repository_root
 from crony_eu.http import build_client
 from crony_eu.match import candidates
+from crony_eu.match.review import ReviewError, review_buyers, review_people
 from crony_eu.paths import Layout
 from crony_eu.sources import REGISTRY, ScopedSource, Source, is_scoped, names
 from crony_eu.sources.fr_entreprises_api import SourceError
@@ -112,6 +116,41 @@ def check_encryption(root: Path | None) -> Check:
     )
 
 
+def check_staged_tables(root: Path | None) -> Check:
+    """Whether every staged table has the columns the current code writes.
+
+    A stage's schema changes with the code, and the data directory does not
+    follow on its own. Every test stages fresh fixtures, so nothing in the suite
+    notices a real table left behind; the first sign would be a later stage
+    failing on a missing column. On 2026-09-22 that happened: DECP gained two
+    columns, the real snapshot was not re-staged, and buyer review failed with a
+    DuckDB binder error. This check names the table and the command instead.
+    """
+    if root is None:
+        return Check("staged tables current", None, "no usable data directory")
+    layout = Layout(root)
+    stale: list[str] = []
+    checked = 0
+    for source, module in sorted(REGISTRY.items()):
+        for table, schema in sorted(module.TABLES.items()):
+            snapshot = layout.latest_staged(source, table)
+            if snapshot is None:
+                continue
+            checked += 1
+            path = layout.staged(source, snapshot) / f"{table}.parquet"
+            if pq.read_schema(path).names != list(schema.names):
+                stale.append(f"{source} {table} ({snapshot})")
+    if not checked:
+        return Check("staged tables current", None, "nothing staged yet")
+    if stale:
+        return Check(
+            "staged tables current",
+            False,
+            f"written by older code, re-run `crony stage`: {'; '.join(stale)}",
+        )
+    return Check("staged tables current", True, f"{checked} tables match the code")
+
+
 def check_export_template() -> Check:
     """The CSP check, which has nothing to read yet."""
     return Check(
@@ -129,6 +168,7 @@ def doctor(_: argparse.Namespace) -> int:
         check_layout(root),
         check_encryption(root),
         check_no_data_in_tree(),
+        check_staged_tables(root),
         check_export_template(),
     ]
 
@@ -341,6 +381,53 @@ def match(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def review(arguments: argparse.Namespace) -> int:
+    """The maintainer's screen. Shows real names; run by a person, not an agent.
+
+    Constraint 13 makes reading real records the maintainer's job, in this
+    command. It is tested on generated records and never run in an agent session.
+    """
+    if arguments.sample is not None and arguments.seed is None:
+        print(
+            "--sample needs --seed: an unseeded sample cannot be drawn again, and "
+            "the precision estimate is only checkable if it can (ADR-0003).",
+            file=sys.stderr,
+        )
+        return 1
+    if arguments.subject == "buyers" and arguments.sample is not None:
+        print(
+            "--sample is for the precision estimate on person-company candidates; "
+            "every buyer assertion in a slice is reviewed.",
+            file=sys.stderr,
+        )
+        return 1
+
+    layout = _layout()
+    try:
+        if arguments.subject == "buyers":
+            tally = review_buyers(layout, arguments.scope, arguments.reviewer)
+        else:
+            tally = review_people(
+                layout,
+                arguments.scope,
+                arguments.reviewer,
+                sample=arguments.sample,
+                seed=arguments.seed,
+            )
+    except ReviewError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+    decided = ", ".join(
+        f"{count} {status}" for status, count in sorted(tally.decided.items())
+    )
+    print(
+        f"\n  shown {tally.shown}, decided {decided or 'none'}, skipped {tally.skipped}"
+        + ("; stopped early" if tally.stopped else "")
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="crony",
@@ -412,6 +499,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--scope", type=departement_scope, metavar="dep:CODE", required=True
     )
     matcher.set_defaults(run=match)
+
+    reviewer = subcommands.add_parser(
+        "review",
+        help="decide pending candidates, or buyer assertions (shows real records)",
+    )
+    reviewer.add_argument("subject", nargs="?", choices=["buyers"], default=None)
+    reviewer.add_argument(
+        "--scope", type=departement_scope, metavar="dep:CODE", required=True
+    )
+    reviewer.add_argument("--sample", type=int, metavar="N")
+    reviewer.add_argument("--seed", type=int, metavar="S")
+    reviewer.add_argument(
+        "--reviewer",
+        default=getpass.getuser(),
+        help="who is deciding; recorded on every decision (default: your login)",
+    )
+    reviewer.set_defaults(run=review)
 
     return parser
 

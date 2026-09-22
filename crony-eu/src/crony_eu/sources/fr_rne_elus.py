@@ -530,3 +530,9 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
         "elus": write_arrow(elus, ELUS, staged / "elus.parquet"),
         "elu_person": write_arrow(people, ELU_PERSON, staged / "elu_person.parquet"),
     }
+
+
+#: Staged table -> the schema it is written with. `crony doctor` compares what is
+#: on disk against this, so a table staged by older code is reported as stale
+#: rather than discovered as a missing-column error three stages later.
+TABLES: dict[str, pa.Schema] = {"elus": ELUS, "elu_person": ELU_PERSON}

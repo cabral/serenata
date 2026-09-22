@@ -172,6 +172,7 @@ def resolve(payload: dict[str, Any], ask: Ask) -> Resolved | Unresolved:
 COMPANIES = pa.schema(
     [
         pa.field("siren", pa.string()),
+        pa.field("name", pa.string()),
         pa.field("nature_juridique", pa.string()),
         pa.field("statut_diffusion", pa.string()),
         pa.field("etat_administratif", pa.string()),
@@ -272,11 +273,7 @@ def asks_for_scope(layout: Layout, scope: str) -> list[Ask]:
     from crony_eu.sources import fr_decp
     from crony_eu.survey import departement_of
 
-    snapshot = None
-    for candidate in reversed(layout.snapshots(fr_decp.SOURCE)):
-        if (layout.staged(fr_decp.SOURCE, candidate) / "contracts.parquet").is_file():
-            snapshot = candidate
-            break
+    snapshot = layout.latest_staged(fr_decp.SOURCE, "contracts")
     if snapshot is None:
         raise SourceError(
             "fr-decp has no staged contracts.parquet. Run `crony fetch fr-decp` "
@@ -455,6 +452,7 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
         companies.append(
             {
                 "siren": unit.get("siren"),
+                "name": unit.get("nom_complet"),
                 "nature_juridique": unit.get("nature_juridique"),
                 "statut_diffusion": unit.get("statut_diffusion"),
                 "etat_administratif": unit.get("etat_administratif"),
@@ -536,3 +534,15 @@ def stage(layout: Layout, snapshot: str) -> dict[str, int]:
             key=("kind", "value"),
         ),
     }
+
+
+#: Staged table -> the schema it is written with. `crony doctor` compares what is
+#: on disk against this, so a table staged by older code is reported as stale
+#: rather than discovered as a missing-column error three stages later.
+TABLES: dict[str, pa.Schema] = {
+    "companies": COMPANIES,
+    "officers": OFFICERS,
+    "officer_companies": OFFICER_COMPANIES,
+    "buyer_evidence": BUYER_EVIDENCE,
+    "officers_missing": MISSING,
+}

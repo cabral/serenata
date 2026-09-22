@@ -19,12 +19,8 @@ from crony_eu.paths import Layout
 from fakes import (
     Elu,
     api_officer,
-    api_response,
-    api_unit,
-    decp_row,
     siret,
-    write_decp,
-    write_rne_snapshot,
+    stage_slice,
 )
 
 SUPPLIER = siret("81230001")
@@ -171,43 +167,9 @@ class TestCandidates:
         buyer_commune: str = "74010",
         supplier: str = SUPPLIER,
     ) -> None:
-        import hashlib
-        import json
-
-        from crony_eu.http import append_manifest
-        from crony_eu.sources import fr_decp, fr_entreprises_api, fr_rne_elus
-
-        write_decp(
-            layout.raw(fr_decp.SOURCE, "2026-09-19") / "decp.parquet",
-            [decp_row(acheteur_commune_code=buyer_commune, titulaire_id=supplier)],
+        stage_slice(
+            layout, elus, officers, buyer_commune=buyer_commune, supplier=supplier
         )
-        fr_decp.stage(layout, "2026-09-19")
-
-        write_rne_snapshot(layout.root, "2026-09-16", cm_current=elus)
-        fr_rne_elus.stage(layout, "2026-09-16")
-
-        api = fr_entreprises_api
-        ask = api.Ask("siren", supplier[:9])
-        text = json.dumps(
-            api_response([api_unit(unit_siren=supplier[:9], officers=officers)])
-        )
-        raw = layout.raw(api.SOURCE, "2026-09-22")
-        raw.mkdir(parents=True, exist_ok=True)
-        (raw / ask.filename).write_text(text, encoding="utf-8")
-        append_manifest(
-            layout.manifest(api.SOURCE, "2026-09-22"),
-            {
-                "source": api.SOURCE,
-                "url": f"{api.ENDPOINT}?q={ask.value}",
-                "path": ask.filename,
-                "sha256": hashlib.sha256(text.encode()).hexdigest(),
-                "bytes": len(text),
-                "retrieved_at": "2026-09-22T09:00:00+00:00",
-                "licence": api.LICENCE,
-                "status": 200,
-            },
-        )
-        api.stage(layout, "2026-09-22")
 
     def elu(self, **overrides: str) -> Elu:
         fields = {

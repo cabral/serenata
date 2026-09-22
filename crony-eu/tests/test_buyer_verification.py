@@ -391,7 +391,7 @@ class TestTheQueue:
                 )
             ],
         )
-        queued = bv.queue(layout, "2026-09-19", "2026-09-22")
+        queued = bv.queue(layout, "2026-09-19", "2026-09-22", "74")
         assert len(queued) == 1
         assert queued[0]["assessment"].identity_corroborated == bv.TRUE
         assert queued[0]["assessment"].historical_geography == bv.NOT_ESTABLISHED
@@ -421,7 +421,7 @@ class TestTheQueue:
                 )
             ],
         )
-        queued = bv.queue(layout, "2026-09-19", "2026-09-22")
+        queued = bv.queue(layout, "2026-09-19", "2026-09-22", "74")
         assert queued[0]["assessment"].identity_corroborated == bv.FALSE
         assert queued[0]["assessment"].blocking_reason == bv.COMMUNE_DISAGREES
 
@@ -441,7 +441,7 @@ class TestTheQueue:
             ],
             [(BUYER, api_response([api_unit(unit_siren=BUYER[:9])]))],
         )
-        queued = bv.queue(layout, "2026-09-19", "2026-09-22")
+        queued = bv.queue(layout, "2026-09-19", "2026-09-22", "74")
 
         # Both are `unknown`, and for different reasons that a reviewer has to
         # be able to tell apart: one buyer was asked about and the registry
@@ -476,7 +476,31 @@ class TestTheQueue:
                 )
             ],
         )
-        row = bv.queue(layout, "2026-09-19", "2026-09-22")[0]
+        row = bv.queue(layout, "2026-09-19", "2026-09-22", "74")[0]
         assert row["verification_id"] == bv.verification_id(
             row["assertion"].buyer_assertion_id, row["evidence"].evidence_sha256
         )
+
+
+class TestTheQueueIsScoped:
+    def test_a_buyer_outside_the_departement_is_not_queued(
+        self, layout: Layout
+    ) -> None:
+        # The LEFT join that keeps an un-fetched buyer visible would, unscoped,
+        # queue every commune buyer in France as unknown.
+        from fakes import api_response, decp_row
+
+        TestTheQueue().build(
+            layout,
+            [
+                decp_row(uid="IN", acheteur_id=BUYER, acheteur_commune_code="74010"),
+                decp_row(
+                    uid="OUT",
+                    acheteur_id=siret("21930001"),
+                    acheteur_commune_code="93001",
+                ),
+            ],
+            [(BUYER, api_response([]))],
+        )
+        queued = bv.queue(layout, "2026-09-19", "2026-09-22", "74")
+        assert [row["assertion"].buyer_siret for row in queued] == [BUYER]
