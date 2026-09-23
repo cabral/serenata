@@ -492,37 +492,50 @@ def base_rate(arguments: argparse.Namespace) -> int:
         print(str(error), file=sys.stderr)
         return 1
 
+    print(f"  measure: {body['measure']}\n")
     header = (
-        f"  {'band':<17}{'pairs':>7}{'cand.':>7}{'conf.':>7}{'elig.':>7}"
-        f"{'roles':>7}{'buyer':>7}"
+        f"  {'':<16}{'pairs':>7}{'cand.':>7}{'conf.':>7}{'elig.':>7}"
+        f"  candidate rate (95% CI)"
     )
     print(header)
     print("  " + "-" * (len(header) - 2))
-    for row in body["bands"]:
+    for row in body["summary"]:
+        interval = row["candidate_rate_ci95"]
+        rate = (
+            f"{100 * row['candidate_rate']:.2f}% "
+            f"({100 * interval[0]:.2f}% to {100 * interval[1]:.2f}%)"
+            if interval
+            else "no pairs"
+        )
         print(
-            f"  {row['band']:<17}{row['pairs']:>7,}{row['candidate_pairs']:>7,}"
-            f"{row['confirmed_pairs']:>7,}{row['eligible_pairs']:>7,}"
-            f"{row['role_resolved_pairs']:>7,}{row['buyer_verified_pairs']:>7,}"
+            f"  {row['group']:<16}{row['pairs']:>7,}{row['candidate_pairs']:>7,}"
+            f"{row['confirmed_pairs']:>7,}{row['eligible_pairs']:>7,}  {rate}"
         )
+
+    bands = body["bands_for_inspection_only"]
     print("\n  pairs removed per gate (not netted; one pair can fail several)")
-    gates = (
-        [key for key in body["bands"][0] if key.startswith("lost_")]
-        if body["bands"]
-        else []
-    )
+    gates = [key for key in bands[0] if key.startswith("lost_")] if bands else []
     for gate in gates:
-        total = sum(int(row[gate]) for row in body["bands"])
+        total = sum(int(row[gate]) for row in bands)
         print(f"    {gate.removeprefix('lost_').replace('_', ' '):<28}{total:>7,}")
+
+    print("\n  limits")
+    for limit in body["limits"]:
+        print(f"    - {limit}")
+
     measured = body["precision"]
-    estimate = measured["estimate"]
-    print(
-        f"\n  precision: {measured['reviewed']} of a sample of "
-        f"{measured['sample_size']} (seed {measured['seed']}) reviewed"
-        + (
-            f", {estimate:.2f} confirmed"
-            if estimate is not None
-            else ", nothing reviewed yet"
+    if measured["reviewed"]:
+        low, high = measured["estimate_ci95"]
+        verdict = (
+            f"{measured['confirmed']} confirmed, {measured['rejected']} rejected, "
+            f"{measured['ambiguous']} ambiguous: {measured['estimate']:.2f} "
+            f"(95% CI {low:.2f} to {high:.2f})"
         )
+    else:
+        verdict = "nothing reviewed yet"
+    print(
+        f"\n  precision, census of {measured['population']} candidates, "
+        f"{measured['reviewed']} reviewed: {verdict}"
     )
     print(f"\n  {body['status']}")
     return 0

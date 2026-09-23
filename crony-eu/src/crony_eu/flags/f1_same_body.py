@@ -210,6 +210,7 @@ PAIRS = pa.schema(
         pa.field("supplier_siren", pa.string()),
         pa.field("population", pa.int32()),
         pa.field("population_band", pa.string()),
+        pa.field("supplier_legal_category", pa.string()),
         pa.field("contracts", pa.int32()),
     ]
 )
@@ -530,6 +531,9 @@ def run(layout: Layout, scope: str) -> Result:
                 "supplier_siren": supplier,
                 "population": populations.get(commune),
                 "population_band": band_of(populations.get(commune)),
+                "supplier_legal_category": companies.get(supplier, {}).get(
+                    "nature_juridique"
+                ),
                 "contracts": count,
             }
             for (commune, supplier), count in pairs.items()

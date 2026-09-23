@@ -2,6 +2,8 @@
 
 Status: **implemented 2026-09-22, not calibrated.** `crony flag F1` and `crony base-rate F1` run, and the base-rate table has been computed for `dep:74` and shown to the maintainer, not written here: that is the session 5 STOP. Until the maintainer approves the table and `CALIBRATION` is set in `crony-eu/src/crony_eu/flags/f1_same_body.py`, every output row is `uncalibrated` (CLAUDE.md, constraint 8) and no case packet may be built from it.
 
+**What F1 measures today is not what it is specified to measure.** F1 asks whether a councillor held a company office *on the notification date*. No source available to phase 1 carries officer role dates, so until one does, F1 is **co-occurrence with a current officer, counts only**: a councillor of the buying commune sharing a name and birth month with someone who is an officer of the supplier now. That is a weaker quantity with a bias of unknown direction: officers appointed after a contract inflate it, and officers who left before the officer list was taken are invisible to it. `crony base-rate F1` prints this label, and changes it by itself the first time a role date resolves. Resolving it is the session 3 gate, and INPI's historical endpoint (`GET /api/companies/{siren}?date=AAAA-MM-JJ`, which returns a company as it stood on a date) is the documented route, pending an account.
+
 Revised 2026-09-16 on two points, both recorded in [ADR-0014](../../../docs/adr/0014-replace-serenata-with-crony.md):
 
 - officer role dates moved from phase 2 into phase 1, because this flag cannot produce a case packet without them
@@ -198,29 +200,36 @@ Two limits the implementation found, recorded rather than worked around:
 
 ## Base rate
 
-Unit: distinct (commune, supplier) pairs with at least one contract meeting conditions 1 to 3. One pair, however many contracts it carries. Every **rate** below uses this unit, so that nothing in this spec compares two denominators. Precision is the exception, and says so: it is measured on sampled candidate *judgments*, as ADR-0003 and the precision line below define it and as `crony review --sample` draws it. An earlier version of this paragraph put the precision sample in the pair unit too, which contradicted the line that specifies it.
+Unit: distinct (commune, supplier) pairs with at least one contract meeting conditions 1 to 3. One pair, however many contracts it carries. Every **rate** below uses this unit, so that nothing in this spec compares two denominators. Precision is the exception, and says so: it is measured on candidate *judgments*, as ADR-0003 defines it.
 
-Method (session 5):
+Method (session 5, revised 2026-09-23 after the maintainer's review of the first table):
 
-- population bands: up to 500; 501 to 3,500; 3,501 to 10,000; 10,001 to 50,000; above 50,000
-- observed rate: pairs with an F1 hit divided by all pairs, per band, with Wilson 95% intervals
+- **one overall rate, and two bands split at the 432-12 line**: 3,500 inhabitants or fewer, and over 3,500. The first table cut five bands and got 0, 12, 4, 3 and 0 candidate pairs, with every interval overlapping every other; one département cannot support five. The five bands stay in the data-directory report as `bands_for_inspection_only` and are not used for any claim. The split is inclusive at 3,500, as the article is ("3 500 habitants au plus"), and a commune with no population row counts in the overall rate and in neither band
+- observed rate: pairs with an F1 hit divided by all pairs, with Wilson 95% intervals, exact at 0 and at 1
 - reported three times over, because they answer different questions: pairs with a **candidate** judgment, pairs with a **confirmed** judgment, and pairs meeting every case-packet eligibility condition above, including buyer verification under ADR-0007. The gap between the second and third reflects all export gates, not role-date coverage alone; report buyer-verification coverage separately without changing the common denominator
-- **losses are reported per gate, not netted.** One line per gate saying how many pairs it removed: role overlap unknown, mandate overlap unknown, judgment not confirmed, buyer identity not corroborated, buyer identity contradicted, supplier not redistributable, flag uncalibrated. A single eligible count with a single shortfall hides which gate is actually binding, and after the 2026-09-21 amendment `historical_geography = not_established` is expected on nearly every row while removing none of them, so it is reported as coverage and never as a loss
-- `role_overlap` coverage: the share of candidate pairs where role dates resolve at all, per band. A low number here is the headline result, not a footnote
-- precision: a seeded random sample of 100 candidate judgments reviewed by the maintainer; report confirmed divided by reviewed, with the sample size and seed
+- **losses are reported per gate, not netted.** One line per gate saying how many pairs it removed: role overlap not true (unknown or false), mandate overlap unknown, judgment not confirmed, buyer identity not corroborated, buyer identity contradicted, supplier not redistributable, flag uncalibrated. A single eligible count with a single shortfall hides which gate is actually binding, and `historical_geography = not_established` is expected on nearly every row while removing none of them, so it is reported as coverage and never as a loss
+- `role_overlap` coverage: the share of candidate pairs where role dates resolve at all. A low number here is the headline result, not a footnote, and while it is zero the rate carries the label in the status line above
+- **precision is a census, not a sample**, while the slice is small enough. `dep:74` has 107 candidate judgments; a seeded sample of 100 would be 93% of them, and seven more decisions buy a figure with no sampling error. Report confirmed divided by reviewed, over every candidate in the slice, with its Wilson interval and the counts of confirmed, rejected and ambiguous. A slice with thousands of candidates goes back to the seeded sample ADR-0003 describes, drawn by `crony review --sample N --seed S`
+- **the limits travel with the rate**, in the same report and in the same terminal output, never in a footnote the rate can be quoted without. See below
 
 No expected rate is computed in phase 1. The two comparators the first bundle proposed, the département's whole supplier pool and the subset with a head office in the commune, both need officer data for companies that won nothing, which is INPI at national scale and therefore phase 2.
 
-Query: `crony-eu/src/crony_eu/flags/sql/f1_base_rate.sql`, run by `crony base-rate F1 --scope dep:<code>`. The precision sample is 100 judgments with seed 1, the same draw `crony review --scope dep:<code> --sample 100 --seed 1` puts in front of the maintainer.
+Query: `crony-eu/src/crony_eu/flags/sql/f1_base_rate.sql`, run by `crony base-rate F1 --scope dep:<code>`. The overall row and the two bands are sums of the query's per-band rows, and exact: a pair belongs to one commune and a commune to one band.
+
+### Limits that go with any rate this flag reports
+
+- **The DECP threshold.** DECP publishes contracts of 40,000 EUR excluding VAT or more (art. R2196-1), so every rate is a rate among contracts of that size and says nothing about a commune's smaller purchasing. The small-commune band is thinnest for that reason: most small communes never sign a contract that large.
+- **One département.** The slice is `dep:74`, chosen as a bounded pilot and not as representative; Haute-Savoie is wealthier, more alpine and more tourism- and construction-driven than most of France. No rate here generalises.
+- **Sociétés publiques locales.** They have no catégorie juridique of their own and are filed as `5599`, "Autre SA à conseil d'administration", so the exclusion list cannot remove them. The report counts the pairs whose supplier carries that code, where an SPL may be; the reviewer, who sees the company's name, is the only filter.
+- **Unreviewed identity.** Candidates match on name and birth month. Until the maintainer has decided them, the candidate rate includes homonyms at whatever rate the precision census measures.
+- **No role dates.** See the status line: until a source supplies them, the rate is co-occurrence with a current officer, counts only.
 
 Measured values: _computed for `dep:74` on 2026-09-22 and awaiting the maintainer's review; not filled in until approved_
 
-| band | pairs | F1 pairs (candidates) | F1 pairs (confirmed) | packet-eligible | role dates resolved |
+| group | pairs | F1 pairs (candidates) | F1 pairs (confirmed) | packet-eligible | role dates resolved |
 |---|---|---|---|---|---|
-| up to 500 | | | | | |
-| 501 to 3,500 | | | | | |
-| 3,501 to 10,000 | | | | | |
-| 10,001 to 50,000 | | | | | |
-| above 50,000 | | | | | |
+| all pairs | | | | | |
+| 3,500 or fewer | | | | | |
+| over 3,500 | | | | | |
 
-Precision: _not measured yet_: the sample (100 judgments, seed 1) has not been reviewed. Report sample size, seed, confirmed, rejected, ambiguous
+Precision: _not measured yet_: none of the 107 candidate judgments in `dep:74` has been reviewed. Report the census size, confirmed, rejected, ambiguous, and the Wilson interval

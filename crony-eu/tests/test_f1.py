@@ -528,15 +528,102 @@ class TestBaseRate:
         bands = [row["band"] for row in base_rates.table(layout, run_directory(layout))]
         assert bands == ["up to 500", "above 50,000"]
 
-    def test_precision_reads_the_seeded_sample(self, layout: Layout) -> None:
+    def test_precision_is_a_census_of_every_candidate(self, layout: Layout) -> None:
         stage_slice(layout, [slice_elu()], [slice_officer()], contracts=[contract()])
         flag(layout)
-        assert base_rates.precision(layout, "74").reviewed == 0
+        before = base_rates.precision(layout, "74")
+        assert (before.population, before.reviewed, before.estimate) == (1, 0, None)
+        assert before.interval is None
         (row,) = judgments.latest(layout)
         judgments.decide(layout, str(row["judgment_id"]), judgments.CONFIRMED, "m")
         measured = base_rates.precision(layout, "74")
         assert (measured.reviewed, measured.confirmed, measured.estimate) == (1, 1, 1.0)
-        assert measured.seed == base_rates.PRECISION_SEED
+        assert measured.interval is not None and measured.interval[1] == 1.0
+
+    def test_a_rejection_lowers_precision(self, layout: Layout) -> None:
+        stage_slice(
+            layout,
+            [slice_elu(commune_code="74010"), slice_elu(commune_code="74011")],
+            [slice_officer()],
+            contracts=[contract()],
+        )
+        flag(layout)
+        first, second = judgments.latest(layout)
+        judgments.decide(layout, str(first["judgment_id"]), judgments.CONFIRMED, "m")
+        judgments.decide(layout, str(second["judgment_id"]), judgments.REJECTED, "m")
+        measured = base_rates.precision(layout, "74")
+        assert (measured.population, measured.reviewed) == (2, 2)
+        assert measured.estimate == 0.5
+
+    def two_bands(self, layout: Layout) -> list[dict[str, object]]:
+        stage_slice(
+            layout,
+            [slice_elu(), slice_elu(surname="AUTRENOM", commune_code="74011")],
+            [slice_officer()],
+            contracts=[
+                contract(),
+                contract(uid="S", acheteur_commune_code="74011"),
+                contract(uid="T", acheteur_commune_code="74012"),
+            ],
+            populations=[
+                ("74010", "COM", "PMUN", 3500),
+                ("74011", "COM", "PMUN", 3501),
+                ("74012", "COM", "PMUN", 60000),
+            ],
+        )
+        flag(layout)
+        return base_rates.table(layout, run_directory(layout))
+
+    def test_the_summary_splits_at_the_432_12_line_inclusively(
+        self, layout: Layout
+    ) -> None:
+        summary = {
+            row["group"]: row for row in base_rates.summary(self.two_bands(layout))
+        }
+        assert (
+            summary["all pairs"]["pairs"],
+            summary["all pairs"]["candidate_pairs"],
+        ) == (
+            3,
+            1,
+        )
+        # 3,500 exactly is inside the exception, so it is in the lower group.
+        assert summary["3,500 or fewer"]["pairs"] == 1
+        assert summary["3,500 or fewer"]["candidate_pairs"] == 1
+        assert summary["over 3,500"]["pairs"] == 2
+        assert summary["over 3,500"]["candidate_pairs"] == 0
+        assert summary["over 3,500"]["candidate_rate"] == 0.0
+
+    def test_an_empty_group_has_no_rate_rather_than_zero(self) -> None:
+        overall, _, _ = base_rates.summary([])
+        assert overall["candidate_rate"] is None
+        assert overall["candidate_rate_ci95"] is None
+
+    def test_the_measure_says_counts_only_until_a_role_date_resolves(
+        self, layout: Layout
+    ) -> None:
+        bands = self.two_bands(layout)
+        assert base_rates.measure(bands).startswith(
+            "co-occurrence with a current officer"
+        )
+        set_roles(layout, date(2019, 1, 1), None)
+        f1.run(layout, "74")
+        resolved = base_rates.table(layout, run_directory(layout))
+        assert base_rates.measure(resolved).startswith("dated overlap")
+
+    def test_the_limits_carry_their_numbers(self, layout: Layout) -> None:
+        stage_slice(
+            layout,
+            [slice_elu()],
+            [slice_officer()],
+            contracts=[contract()],
+            supplier_category="5599",
+        )
+        flag(layout)
+        text = " ".join(base_rates.limits(layout, run_directory(layout), "74"))
+        assert "40,000 EUR" in text
+        assert "dep:74" in text
+        assert "1 of 1 pairs have a supplier filed as 5599" in text
 
     def test_the_report_goes_to_the_data_directory_and_not_the_spec(
         self, layout: Layout
@@ -547,6 +634,13 @@ class TestBaseRate:
         assert (layout.reports() / "f1-base-rate-dep-74.json").is_file()
         assert body["status"].startswith("uncalibrated")
         assert body["query"].endswith("f1_base_rate.sql")
+        assert [row["group"] for row in body["summary"]] == [
+            "all pairs",
+            "3,500 or fewer",
+            "over 3,500",
+        ]
+        # The five bands are kept, and labelled as not for claims.
+        assert "bands_for_inspection_only" in body
 
     def test_a_base_rate_needs_a_flag_run_for_the_current_inputs(
         self, layout: Layout

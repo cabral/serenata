@@ -698,10 +698,12 @@ class TestFlagCommands:
         capsys.readouterr()
         assert main(["base-rate", "F1", "--scope", "dep:74"]) == 0
         output = capsys.readouterr().out
-        assert "501 to 3,500" in output
+        assert "measure: co-occurrence with a current officer" in output
+        assert "3,500 or fewer" in output and "over 3,500" in output
         assert "pairs removed per gate" in output
         assert "judgment not confirmed" in output
-        assert "nothing reviewed yet" in output
+        assert "limits" in output and "40,000 EUR" in output
+        assert "census of 1 candidates, 0 reviewed: nothing reviewed yet" in output
         assert "awaiting the maintainer" in output
 
     def test_base_rate_reports_a_reviewed_precision(
@@ -721,7 +723,7 @@ class TestFlagCommands:
         main(["flag", "F1", "--scope", "dep:74"])
         capsys.readouterr()
         main(["base-rate", "F1", "--scope", "dep:74"])
-        assert "1.00 confirmed" in capsys.readouterr().out
+        assert "1 confirmed, 0 rejected, 0 ambiguous: 1.00" in capsys.readouterr().out
 
     def test_flag_without_matching_names_the_command(
         self,
