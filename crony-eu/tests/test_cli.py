@@ -780,3 +780,42 @@ class TestFlagCommands:
         monkeypatch.setenv(DATA_DIR_VARIABLE, str(outside_repo))
         assert main(["review", "buyers", "--scope", "dep:74", "--flag", "F1"]) == 1
         assert "every buyer" in capsys.readouterr().err
+
+
+class TestNoDataDirectory:
+    """A missing data directory is a one-line message, never a traceback."""
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["review", "--scope", "dep:74"],
+            ["match", "fr", "--scope", "dep:74"],
+            ["flag", "F1", "--scope", "dep:74"],
+            ["base-rate", "F1", "--scope", "dep:74"],
+            ["survey", "departements"],
+            ["stage", "fr-decp"],
+        ],
+    )
+    def test_every_command_explains_instead_of_crashing(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        argv: list[str],
+    ) -> None:
+        monkeypatch.delenv(DATA_DIR_VARIABLE, raising=False)
+        assert main(argv) == 2
+        err = capsys.readouterr().err
+        assert "CRONY_DATA_DIR is not set" in err
+        assert "export CRONY_DATA_DIR=" in err
+        assert "Traceback" not in err
+
+    def test_a_rule_breaking_directory_explains_without_the_export_hint(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setenv(DATA_DIR_VARIABLE, "relative/path")
+        assert main(["review", "--scope", "dep:74"]) == 2
+        err = capsys.readouterr().err
+        assert err.startswith("crony: ")
+        assert "export CRONY_DATA_DIR=" not in err

@@ -6,10 +6,10 @@
 subcommands and flags, which is what argparse is.
 
 `doctor`, `fetch`, `stage`, `survey`, `match`, `review`, `flag` and `base-rate`
-exist. The other
-subcommands named in CLAUDE.md arrive with the stages they drive, and a
-subcommand that parsed its arguments and then printed "not implemented" would be
-worse than its absence, because `--help` would list it as though it worked.
+exist. The other subcommands named in CLAUDE.md arrive with the stages they
+drive, and a subcommand that parsed its arguments and then printed "not
+implemented" would be worse than its absence, because `--help` would list it as
+though it worked.
 """
 
 from __future__ import annotations
@@ -661,7 +661,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     arguments = parser.parse_args(argv)
     run: Callable[[argparse.Namespace], int] = arguments.run
-    return run(arguments)
+    try:
+        return run(arguments)
+    except ConfigError as error:
+        # A data directory that is unset or breaks a rule is a setup problem with
+        # a one-line fix, not a crash. Only `doctor` caught it until 2026-09-23;
+        # every other command printed a Python traceback, which is how the
+        # maintainer's first `crony review` ended.
+        print(f"crony: {error}", file=sys.stderr)
+        if "is not set" in str(error):
+            print(
+                "  export CRONY_DATA_DIR=/absolute/path/outside/this/repository",
+                file=sys.stderr,
+            )
+        return 2
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised through the console script
