@@ -23,5 +23,5 @@ The format follows the gate templates in
 | Gate | Instruction | Status |
 |---|---|---|
 | [#11](../open-work.md#11-decide-the-publication-rule-for-unknown-natural-person-status) | [Unknown natural-person status](11-natural-person-status.md) | drafted, not sent |
-| [#14](../open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Retained-field personal data | not drafted |
+| [#14](../open-work.md#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | [Retained-field personal data](14-retained-field-personal-data.md) | drafted, not sent |
 | [#15](../open-work.md#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Beneficial ownership | not drafted |
