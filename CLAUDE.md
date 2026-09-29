@@ -15,7 +15,12 @@ and the constraints below are not optional.
    and filtered later. This is a legal constraint (GDPR, Swedish defamation law),
    not a style preference. The field list is docs/personal-data.md, executable as
    serenata/parse/personal_data.py; extend both in the same PR as any schema
-   change.
+   change. The law decides what may be kept, not a preference in this file: open
+   data the project has the right to hold should be held, and "the authority
+   published it" does not by itself create that right. The raw archive (see Stack
+   decisions) holds these fields as fetched, and whether that is lawful is open
+   in ADR-0010. Until counsel answers, the drop stands and nothing here widens
+   what is stored.
 3. Flags are statistical anomalies, not accusations. Any user-facing string, doc,
    or example output describes flags as anomalies with possible innocent
    explanations, linked to the source notice. Never the words "corrupt",
