@@ -112,12 +112,21 @@ open question in ADR-0010. It needs counsel, so until counsel answers, the
 drop-at-ingestion rule stays and ADR-0010 stays the record of what is unresolved.
 
 **What changes.** Commits and pushes to a working branch need no approval per
-step. `AGENTS.md`, `CONTRIBUTING.md` and the skills said otherwise and were
-edited in the same change.
+step, and an assistant may merge its own pull request. `AGENTS.md`,
+`CONTRIBUTING.md` and the skills said otherwise and were edited to match.
+
+**Merging.** The maintainer authorised this on 2026-09-29, as a standing
+instruction. An assistant merges only when every required check is green on the
+current head, the branch has no conflict, no review thread is open, and the
+change touches nothing in the list below. It never bypasses branch protection or
+a required review, and never merges anything red. A classifier still needs its
+hypothesis and current measurement first, as the merge checklist says. This is
+an instruction to assistants, not the externally held delegation ADR-0012
+describes: no controller enforces it, and ADR-0012 stays as written.
 
 **What does not change.** These stay with the maintainer:
 
-- merging, publishing, and any external message;
+- publishing, and any external message;
 - anything that names or identifies a person or an entity;
 - the licence, and the drop-at-ingestion rule;
 - the CI checks, the merge guard and ADR-0012's delegation lane. An assistant
@@ -127,7 +136,7 @@ edited in the same change.
 added under a name its owner has not configured. A sign-off still reads as "the
 maintainer takes responsibility for this contribution". Under this model that
 rests on three things: the checks the assistant ran while working, CI, and the
-maintainer's decision to merge. A session that runs under the assistant's own
+maintainer's standing authorisation to merge under the conditions above. A session that runs under the assistant's own
 git identity leaves `Co-Authored-By` only, and the maintainer's sign-off is added
 before a pull request with `git rebase --signoff origin/main`, as the DCO
 workflow already says.

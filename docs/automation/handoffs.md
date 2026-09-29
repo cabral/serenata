@@ -36,7 +36,7 @@ work on `HOLD`, bound repair attempts, and obtain fresh review after patch chang
 Independent sessions can challenge each other; model consensus is not
 independent empirical evidence and cannot authorize anything. Human-authorized
 scope can permit the sequence without an approval click between every role;
-current merges, publication and external messages still require explicit
+current publication and external messages still require explicit
 human authorization for the specific action. A future separately adopted,
 externally held standing delegation could authorize only enumerated merges
 without per-merge approval clicks, after the executor and deployment requirements

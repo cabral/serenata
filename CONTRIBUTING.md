@@ -161,14 +161,16 @@ prompts, tool output or logs; use synthetic fixtures and non-identifying summari
 
 Agents may draft, edit, test, commit and push to a working branch within the
 requested scope, but not self-approve. Explicit human authorization is required
-before any merge, publication or external message, including issue comments and
-private replies. A passing build,
-review checklist, DCO sign-off or co-authorship trailer is not that authorization.
+before any publication or external message, including issue comments and private
+replies. An agent may merge its own pull request only under the conditions in
+[ADR-0009](docs/adr/0009-contribution-provenance.md). A passing build, review
+checklist, DCO sign-off or co-authorship trailer is not authorization to publish
+or send messages.
 
 [Bounded automation](docs/automation/README.md) separates technical checking
 from authority. Its proposed standing-delegation lane can avoid per-PR approval
 clicks for a narrow scope after independent deployment and explicit adoption.
-It is disabled here; ordinary merge authorization remains unchanged. Agent
+It is disabled here; ADR-0009 governs ordinary merges. Agent
 reports never activate it, and code-merge authority is not processing or release
 authority. See the [four gate handoffs](docs/automation/handoffs.md) for evidence
 that an automated test or model cannot manufacture.
@@ -220,7 +222,7 @@ reproducing a fragment of someone else's licensed code. Read what you submit.
 `Co-Authored-By` is the separate trailer that discloses the tool, and both
 belong on the commit. [ADR-0009](docs/adr/0009-contribution-provenance.md) has
 the full reasoning, including what a sign-off here does and does not prove.
-Neither trailer is review approval or authorization to merge, publish or
+Neither trailer is review approval or authorization to publish or
 send messages on the project's behalf.
 
 ## Tests
