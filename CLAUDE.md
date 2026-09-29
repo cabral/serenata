@@ -44,7 +44,8 @@ and the constraints below are not optional.
   derived record keeps a reference back to its source notice ID.
 - Code, comments, identifiers, docs: English. Findings published later may be
   multilingual; not a code concern now.
-- Tests: pytest. CI: GitHub Actions, runs lint (ruff) + tests on every push.
+- Tests: pytest. CI: GitHub Actions runs `ruff check`, `ruff format --check`,
+  mypy and pytest on every push and pull request (.github/workflows/ci.yml).
 - Formatting: ruff format. No other formatters.
 
 ## Data source facts (verify against current docs before coding against them)
