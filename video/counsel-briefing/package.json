@@ -1,0 +1,24 @@
+{
+  "name": "serenata-counsel-briefing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Briefing video for counsel: what Serenata Europa holds, what it asks, what each answer changes.",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "script": "node scripts/build.mjs --script-only",
+    "check": "node scripts/build.mjs && node scripts/hf.mjs check",
+    "stills": "node scripts/build.mjs && node scripts/stills.mjs",
+    "dev": "node scripts/build.mjs && node scripts/hf.mjs preview",
+    "render:draft": "node scripts/build.mjs && node scripts/hf.mjs render --quality draft --output out/draft.mp4",
+    "render": "node scripts/build.mjs && node scripts/hf.mjs render --quality delivery --output out/counsel-briefing.mp4",
+    "render:chapters": "node scripts/render-chapters.mjs"
+  },
+  "devDependencies": {
+    "hyperframes": "0.8.92"
+  }
+}

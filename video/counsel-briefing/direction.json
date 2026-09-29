@@ -1,0 +1,17 @@
+{
+  "motion": {
+    "feel": 15,
+    "speed": 1.0
+  },
+  "camera": {
+    "push": 0.02,
+    "speed": 1.0
+  },
+  "pace": {
+    "wordsPerSecond": 2.5,
+    "leadIn": 0.5,
+    "beatPad": 0.3,
+    "tail": 1.1
+  },
+  "captions": true
+}

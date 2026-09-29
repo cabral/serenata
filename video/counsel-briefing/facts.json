@@ -1,0 +1,215 @@
+{
+  "_": "Every number and quotation shown on screen. `needle` must appear in `doc` (whitespace-normalised). The build stops if it does not, and tests/test_counsel_video.py checks the same thing in CI.",
+  "facts": {
+    "tedPerYear": {
+      "display": "700,000",
+      "doc": "README.md",
+      "needle": "around 700,000 procurement notices a year"
+    },
+    "notices": {
+      "display": "19,180",
+      "doc": "README.md",
+      "needle": "19,180 notices parse and become 632,068 rows across twelve tables"
+    },
+    "rows": {
+      "display": "632,068",
+      "doc": "README.md",
+      "needle": "19,180 notices parse and become 632,068 rows across twelve tables"
+    },
+    "tables": {
+      "display": "12",
+      "doc": "README.md",
+      "needle": "632,068 rows across twelve tables"
+    },
+    "days": {
+      "display": "5",
+      "doc": "README.md",
+      "needle": "against five real publication days"
+    },
+    "flags": {
+      "display": "96",
+      "doc": "README.md",
+      "needle": "96 flags from 8,132 lot outcomes"
+    },
+    "lotOutcomes": {
+      "display": "8,132",
+      "doc": "README.md",
+      "needle": "96 flags from 8,132 lot outcomes"
+    },
+    "unpublished": {
+      "display": "0",
+      "doc": "README.md",
+      "needle": "No flag has been published, and none may be yet."
+    },
+    "leafDrop": {
+      "display": "3.5%",
+      "doc": "README.md",
+      "needle": "3.5% of every leaf element"
+    },
+    "contactDetails": {
+      "display": "99.9%",
+      "doc": "docs/adr/0010-raw-archive-retention.md",
+      "needle": "contact details appear in **99.9%** of the measured notices"
+    },
+    "absent": {
+      "display": "96.6%",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "absent from 96.6% of the organisation records measured"
+    },
+    "orgRows": {
+      "display": "77,444",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "77,444 `organisation` rows"
+    },
+    "addressShaped": {
+      "display": "427",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "427 values in seven retained columns"
+    },
+    "personShaped": {
+      "display": "139",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "139 of those are shaped like a person's own address"
+    },
+    "inDescriptions": {
+      "display": "359",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "This removes 359 of the 427"
+    },
+    "colLotDescription": {
+      "display": "234",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `lot.description` | 234 | 77 |"
+    },
+    "colProcedureDescription": {
+      "display": "125",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `procedure.description` | 125 | 45 |"
+    },
+    "colStreet": {
+      "display": "18",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `organisation.street` | 18 | 6 |"
+    },
+    "colWebsite": {
+      "display": "17",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `organisation.website` | 17 | 5 |"
+    },
+    "colCompanyIds": {
+      "display": "16",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `organisation.company_ids` | 16 | 4 |"
+    },
+    "colName": {
+      "display": "11",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `organisation.name` | 11 | 1 |"
+    },
+    "colCity": {
+      "display": "6",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "needle": "| `organisation.city` | 6 | 1 |"
+    },
+    "segmentFloor": {
+      "display": "50",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "fewer than 50 comparable lot results"
+    },
+    "flagCarries": {
+      "display": "a bid count, a market baseline and a URL",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "It carries a bid count, a market baseline, and a URL to the notice's XML on TED."
+    },
+    "flagNoOrg": {
+      "display": "no organisation reference",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "no organisation reference of any kind"
+    },
+    "beneficialOwners": {
+      "display": "1,486",
+      "doc": "docs/open-work.md",
+      "needle": "1,486 of the 32,135 leaf elements"
+    },
+    "leafRemovals": {
+      "display": "32,135",
+      "doc": "docs/open-work.md",
+      "needle": "1,486 of the 32,135 leaf elements"
+    },
+    "reviewDate": {
+      "display": "2027-09-03",
+      "doc": "docs/adr/0010-raw-archive-retention.md",
+      "needle": "**2027-09-03**"
+    },
+    "personnummer": {
+      "display": "personnummer",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "In Sweden a sole trader's `organisationsnummer` is the owner's `personnummer`."
+    },
+    "directive": {
+      "display": "Directive 2014/24/EU, Art. 2(1)(1)",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Directive 2014/24/EU, Article 2(1)(1)"
+    },
+    "directiveUtilities": {
+      "display": "Directive 2014/25/EU",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Directive 2014/25/EU"
+    },
+    "directiveSubsidised": {
+      "display": "Directive 2014/24/EU, Art. 13",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Directive 2014/24/EU, Article 13"
+    },
+    "foertal": {
+      "display": "Brottsbalken ch. 5",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Brottsbalken ch. 5"
+    },
+    "partAFirst": {
+      "display": "Part A first",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Counsel is asked to answer Part A first, and may answer it without reaching Part B."
+    },
+    "fourOtherBlocks": {
+      "display": "four",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "Publication cannot happen for at least four reasons independent of this item"
+    },
+    "lawDecides": {
+      "display": "The law decides what may be kept.",
+      "doc": "CLAUDE.md",
+      "needle": "The law decides what may be kept"
+    },
+    "notAnonymisation": {
+      "display": "This is structural suppression, not anonymisation",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "needle": "This is structural suppression, not anonymisation"
+    },
+    "notAdvice": {
+      "display": "questionnaires, not legal advice, and not authorization",
+      "doc": "docs/counsel/README.md",
+      "needle": "These are questionnaires, not legal advice, and not authorization."
+    },
+    "independent": {
+      "display": "independent",
+      "doc": "README.md",
+      "needle": "It is not affiliated with, endorsed by, or run by Open Knowledge Brasil"
+    },
+    "lineage": {
+      "display": "2016",
+      "doc": "README.md",
+      "needle": "In 2016, three of us in Brazil built"
+    },
+    "tedSource": {
+      "display": "TED",
+      "doc": "README.md",
+      "needle": "Source: [TED](https://ted.europa.eu)"
+    },
+    "privateAdvice": {
+      "display": "Detailed legal advice and holdings inventories stay in authorized restricted channels",
+      "doc": "docs/automation/handoffs.md",
+      "needle": "Detailed legal advice and holdings inventories stay in authorized restricted channels"
+    }
+  }
+}

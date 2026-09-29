@@ -1,0 +1,275 @@
+/* Visual language taken from serenata.ai (Operação Serenata de Amor): black
+ * ground, white text, Anonymous Pro monospace, white label boxes, big numerals,
+ * stripe groups, pixel icons, a hard purple offset on the wordmark.
+ * Colours were read from that site's stylesheet and logo:
+ *   #000 / #fff  body            #e6e6e6  logo white
+ *   #681284      logo purple     #43007f  footer purple
+ *   #bc68d1      link purple     #c72838  button red     #eb4a3b  support-bar coral
+ * No logo, partner mark or press mark from that site is reused.
+ */
+
+@font-face {
+  font-family: 'Anonymous Pro';
+  font-weight: 400;
+  src: url('assets/fonts/anonymous-pro-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Anonymous Pro';
+  font-weight: 700;
+  src: url('assets/fonts/anonymous-pro-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-weight: 700;
+  src: url('assets/fonts/pixelify-sans-latin-700-normal.woff2') format('woff2');
+}
+
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --soft: #e6e6e6;
+  --purple: #681284;
+  --deep: #43007f;
+  --lilac: #bc68d1;
+  --coral: #eb4a3b;
+  --red: #c72838;
+  --grey: #9a9a9a;
+  --rule: #303030;
+  --mono: 'Anonymous Pro', monospace;
+  --pix: 'Pixelify Sans', 'Anonymous Pro', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  background: var(--bg);
+}
+body {
+  font-family: var(--mono);
+  color: var(--fg);
+}
+
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 38px;
+  line-height: 1.28;
+}
+
+.scene,
+.beat,
+.caption-cue {
+  position: absolute;
+  inset: 0;
+}
+.cam {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+.abs {
+  position: absolute;
+}
+.up {
+  text-transform: uppercase;
+}
+.b {
+  font-weight: 700;
+}
+.pix {
+  font-family: var(--pix);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+}
+.grey {
+  color: var(--grey);
+}
+.lilac {
+  color: var(--lilac);
+}
+.coral {
+  color: var(--coral);
+}
+
+/* ---- frame furniture ---------------------------------------------------- */
+
+.hud-mark {
+  position: absolute;
+  left: 96px;
+  top: 34px;
+  font: 700 30px/1 var(--pix);
+  text-transform: uppercase;
+  color: var(--soft);
+  text-shadow: 3px 3px 0 var(--purple);
+  letter-spacing: 0.02em;
+}
+.hud-prog {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 8px;
+  background: #151515;
+}
+.hud-prog i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--lilac);
+  transform-origin: left center;
+}
+.chap {
+  position: absolute;
+  right: 96px;
+  top: 26px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.capbox {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  bottom: 46px;
+  min-height: 124px;
+  display: flex;
+  align-items: flex-end;
+  border-top: 3px solid var(--rule);
+  padding-top: 14px;
+  font-size: 40px;
+  line-height: 1.22;
+  color: var(--soft);
+}
+
+/* ---- shared pieces ------------------------------------------------------ */
+
+.tag {
+  display: inline-block;
+  background: var(--soft);
+  color: #000;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 16px 4px;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.tag.p {
+  background: var(--purple);
+  color: #fff;
+}
+.tag.d {
+  background: var(--deep);
+  color: #fff;
+}
+.tag.c {
+  background: var(--coral);
+  color: #000;
+}
+.tag.k {
+  background: transparent;
+  color: var(--soft);
+  outline: 3px solid var(--soft);
+  outline-offset: -3px;
+}
+.tag.big {
+  font-size: 46px;
+  padding: 10px 26px 6px;
+}
+
+.box {
+  background: var(--soft);
+  color: #000;
+  padding: 26px 32px;
+}
+.box.p {
+  background: var(--purple);
+  color: #fff;
+}
+.box.d {
+  background: var(--deep);
+  color: #fff;
+}
+
+.num {
+  display: flex;
+  width: max-content;
+  font-family: var(--mono);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.num .dg {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+  width: 0.6em;
+}
+.num .strip {
+  display: block;
+}
+.num .strip i {
+  display: block;
+  height: 1em;
+  font-style: normal;
+  text-align: center;
+}
+.num .ch {
+  display: inline-block;
+  height: 1em;
+  width: 0.6em;
+  text-align: center;
+}
+
+.typed {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.cur {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.stripes {
+  display: inline-flex;
+  align-items: flex-end;
+}
+.stripes i {
+  display: block;
+  background: currentColor;
+  transform-origin: bottom center;
+}
+.bar {
+  transform-origin: left center;
+}
+.barY {
+  transform-origin: bottom center;
+}
+
+.ico {
+  display: block;
+}
+
+/* the wordmark: pixel face, hard purple offset, as on the original logo */
+.wordmark {
+  font-family: var(--pix);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--soft);
+  text-shadow: 8px 8px 0 var(--purple);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+}

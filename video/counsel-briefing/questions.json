@@ -1,0 +1,173 @@
+{
+  "_": "The questions put to counsel, condensed for the screen. Each `needle` must appear in `doc` (whitespace-normalised), so a question cannot be reworded on screen without the source instruction saying it too. Gate 15 has no questionnaire yet; its four points are from open-work #15.",
+  "gates": {
+    "11": {
+      "title": "Unknown natural-person status",
+      "doc": "docs/counsel/11-natural-person-status.md",
+      "questions": [
+        {
+          "id": "A1",
+          "label": "Lawful basis and necessity",
+          "text": "We propose legitimate interest, Article 6(1)(f). Does it hold for records of unknown natural-person status? Answer separately for the raw XML, the tables and the flag files.",
+          "needle": "A1. Lawful basis and necessity."
+        },
+        {
+          "id": "A2",
+          "label": "A counts-only measurement",
+          "text": "May we run counts-only queries over what we already hold, to see how the indicator is spread by organisation role and country? No field value in any output. On what conditions, and until when?",
+          "needle": "A2. A bounded measurement authorization."
+        },
+        {
+          "id": "A3",
+          "label": "Retention",
+          "text": "What retention period, review trigger and deletion criteria apply to today's holdings, including derived copies and backups? The September 2027 review date is not permission.",
+          "needle": "A3. Retention."
+        },
+        {
+          "id": "A4",
+          "label": "Article 14",
+          "text": "What information duty arises from indirect collection, on what timing, and does an exception apply? If Article 14(5)(b) is relied on, which safeguards?",
+          "needle": "A4. Article 14."
+        },
+        {
+          "id": "A5",
+          "label": "DPIA",
+          "text": "Is a data protection impact assessment required under Article 35? None is claimed completed.",
+          "needle": "A5. DPIA."
+        },
+        {
+          "id": "A6",
+          "label": "Security and access",
+          "text": "Local disk, gitignored, no third-party sync. That is policy, not an audited control. What is required?",
+          "needle": "A6. Security and access."
+        },
+        {
+          "id": "A7",
+          "label": "Rights and incidents",
+          "text": "How does a data-subject request reach the archive, the tables, the flags and the backups? How does an immutable raw archive yield to a valid erasure request?",
+          "needle": "A7. Rights and incidents."
+        },
+        {
+          "id": "B1",
+          "label": "The baseline question",
+          "text": "May a flag point at a notice when the natural-person status of the organisations in it is unknown? Our default without an answer: no.",
+          "needle": "### B1. The baseline question"
+        },
+        {
+          "id": "B2",
+          "label": "A buyer, by definition",
+          "text": "We propose that set cannot include a natural person. Please scope three exceptions: utilities, subsidised contracts, voluntary notices.",
+          "needle": "### B2. Corroborating a buyer from the legal definition, not from the data"
+        },
+        {
+          "id": "B3",
+          "label": "The supplier side",
+          "text": "Sole traders win public contracts, so no definition helps here. We propose holding suppliers until register cross-referencing exists. Is there anything short of that you would accept?",
+          "needle": "### B3. The supplier side"
+        },
+        {
+          "id": "B4",
+          "label": "Linking or naming?",
+          "text": "A flag carries a bid count, a market baseline and a URL to the notice on TED. That notice names the buyer. Is linking different from naming, under GDPR and Swedish förtal?",
+          "needle": "### B4. Does linking differ from naming?"
+        },
+        {
+          "id": "B5",
+          "label": "Small cells",
+          "text": "Aggregates by country and CPV division can identify a notice by elimination when a cell is small. Our floor of 50 is statistical. Is an identifiability floor needed, and how large?",
+          "needle": "### B5. Aggregate identifiability"
+        },
+        {
+          "id": "B6",
+          "label": "Conflicting indicators",
+          "text": "Two contradictory natural-person indicators on one organisation. We propose treating it as a natural person. Is erring toward suppression the right resolution?",
+          "needle": "### B6. Conflicting and unreadable indicators"
+        }
+      ]
+    },
+    "14": {
+      "title": "Personal data in retained fields",
+      "doc": "docs/counsel/14-retained-field-personal-data.md",
+      "questions": [
+        {
+          "id": "A1",
+          "label": "Holding, pending a rule",
+          "text": "Is holding these values in the raw archive and the normalised tables acceptable while a rule is pending, and for how long?",
+          "needle": "**A1.** Is the current holding of these values"
+        },
+        {
+          "id": "A2",
+          "label": "Values already held",
+          "text": "Delete, rebuild under the chosen rule, or something else? How does the immutable raw archive yield to a valid obligation to remove?",
+          "needle": "**A2.** For values already held"
+        },
+        {
+          "id": "A3",
+          "label": "A counts-only scan",
+          "text": "May we scan for telephone-shaped strings to size the problem? Output: counts by column, nothing else.",
+          "needle": "**A3.** Is a counts-only pattern scan"
+        },
+        {
+          "id": "A4",
+          "label": "Articles 14 and 35",
+          "text": "Do the Article 14 and Article 35 duties change because these values are incidental, typed by the publisher outside any contact field?",
+          "needle": "**A4.** Do Article 14 and Article 35"
+        },
+        {
+          "id": "B1",
+          "label": "Which option",
+          "text": "Which of options 1 to 4 is adequate? Is a combination better, for example 4 for the descriptions and 1 for the rest?",
+          "needle": "**B1.** Which of options 1 to 4"
+        },
+        {
+          "id": "B2",
+          "label": "Is a pattern enough",
+          "text": "If a pattern rule is chosen: is an email-shaped pattern enough, or is a rule that misses phone numbers and names inadequate on its face?",
+          "needle": "**B2.** If option 1 or 2 is chosen"
+        },
+        {
+          "id": "B3",
+          "label": "Linkability",
+          "text": "Does dropping a column change the source-linkability analysis? The notice stays public either way.",
+          "needle": "**B3.** Does dropping a column change"
+        },
+        {
+          "id": "B4",
+          "label": "Law or preference",
+          "text": "Is suppressing a value a public authority published on a public register a matter of law, or of our preference? Our rule says the law decides. We are asking for the law.",
+          "needle": "**B4.** Is suppressing a value that a public authority"
+        }
+      ]
+    },
+    "15": {
+      "title": "Beneficial ownership",
+      "doc": "docs/open-work.md",
+      "questions": [
+        {
+          "id": "1",
+          "label": "Any analysis at all",
+          "text": "Is any analysis of the beneficial-ownership subtree available, or is the answer simply no?",
+          "needle": "Whether any analysis of this subtree is available at all"
+        },
+        {
+          "id": "2",
+          "label": "A relation, no names",
+          "text": "Is a stored yes-or-no, 'these two suppliers declare an owner in common' with nobody named, legally different from storing the owner?",
+          "needle": "whether a relation intended not to identify an individual"
+        },
+        {
+          "id": "3",
+          "label": "Publication",
+          "text": "May any of it be published?",
+          "needle": "Whether any of it may be *published*"
+        },
+        {
+          "id": "4",
+          "label": "Nationality",
+          "text": "Does nationality raise additional risks in context?",
+          "needle": "Whether `efac:Nationality` raises additional risks in context"
+        }
+      ]
+    }
+  }
+}
