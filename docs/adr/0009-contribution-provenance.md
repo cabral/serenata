@@ -132,14 +132,16 @@ describes: no controller enforces it, and ADR-0012 stays as written.
 - the CI checks, the merge guard and ADR-0012's delegation lane. An assistant
   does not edit the checks that apply to its own work to get a change through.
 
-**Sign-off.** An assistant does not sign under its own name, and a trailer is not
-added under a name its owner has not configured. A sign-off still reads as "the
-maintainer takes responsibility for this contribution". Under this model that
-rests on three things: the checks the assistant ran while working, CI, and the
-maintainer's standing authorisation to merge under the conditions above. A session that runs under the assistant's own
-git identity leaves `Co-Authored-By` only, and the maintainer's sign-off is added
-before a pull request with `git rebase --signoff origin/main`, as the DCO
-workflow already says.
+**Sign-off.** An assistant does not sign under its own name. On 2026-09-29 the
+maintainer had the assistant's working clone configured with their git identity
+and the `.githooks` hook enabled, so each commit made there carries their
+`Signed-off-by` and, separately, `Co-Authored-By` for the assistant. A sign-off
+still reads as "the maintainer takes responsibility for this contribution". Under
+this model that rests on three things: the checks the assistant ran while
+working, CI, and the maintainer's standing authorisation to merge under the
+conditions above. The configuration lives in the clone, not in the repository, so
+a session that starts without it leaves commits unsigned until the maintainer
+adds the sign-off with `git rebase --signoff origin/main`.
 
 ## What would change this
 
