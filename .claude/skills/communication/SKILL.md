@@ -1,6 +1,6 @@
 ---
 name: communication
-description: Use when writing anything that leaves the repo or speaks for Serenata Europa. That includes grant application text, the README and public docs, weekly finding posts, emails to OKBr, academic collaborators, NLnet, journalists or officials, social posts, talk abstracts, and website copy. Also use it when editing or reviewing such text. If a draft could be read by someone outside the project, this skill applies. It carries the project voice, the infrastructure-not-campaign framing, the findings language rules, audience notes for each stakeholder, and the writing style reference.
+description: Use when writing anything that leaves the repo or speaks for Serenata Europa. That includes grant application text, the README and public docs, weekly finding posts, emails to OKBr, academic collaborators, NLnet, journalists or officials, social posts, talk abstracts, and website copy. Also use it when editing or reviewing such text. If a draft could be read by someone outside the project, this skill applies. It carries the project voice, the infrastructure-not-campaign framing, the findings language rules, and audience notes for each stakeholder.
 ---
 
 # Communication
@@ -13,7 +13,7 @@ Agents may draft and check copy, not self-approve it. Obtain explicit human auth
 
 Honest, short, specific. Numbers over adjectives. If a sentence would survive with the adjective deleted, delete the adjective. Placeholders stay visibly bracketed like [THIS] until Felipe fills them; never invent a metric, a date, or an endorsement to make a draft look finished.
 
-Before finalizing any draft longer than a paragraph, re-read the rules above and apply them line by line. (This pointed at a bundled writing-style reference under references/ that has never existed in this repository; if that file turns up, add it here and point at it again.)
+Before finalizing any draft longer than a paragraph, re-read the rules above and apply them line by line.
 
 ## Framing
 
