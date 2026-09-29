@@ -35,8 +35,9 @@ DOCS_ROOT = Path(__file__).resolve().parent.parent / "docs"
 #: Everything downstream of fetch: it transforms, classifies, or reports on
 #: archived input, and must be reproducible from that input alone (constraint
 #: 4). ``survey`` is here because the data model cites its numbers, so a report
-#: that changed between runs would be worse than no report.
-OFFLINE_STAGES = ("parse", "normalise", "classify", "survey")
+#: that changed between runs would be worse than no report. ``site`` is here for
+#: the same reason: it renders those numbers for readers (ADR-0014).
+OFFLINE_STAGES = ("parse", "normalise", "classify", "survey", "site")
 
 
 def python_files(*within: str) -> list[Path]:

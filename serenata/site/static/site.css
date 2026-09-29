@@ -1,0 +1,256 @@
+/*
+ * Serenata Europa site.
+ *
+ * The visual language is borrowed from the original project's site: black and
+ * white bands that alternate down the page, monospace type, one purple. Nothing
+ * else is: no logo, no mascot, no partner marks, no words.
+ *
+ * No font is downloaded. "Anonymous Pro" is named first so a reader who has it
+ * gets it; everyone else gets their system monospace. A web font would mean a
+ * request to a third party on every visit, which a project that argues about
+ * lawful basis should not make on its own front page.
+ *
+ * Contrast (measured, WCAG relative luminance): #bc68d1 on #000 is 6.0:1 and on
+ * #fff only 3.5:1, so links on white bands use the deep purple #43007f (13.6:1).
+ * #eb4a3b carries black text (5.6:1); white on it would be 3.8:1.
+ */
+
+:root {
+  --black: #000;
+  --white: #fff;
+  --purple: #bc68d1;
+  --deep: #43007f;
+  --alert: #eb4a3b;
+  --mono: "Anonymous Pro", ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo,
+    Consolas, "Liberation Mono", monospace;
+}
+
+/* Each band declares its own palette; everything inside reads these. */
+.band {
+  --bg: #000;
+  --fg: #fff;
+  --muted: #b8b8b8;
+  --line: #3a3a3a;
+  --link: #bc68d1;
+  --mark: #bc68d1;
+  --mark-2: #777;
+  --track: #1c1c1c;
+  --panel: #101010;
+  background: var(--bg);
+  color: var(--fg);
+}
+.band--light {
+  --bg: #fff;
+  --fg: #000;
+  --muted: #4d4d4d;
+  --line: #cfcfcf;
+  --link: #43007f;
+  --mark: #43007f;
+  --mark-2: #8a8a8a;
+  --track: #ececec;
+  --panel: #f3f3f3;
+}
+.band--deep {
+  --bg: #43007f;
+  --muted: #dcc8ee;
+  --line: #6d3aa3;
+  --link: #fff;
+  --panel: #360066;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 3px; }
+:focus-visible { outline: 3px solid var(--alert); outline-offset: 2px; }
+code { font-family: var(--mono); font-size: 0.95em; overflow-wrap: anywhere; background: var(--panel); padding: 1px 5px; }
+strong { font-weight: 700; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.band > .wrap { padding-top: 56px; padding-bottom: 56px; }
+.prose { max-width: 66ch; }
+.prose > * + * { margin-top: 1em; }
+.muted { color: var(--muted); }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 8px; top: 8px; background: var(--white); color: var(--black); padding: 8px; z-index: 10; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* The status strip stays on screen while the page scrolls, so no screenshot of
+   any part of the site can be shown without it. */
+.strip {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--alert); color: var(--black);
+  font-size: 14px; line-height: 1.4; padding: 8px 20px; text-align: center;
+}
+.strip a { color: var(--black); font-weight: 700; }
+
+header.site { background: var(--black); border-bottom: 1px solid #3a3a3a; }
+header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-top: 20px; padding-bottom: 20px; }
+.wordmark { display: flex; align-items: center; gap: 12px; color: var(--white); text-decoration: none; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 18px; }
+.wordmark svg { display: block; }
+nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; padding: 0; }
+nav a { color: var(--white); text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; font-size: 14px; padding: 6px 0; border-bottom: 2px solid transparent; display: inline-block; }
+nav a:hover { border-bottom-color: var(--purple); }
+nav a[aria-current="page"] { border-bottom-color: var(--purple); }
+
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(28px, 5.2vw, 52px); text-transform: uppercase; font-weight: 700; letter-spacing: 0.01em; }
+h2 { font-size: clamp(22px, 3.2vw, 34px); font-weight: 700; }
+h2.statement { max-width: 34ch; }
+h3 { font-size: 20px; font-weight: 700; }
+h4 { font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+.lede { font-size: clamp(18px, 2.2vw, 22px); line-height: 1.5; max-width: 60ch; }
+h1 + .lede, h2 + .lede { margin-top: 24px; }
+section + section { margin-top: 56px; }
+h2 + *, h3 + * { margin-top: 20px; }
+* + h3 { margin-top: 44px; }
+.explorer + h3 { margin-top: 56px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.button { display: inline-block; border: 2px solid var(--link); color: var(--link); padding: 10px 18px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; font-size: 14px; font-weight: 700; background: transparent; font-family: var(--mono); cursor: pointer; }
+.button:hover { background: var(--link); color: var(--bg); }
+.button--solid { background: var(--link); color: var(--bg); }
+.button--solid:hover { background: transparent; color: var(--link); }
+
+/* Pills and callouts ---------------------------------------------------- */
+.pill { display: inline-block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; padding: 2px 8px; border: 1px solid currentColor; white-space: nowrap; }
+.pill--open { color: var(--alert); }
+.band--light .pill--open { color: #a32316; }
+.pill--done { color: var(--link); }
+.callout { margin-top: 28px; border: 1px solid var(--line); border-left: 8px solid var(--alert); padding: 16px 20px; background: var(--panel); }
+.callout > * + * { margin-top: 0.7em; }
+.synthetic { display: inline-block; background: var(--alert); color: var(--black); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 13px; padding: 2px 10px; }
+
+/* Tiles ------------------------------------------------------------------ */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 2px; margin: 28px 0 0; padding: 0; list-style: none; }
+.tile { background: var(--panel); padding: 18px 20px; border-top: 3px solid var(--mark); }
+.tile .value { display: block; font-size: 36px; font-weight: 700; line-height: 1.1; }
+.tile .label { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+/* Bars ------------------------------------------------------------------- */
+figure { margin: 28px 0 0; }
+figcaption { margin-top: 14px; font-size: 14px; color: var(--muted); max-width: 72ch; }
+.bars { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.bar-row { display: grid; grid-template-columns: minmax(150px, 30%) 1fr; gap: 6px 16px; align-items: center; }
+.bar-label { font-size: 15px; overflow-wrap: anywhere; }
+.bar-track { display: flex; align-items: center; gap: 12px; }
+.bar { display: flex; gap: 2px; flex: none; width: calc(var(--r, 1) * (100% - 16ch)); min-width: 3px; height: 22px; }
+.bar > span { display: block; flex: 1 1 0; height: 100%; background: var(--mark); min-width: 2px; }
+.bar > span:first-child { border-radius: 4px 0 0 4px; }
+.bar > span:last-child { border-radius: 0 4px 4px 0; }
+.bar > span:only-child { border-radius: 0 4px 4px 0; }
+.bar > span.rest { background: var(--mark-2); }
+.bar-value { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 18px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; background: var(--mark); }
+.legend i.rest { background: var(--mark-2); }
+details.twin { margin-top: 16px; font-size: 14px; }
+details.twin summary { cursor: pointer; color: var(--link); }
+details.twin table { margin-top: 12px; }
+
+/* Tables ----------------------------------------------------------------- */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); }
+th { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 14px; }
+td.heat { text-align: center; font-variant-numeric: tabular-nums; color: #fff; padding: 12px 6px; border: 2px solid var(--bg); }
+.heat-0 { background: #1f1226; }
+.heat-1 { background: #3b1f4a; }
+.heat-2 { background: #5a2b72; }
+.heat-3 { background: #7a3a92; }
+.heat-4 { background: #94469f; }
+td.chosen { outline: 3px solid var(--alert); outline-offset: -3px; font-weight: 700; }
+.band--light .heat-0 { background: #4a2a5c; }
+
+/* Pipeline strip --------------------------------------------------------- */
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; margin: 28px 0 0; padding: 0; list-style: none; counter-reset: stage; }
+.stage { position: relative; padding: 18px 18px 22px; border: 1px solid var(--line); margin: 0 -1px -1px 0; background: var(--panel); }
+.stage h3 { font-size: 20px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stage h3::before { counter-increment: stage; content: counter(stage) ". "; color: var(--muted); }
+.stage p { font-size: 14px; margin-top: 10px; color: var(--muted); }
+.stage .pill { margin-top: 12px; }
+.stage--unbuilt { border-style: dashed; background: transparent; }
+
+/* Cards ------------------------------------------------------------------ */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 2px; margin: 28px 0 0; padding: 0; list-style: none; }
+.card { background: var(--panel); border-top: 3px solid var(--mark); }
+.card a { display: block; padding: 20px; color: var(--fg); text-decoration: none; height: 100%; }
+.card a:hover { background: var(--link); color: var(--bg); }
+.card h3 { text-transform: uppercase; letter-spacing: 0.04em; font-size: 18px; }
+.card p { margin-top: 10px; font-size: 15px; }
+
+/* Definition lists and question lists ------------------------------------- */
+dl.facts { margin: 24px 0 0; display: grid; grid-template-columns: minmax(130px, 24%) 1fr; gap: 0 24px; }
+dl.facts dt { font-weight: 700; padding: 12px 0; border-top: 1px solid var(--line); }
+dl.facts dd { margin: 0; padding: 12px 0; border-top: 1px solid var(--line); }
+ol.questions { margin: 20px 0 0; padding: 0; list-style: none; }
+ol.questions li { display: grid; grid-template-columns: 56px 1fr; gap: 0 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+ol.questions .label { font-weight: 700; color: var(--muted); }
+.parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; margin-top: 8px; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 0; margin: 28px 0 0; list-style: none; font-size: 15px; }
+ul.plain, ol.plain { margin: 16px 0 0; padding-left: 1.3em; }
+ul.plain li + li, ol.plain li + li { margin-top: 0.6em; }
+
+/* Explorer --------------------------------------------------------------- */
+.explorer { display: grid; grid-template-columns: minmax(240px, 340px) 1fr; gap: 32px; margin-top: 28px; align-items: start; }
+.explorer form { display: grid; gap: 16px; }
+.explorer label { display: block; font-size: 14px; color: var(--muted); }
+.explorer input { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 20px; padding: 8px 10px; background: var(--white); color: var(--black); border: 2px solid var(--black); }
+.explorer .out { border: 1px solid var(--line); background: var(--panel); padding: 20px; }
+.explorer .out > * + * { margin-top: 12px; }
+.verdict { font-size: 22px; font-weight: 700; }
+.verdict[data-code="flagged"] { color: var(--alert); }
+.band--light .verdict[data-code="flagged"] { color: #a32316; }
+.record { font-size: 14px; margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 20px; }
+.record dt { color: var(--muted); }
+.record dd { margin: 0; overflow-wrap: anywhere; }
+
+footer.site .wrap { padding-top: 40px; padding-bottom: 48px; font-size: 14px; }
+footer.site p + p { margin-top: 1em; }
+footer.site ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 24px; margin: 24px 0 0; padding: 0; }
+footer.site a { text-transform: uppercase; letter-spacing: 0.05em; }
+footer.site p a { text-transform: none; letter-spacing: 0; }
+
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .band > .wrap { padding-top: 40px; padding-bottom: 40px; }
+  .bar-row { grid-template-columns: 1fr; }
+  dl.facts { grid-template-columns: 1fr; }
+  dl.facts dt { padding-bottom: 0; border-bottom: 0; }
+  dl.facts dd { border-top: 0; padding-top: 4px; }
+  .explorer { grid-template-columns: 1fr; }
+  ol.questions li { grid-template-columns: 44px 1fr; }
+  .record { grid-template-columns: 1fr; gap: 0; }
+  .record dd { margin-bottom: 8px; }
+}
+
+/* Counsel prints this page, so it must print as a document. The strip stays:
+   nothing on this site is meant to be read without it. */
+@media print {
+  body, .band, .band--light, .band--deep { background: #fff !important; color: #000 !important; --bg: #fff; --fg: #000; --muted: #333; --line: #999; --link: #000; --mark: #000; --mark-2: #888; --track: #eee; --panel: #fff; }
+  .strip { position: static; background: #fff; border: 2px solid #000; }
+  header.site, nav, .actions, footer.site ul, .no-print, details.twin { display: none !important; }
+  .band > .wrap { padding-top: 16px; padding-bottom: 16px; }
+  a { color: #000; text-decoration: underline; }
+  h1 { font-size: 26px; }
+  .callout { border-left-width: 6px; }
+  section, figure, table, .callout { break-inside: avoid; }
+  td.heat { color: #000; border: 1px solid #999; background: #fff !important; }
+  .heat-3, .heat-4 { font-weight: 700; }
+  .bar > span { background: #000 !important; }
+  .bar > span.rest { background: #888 !important; }
+}
