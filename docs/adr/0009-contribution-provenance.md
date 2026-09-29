@@ -1,8 +1,10 @@
 # ADR-0009: Keep the DCO, enforce it, and say what it means when an assistant wrote the patch
 
-- Status: accepted
+- Status: amended — the DCO decision stands; the operating model and sign-off practice below were added
 - Date: 2026-09-03
-- Enforced by: `.github/workflows/dco.yml`
+- Amendment: 2026-09-29
+- Enforced by: `.github/workflows/dco.yml` checks that a sign-off is present. The
+  operating rules in the amendment are policy; nothing mechanical holds them.
 
 ## Context
 
@@ -87,6 +89,61 @@ GitHub creates them server-side where no hook runs.
   `git rebase --signoff origin/main` fixes it, and the workflow says so.
 - This adds a required check to pull requests. It is ten lines of shell and no
   third-party action, so it costs nothing to keep and nothing to audit.
+
+## Amendment (2026-09-29): how assistants work, and who decides
+
+The maintainer set the operating model. The project runs like a small
+engineering shop that mostly runs itself: assistants design, write, test and
+commit on their own, and check each change against the law and the project's
+rules while they work. Those checks are part of the job. What they check against
+is `CLAUDE.md`, the skills, the ADRs and the escalation list in the legal skill.
+
+The decision rule is short. If those sources answer the question, the assistant
+acts on the answer and keeps going. If they don't, or the question is on the
+escalation list, the assistant stops that item, asks the maintainer, and carries
+on with other work in the meantime. An open question is not a reason to go idle.
+
+**Law decides, not policy.** What the project may store or process is a legal
+question (lawful basis, minimisation, retention). A preference written into this
+repository does not answer it in either direction. Open data the project has the
+right to keep should be kept, and being published by an authority does not by
+itself create that right. Whether it exists for personal data in notices is the
+open question in ADR-0010. It needs counsel, so until counsel answers, the
+drop-at-ingestion rule stays and ADR-0010 stays the record of what is unresolved.
+
+**What changes.** Commits and pushes to a working branch need no approval per
+step, and an assistant may merge its own pull request. `AGENTS.md`,
+`CONTRIBUTING.md` and the skills said otherwise and were edited to match.
+
+**Merging.** The maintainer authorised this on 2026-09-29, as a standing
+instruction. An assistant merges only when every required check is green on the
+current head, the branch has no conflict, no review thread is open, and the
+change touches nothing in the list below. It never bypasses branch protection or
+a required review, and never merges anything red. A classifier still needs its
+hypothesis and current measurement first, as the merge checklist says. This is
+an instruction to assistants, not the externally held delegation ADR-0012
+describes: no controller enforces it, and ADR-0012 stays as written.
+
+**What does not change.** These stay with the maintainer:
+
+- publishing, and any external message;
+- anything that names or identifies a person or an entity;
+- the licence, and the drop-at-ingestion rule;
+- the CI checks, the merge guard and ADR-0012's delegation lane. An assistant
+  does not edit the checks that apply to its own work to get a change through.
+
+**Sign-off.** An assistant does not sign under its own name. On 2026-09-29 the
+maintainer had the assistant's working clone configured with their git identity
+and the `.githooks` hook enabled, so each commit made there carries their
+`Signed-off-by` and, separately, `Co-Authored-By` for the assistant. A sign-off
+still reads as "the maintainer takes responsibility for this contribution". Under
+this model that rests on three things: the checks the assistant ran while
+working, CI, and the maintainer's standing authorisation to merge under the
+conditions above. `.claude/hooks/session-start.sh` applies that configuration at the start of
+every cloud session, and only when the clone's origin is `cabral/serenata`, so a
+fork or another person's session is never signed as the maintainer. Anywhere else
+a commit is unsigned until its owner adds the sign-off with
+`git rebase --signoff origin/main`.
 
 ## What would change this
 
