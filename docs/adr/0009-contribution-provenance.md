@@ -139,9 +139,11 @@ and the `.githooks` hook enabled, so each commit made there carries their
 still reads as "the maintainer takes responsibility for this contribution". Under
 this model that rests on three things: the checks the assistant ran while
 working, CI, and the maintainer's standing authorisation to merge under the
-conditions above. The configuration lives in the clone, not in the repository, so
-a session that starts without it leaves commits unsigned until the maintainer
-adds the sign-off with `git rebase --signoff origin/main`.
+conditions above. `.claude/hooks/session-start.sh` applies that configuration at the start of
+every cloud session, and only when the clone's origin is `cabral/serenata`, so a
+fork or another person's session is never signed as the maintainer. Anywhere else
+a commit is unsigned until its owner adds the sign-off with
+`git rebase --signoff origin/main`.
 
 ## What would change this
 
