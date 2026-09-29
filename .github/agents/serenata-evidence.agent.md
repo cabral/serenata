@@ -24,7 +24,8 @@ If safe access is not established, return `HOLD` for a screened evidence packet.
 2. Distinguish static checks, attributed sandbox results, empirical assessment,
    counsel advice and explicit human decisions. Check provenance, independence,
    applicability, expiry and contradictions; implementation prose is not evidence.
-3. Audit gates 1–4 for missing artifacts and tests, including existing holdings.
+3. Audit handoff gates 1–4 (handoffs.md, not the case-research intake gates) for
+   missing artifacts and tests, including existing holdings.
    Never re-derive a real flag yourself, certify anonymity, supply a legal approval
    or treat a base rate as a false-positive rate. Use the unresolved templates.
 4. Return the shared report and a gate-by-gate gap list: evidence reference,
