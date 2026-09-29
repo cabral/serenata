@@ -604,8 +604,11 @@ about fixtures rather than about TED.
 - Remeasurement of the resolution rate on that archive, replacing the 1.6% the
   design was reasoned from.
 - Chains deeper than one, and targets corrected by notices in different
-  packages — neither observed here, both expected at scale, both already
-  handled in code and untested against reality.
+  packages — neither observed here, both expected at scale. Both are now
+  tested on synthetic packages (`TestCorrectionsAcrossPackages`, including a
+  year boundary and package order), which shows the join does not depend on
+  where a notice was archived. It says nothing about how often TED produces
+  them.
 - A recount of how many flags actually move. On this archive the answer is zero
   through two rule versions, which says nothing about a year of notices.
 
