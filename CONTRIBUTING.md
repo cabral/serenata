@@ -175,6 +175,17 @@ reports never activate it, and code-merge authority is not processing or release
 authority. See the [four gate handoffs](docs/automation/handoffs.md) for evidence
 that an automated test or model cannot manufacture.
 
+## The site reads some documents by heading
+
+`uv run --locked python -m serenata.site` renders the status pages from the
+documents, and reads several of them by heading and by table: the hypothesis file,
+the generated reports, the counsel instructions, the README's status table. Renaming
+a heading or reshaping a table it reads fails
+[tests/test_site.py](tests/test_site.py) and names the document. That is deliberate:
+the alternative is a page that quietly keeps the old number. Fix the reader in
+`serenata/site/facts.py` in the same commit, or keep the shape. Output goes to the
+`site` directory, which git ignores.
+
 ## Commits and pull requests
 
 - Small, one concern each. Imperative subject: "Build the parse stage", not
