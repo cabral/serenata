@@ -51,6 +51,7 @@ def award(
     corrects: str | None = None,
     version: str | None = None,
     reason: str | None = None,
+    date: str = "2026-08-17+02:00",
 ) -> bytes:
     """An award notice that may correct another, and may say why."""
     notice_body = body(procedure="open", cpv="45000000", system="none")
@@ -63,6 +64,7 @@ def award(
         root="ContractAwardNotice",
         notice_id=uuid_for(index),
         publication_id=f"{index:08d}-2026",
+        publication_date=date,
         body=notice_body,
         extension=extension,
     )
@@ -79,6 +81,25 @@ def build(notices: dict[int, bytes], tmp_path: Path) -> Path:
     )
     root = tmp_path / "dataset"
     normalise_package(package, root)
+    return root
+
+
+def build_days(days: dict[str, dict[int, bytes]], tmp_path: Path) -> Path:
+    """Normalise several publication days into one dataset, one package each.
+
+    Package names are the OJS issue numbers TED uses; only their being distinct
+    matters here, since each package writes its own part files.
+    """
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    root = tmp_path / "dataset"
+    for name, notices in days.items():
+        package = tmp_path / f"{name}.tar.gz"
+        package.write_bytes(
+            make_notice_package(
+                {f"{index:08d}_2026.xml": body for index, body in notices.items()}
+            )
+        )
+        normalise_package(package, root)
     return root
 
 
@@ -287,3 +308,125 @@ class TestCorrectionsDoNotBreakDeterminism:
 
         assert without != with_correction
         assert without - with_correction == {published(1)}
+
+
+class TestCorrectionsAcrossPackages:
+    """#18: the archive that would exercise this is continuous, so the join
+    must already work when target and corrector arrive in different packages.
+    Synthetic days here; the real resolution rate stays unmeasured."""
+
+    def test_a_corrector_in_a_later_package_excludes_the_earlier_target(
+        self, tmp_path: Path
+    ) -> None:
+        root = build_days(
+            {
+                "202600157": {1: award(1, date="2026-08-17+02:00")},
+                "202600158": {
+                    2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-08-18+02:00")
+                },
+            },
+            tmp_path,
+        )
+
+        assert {o.source_publication_id for o in read_outcomes(root)} == {published(2)}
+
+    def test_a_corrector_in_an_earlier_package_excludes_a_later_target(
+        self, tmp_path: Path
+    ) -> None:
+        """Order of arrival is not part of the rule: identifiers are."""
+        root = build_days(
+            {
+                "202600157": {
+                    2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-08-17+02:00")
+                },
+                "202600158": {1: award(1, date="2026-08-18+02:00")},
+            },
+            tmp_path,
+        )
+
+        assert {o.source_publication_id for o in read_outcomes(root)} == {published(2)}
+
+    def test_a_chain_spanning_three_packages_leaves_only_its_head(
+        self, tmp_path: Path
+    ) -> None:
+        root = build_days(
+            {
+                "202600157": {1: award(1, date="2026-08-17+02:00")},
+                "202600158": {
+                    2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-08-18+02:00")
+                },
+                "202600159": {
+                    3: award(3, corrects=f"{uuid_for(2)}-01", date="2026-08-19+02:00")
+                },
+            },
+            tmp_path,
+        )
+
+        assert {o.source_publication_id for o in read_outcomes(root)} == {published(3)}
+
+    def test_two_correctors_in_different_packages_exclude_the_target_once(
+        self, tmp_path: Path
+    ) -> None:
+        root = build_days(
+            {
+                "202600157": {1: award(1, date="2026-08-17+02:00")},
+                "202600158": {
+                    2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-08-18+02:00")
+                },
+                "202600159": {
+                    3: award(3, corrects=f"{uuid_for(1)}-01", date="2026-08-19+02:00")
+                },
+            },
+            tmp_path,
+        )
+
+        assert [o.source_publication_id for o in read_outcomes(root)] == [
+            published(2),
+            published(3),
+        ]
+
+    def test_the_cutoff_is_the_latest_day_across_every_package(
+        self, tmp_path: Path
+    ) -> None:
+        root = build_days(
+            {
+                "202600158": {1: award(1, date="2026-08-18+02:00")},
+                "202600157": {2: award(2, date="2026-08-17+02:00")},
+            },
+            tmp_path,
+        )
+
+        assert {o.correction_cutoff for o in read_outcomes(root)} == {"2026-08-18"}
+
+    def test_a_correction_across_a_year_boundary_still_resolves(
+        self, tmp_path: Path
+    ) -> None:
+        """Parquet is partitioned by year; the join must not be."""
+        root = build_days(
+            {
+                "202500250": {1: award(1, date="2025-12-31+01:00")},
+                "202600001": {
+                    2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-01-02+01:00")
+                },
+            },
+            tmp_path,
+        )
+
+        outcomes = read_outcomes(root)
+        assert [o.source_publication_id for o in outcomes] == [published(2)]
+        assert outcomes[0].correction_cutoff == "2026-01-02"
+
+    def test_the_order_packages_are_added_does_not_change_the_outcomes(
+        self, tmp_path: Path
+    ) -> None:
+        one = {"202600157": {1: award(1, date="2026-08-17+02:00")}}
+        two = {
+            "202600158": {
+                2: award(2, corrects=f"{uuid_for(1)}-01", date="2026-08-18+02:00")
+            }
+        }
+
+        forward = read_outcomes(build_days({**one, **two}, tmp_path / "forward"))
+        backward = read_outcomes(build_days({**two, **one}, tmp_path / "backward"))
+
+        assert forward == backward

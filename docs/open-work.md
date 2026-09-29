@@ -41,7 +41,7 @@ record of how each was built and what it corrected is in the
 | [3](#3-document-and-drop-the-fields-that-can-name-a-natural-person) | Legacy TED person-carrying fields | a pre-2024 package to measure |
 | [4](#4-build-the-parse-stage) | Legacy TED parsing | blocked on 3 |
 | [11](#11-decide-the-publication-rule-for-unknown-natural-person-status) | Unknown natural-person status | counsel review of current processing, then a publication rule; [instruction drafted](counsel/11-natural-person-status.md) |
-| [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation |
+| [14](#14-decide-what-to-do-about-personal-data-in-fields-that-are-not-contact-fields) | Personal data in retained fields and private holdings | counsel, remediation, rebuild and validation; [instruction drafted](counsel/14-retained-field-personal-data.md) |
 | [15](#15-decide-whether-beneficial-ownership-can-be-analysed-at-all) | Whether beneficial ownership can be analysed | counsel |
 | [17](#17-build-the-first-classifier) | Verification of individual flags | blocked release; also needs 11, 14 and 18 |
 | [18](#18-validate-correction-handling-against-a-continuous-archive) | A continuous archive, then remeasurement | blocked release; needs the ADR-0010 review |
@@ -419,7 +419,9 @@ does not remove processing obligations. Review the lawful basis for current raw
 and derived holdings, their retention, Article 14 transparency and DPIA necessity
 with counsel now, not at launch. ADR-0010 does not certify them.
 
-**This one needs counsel before it is acted on.** Whichever option is chosen
+**This one needs counsel before it is acted on.** The
+[counsel instruction](counsel/14-retained-field-personal-data.md) is drafted,
+not sent, and adds a fourth option: drop the two description columns by path. Whichever option is chosen
 changes what "dropped at ingestion" means, and a change to the drop-at-ingestion
 rule is on the project's escalation list rather than being a judgement call to
 make in a pull request. Writing the options down is in scope; deciding between
@@ -604,8 +606,11 @@ about fixtures rather than about TED.
 - Remeasurement of the resolution rate on that archive, replacing the 1.6% the
   design was reasoned from.
 - Chains deeper than one, and targets corrected by notices in different
-  packages — neither observed here, both expected at scale, both already
-  handled in code and untested against reality.
+  packages — neither observed here, both expected at scale. Both are now
+  tested on synthetic packages (`TestCorrectionsAcrossPackages`, including a
+  year boundary and package order), which shows the join does not depend on
+  where a notice was archived. It says nothing about how often TED produces
+  them.
 - A recount of how many flags actually move. On this archive the answer is zero
   through two rule versions, which says nothing about a year of notices.
 
