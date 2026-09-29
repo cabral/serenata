@@ -8,7 +8,13 @@ import httpx
 import pytest
 
 from serenata.fetch.client import FetchError
-from serenata.fetch.ojs import OjsIssue, dates_in_range, issue_for_date
+from serenata.fetch.ojs import (
+    SEARCH_INDEX_FLOOR,
+    DateNotIndexed,
+    OjsIssue,
+    dates_in_range,
+    issue_for_date,
+)
 
 from .support import search_body
 
@@ -99,6 +105,84 @@ class TestIssueForDate:
             pytest.raises(FetchError, match="could not read the OJ S issue"),
         ):
             issue_for_date(client, date(2026, 8, 17))
+
+
+class TestTheSearchIndexFloor:
+    """A date TED cannot resolve is refused, not read as a quiet day.
+
+    ADR-0002 originally held that "the service is the authority on which days
+    published", and its 2026-09-07 amendment narrows that to the period the
+    Search API indexes. The floor is measured, not assumed —
+    `docs/legacy-availability.md` records the bisection.
+
+    What these assert is the behaviour that measurement bought: that the
+    pipeline never turns "TED could not tell us" into "TED published nothing",
+    because that answer would be archived as ground truth and is
+    indistinguishable from a weekend once written.
+    """
+
+    def test_a_date_below_the_floor_is_refused(self, client_factory):
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("a date below the floor must not be requested")
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed, match="2016-09-05"),
+        ):
+            issue_for_date(client, date(2016, 9, 5))
+
+    def test_the_refusal_names_the_floor_and_the_measurement(self, client_factory):
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("a date below the floor must not be requested")
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed) as refused,
+        ):
+            issue_for_date(client, date(2012, 6, 6))
+
+        message = str(refused.value)
+        assert SEARCH_INDEX_FLOOR.isoformat() in message
+        assert "docs/legacy-availability.md" in message
+
+    def test_the_floor_itself_is_asked_for_normally(self, client_factory):
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=search_body(ojs_number="171/2016"))
+
+        with client_factory(handler) as client:
+            issue = issue_for_date(client, SEARCH_INDEX_FLOOR)
+
+        assert issue == OjsIssue(year=2016, number=171)
+
+    def test_an_empty_day_above_the_floor_is_still_a_quiet_day(self, client_factory):
+        """The refusal replaces a guess below the floor, not the ordinary case.
+
+        Weekends are the overwhelming majority of empty answers and must stay
+        cheap; a fix that turned every Sunday into an error would be worse than
+        the bug it replaced.
+        """
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=search_body(count=0))
+
+        with client_factory(handler) as client:
+            assert issue_for_date(client, date(2016, 9, 11)) is None
+
+    def test_a_refused_date_costs_no_request(self, client_factory):
+        """Refusing before the network is what makes a wrong backfill free."""
+        requests: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            return httpx.Response(200, json=search_body())
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed),
+        ):
+            issue_for_date(client, date(2015, 6, 10))
+
+        assert requests == []
 
 
 class TestDatesInRange:

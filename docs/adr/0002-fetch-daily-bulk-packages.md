@@ -1,8 +1,9 @@
 # ADR-0002: Fetch whole daily packages, use the Search API only to address them
 
-- Status: accepted
+- Status: amended — the addressing decision stands; one assumption behind it was wrong
 - Date: 2026-09-01
-- Enforced by: `tests/test_constraints.py::TestNetworkIsolation`, `tests/test_ted_contract.py::TestTheDailyPackage`
+- Amendment: 2026-09-07
+- Enforced by: `tests/test_constraints.py::TestNetworkIsolation`, `tests/test_ted_contract.py::TestTheDailyPackage`, `tests/test_ted_contract.py::TestTheSearchIndexFloor`, `tests/test_fetch_ojs.py::TestTheSearchIndexFloor`
 
 ## Context
 
@@ -55,7 +56,8 @@ per day. Never download notices one at a time.
   `Retry-After`, and a User-Agent naming the project and its repository.
 - A day with no notices returns zero results and is recorded as having no
   package. Weekends and holidays therefore need no calendar of their own; the
-  service is the authority on which days published.
+  service is the authority on which days published. **Amended 2026-09-07 — see
+  below: the service is the authority only within its index.**
 - Packages are stored exactly as received, under
   `data/raw/ted/daily/{year}/{package_id}.tar.gz`, beside a
   `.manifest.json` recording the OJ S number, publication date, source URL,
@@ -99,6 +101,40 @@ fields on the way to intermediate records, so they never reach the normalised
 model, the Parquet artefacts, the API, or any published finding. Constraint 2
 governs what this project stores as data and publishes; it is not a
 prohibition on reading the official journal.
+
+## Amendment, 2026-09-07: the Search API is the authority only within its index
+
+The decision above reads a date with no notices as a date that did not publish,
+and treats that as the service speaking for its own calendar. That is true for
+the period the Search API indexes and false before it, where the API answers
+every date the way it answers a Sunday.
+
+[`legacy-availability.md`](../legacy-availability.md) measured the edge without
+downloading a package: the index reaches back to **2016-09-06** and no further,
+while the package endpoint still serves **OJ S 170/2016**, the issue immediately
+before it, along with issues from 2015 and 2012. So the limit is the addressing
+channel, not TED's archive.
+
+Nothing was ever archived wrongly — no date below the edge has been requested —
+but the code would have done it silently, which is why this is corrected rather
+than noted. `issue_for_date` now refuses a date below `SEARCH_INDEX_FLOOR`
+instead of resolving it, before any request is made. An archive that recorded
+"TED did not publish" about a day TED published on would be a false provenance
+claim in the layer this project calls ground truth, and it would be
+indistinguishable from a weekend once written.
+
+**The floor is a measured constant, so it is watched rather than trusted.**
+`TestTheSearchIndexFloor` in the weekly contract suite asserts both edges
+against the live service: that the index still reaches the floor, and that the
+day below it is still outside. A failure in the second direction is good news —
+more of the legacy record becomes addressable by date — and still has to fail,
+because nothing else in the suite would notice the constant going stale.
+
+What this does not change: the addressing decision, the archive's unit, or
+anything about what may be fetched. Reaching below the floor needs a
+date-to-issue mapping that does not exist here, and fetching a pre-2024 package
+at all remains subject to the review [ADR-0010](0010-raw-archive-retention.md)
+leaves unresolved.
 
 ## What would change this
 

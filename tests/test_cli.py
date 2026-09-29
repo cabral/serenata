@@ -147,6 +147,25 @@ class TestFetchRun:
         assert code == 1
         assert "serenata fetch:" in capsys.readouterr().err
 
+    def test_a_date_below_the_search_index_floor_exits_one_and_says_why(
+        self, client_factory, tmp_path, capsys
+    ):
+        """A backfill nobody can address fails at the command, not in the data."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("nothing below the floor should be requested")
+
+        code = main(
+            ["fetch", "--from", "2016-06-08", "--archive", str(tmp_path)],
+            open_client=lambda _interval: client_factory(handler),
+        )
+
+        assert code == 1
+        message = capsys.readouterr().err
+        assert "serenata fetch:" in message
+        assert "docs/legacy-availability.md" in message
+        assert not list(tmp_path.rglob("*.tar.gz"))
+
     def test_an_archive_conflict_exits_one_rather_than_overwriting(
         self, client_factory, ted_handler, tmp_path, capsys
     ):

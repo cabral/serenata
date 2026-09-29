@@ -10,7 +10,7 @@ import httpx
 import pytest
 
 from serenata.fetch.archive import ArchiveConflict, RawArchive
-from serenata.fetch.ojs import OjsIssue
+from serenata.fetch.ojs import SEARCH_INDEX_FLOOR, DateNotIndexed, OjsIssue
 from serenata.fetch.packages import Outcome, fetch_range
 
 from .support import PACKAGE_ID, make_package, search_body
@@ -204,6 +204,77 @@ class TestQuietDays:
 
         assert [r.outcome for r in results] == [Outcome.NOT_PUBLISHED]
         assert results[0].issue is None
+
+
+class TestDatesBelowTheSearchIndexFloor:
+    """The backfill stops rather than archiving a false non-publication day.
+
+    This is the case the fetch stage used to get quietly wrong: TED reports an
+    unindexed date as empty, the stage recorded that as `NOT_PUBLISHED`, and
+    the result was indistinguishable from a weekend once in the archive.
+    `docs/legacy-availability.md` measured the edge; these assert the refusal.
+    """
+
+    def test_a_backfill_below_the_floor_refuses_instead_of_recording_a_quiet_day(
+        self, client_factory, tmp_path
+    ):
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("nothing below the floor should be requested")
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed, match="2016-09-05"),
+        ):
+            run(client, RawArchive(tmp_path), date(2016, 9, 5))
+
+    def test_a_range_starting_below_the_floor_stops_before_archiving_anything(
+        self, client_factory, tmp_path
+    ):
+        """A spanning range fails on its first date, so nothing lands."""
+        archive_root = tmp_path / "raw"
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("nothing below the floor should be requested")
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed),
+        ):
+            run(
+                client,
+                RawArchive(archive_root),
+                date(2016, 9, 1),
+                date(2016, 9, 30),
+            )
+
+        assert not list(archive_root.rglob("*.tar.gz"))
+
+    def test_a_dry_run_refuses_too(self, client_factory, tmp_path):
+        """A dry run exists to answer "would this work"; the answer is no."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise AssertionError("nothing below the floor should be requested")
+
+        with (
+            client_factory(handler) as client,
+            pytest.raises(DateNotIndexed),
+        ):
+            run(client, RawArchive(tmp_path), date(2015, 6, 10), dry_run=True)
+
+    def test_the_floor_itself_is_fetched_like_any_other_day(
+        self, client_factory, tmp_path
+    ):
+        """The boundary is inclusive: the floor is indexed and must work."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/notices/search"):
+                return httpx.Response(200, json=search_body(count=0))
+            raise AssertionError("no package should be requested for a quiet day")
+
+        with client_factory(handler) as client:
+            results = run(client, RawArchive(tmp_path), SEARCH_INDEX_FLOOR)
+
+        assert [r.outcome for r in results] == [Outcome.NOT_PUBLISHED]
 
 
 class TestRanges:

@@ -13,6 +13,7 @@ reads offline.
 | Script | Output | When to run it |
 |---|---|---|
 | [`generate_sdk_privacy.py`](generate_sdk_privacy.py) | `serenata/normalise/sdk_privacy.py` | When the eForms SDK gains a privacy code, or when notices start declaring an SDK version it was not generated against |
+| [`probe_legacy_packages.py`](probe_legacy_packages.py) | [`docs/legacy-availability.md`](../docs/legacy-availability.md), written by hand from its table | When it matters again whether TED serves a package for a given date or OJ S issue |
 | [merge_guard.py](merge_guard.py) | Read-only eligibility/hold reports only; no GitHub writes or merge execution | External read-only evaluation under the [automation procedure](../docs/automation/README.md); repository policy disabled |
 
 ## Running the SDK generator

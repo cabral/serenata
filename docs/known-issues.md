@@ -125,6 +125,27 @@ elements into the data model has never been measured, because no archived
 package contains a legacy notice, and guessing which of those fields can carry a
 person's name is the guess constraint 2 exists to forbid.
 
+**The packages exist.** [`legacy-availability.md`](legacy-availability.md)
+asked TED for them without downloading one: every OJ S issue probed is served,
+back to at least 2012. What blocks the measurement is the unresolved processing
+review in [ADR-0010](adr/0010-raw-archive-retention.md), not the source.
+
+The same probe found a trap for whoever backfills first, and it is now closed.
+TED's Search API **indexes back to 2016-09-06 and no further**, while the
+package endpoint still serves the issue immediately before it. The fetch stage
+used to read an unindexed date as a day that did not publish — the same outcome
+as a weekend — so a backfill would have recorded "not published" about days TED
+published on. `issue_for_date` now refuses below that floor before making a
+request, [ADR-0002](adr/0002-fetch-daily-bulk-packages.md) is amended to say the
+service is authoritative only within its index, and the weekly contract suite
+watches the floor for movement. Nothing had asked for those dates, so no
+archived package carries a wrong answer.
+
+**Coverage by date therefore starts at 2016-09-06**, not at the start of TED's
+archive. Packages older than that exist and are served, but this project
+addresses a package only by date and has no date-to-issue mapping below the
+floor.
+
 The eForms prototype can run without legacy support, but the broader
 ingestion/normalisation milestone remains incomplete. Coverage is limited to
 eForms notices; it is not the full historical TED record.

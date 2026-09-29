@@ -21,6 +21,7 @@ from serenata.classify import (
 )
 from serenata.fetch import (
     ArchiveConflict,
+    DateNotIndexed,
     DayResult,
     FetchError,
     Outcome,
@@ -268,7 +269,7 @@ def _run_fetch(
                 dry_run=args.dry_run,
                 on_result=report,
             )
-        except (FetchError, ArchiveConflict) as exc:
+        except (FetchError, ArchiveConflict, DateNotIndexed) as exc:
             print(f"serenata fetch: {exc}", file=sys.stderr)
             return 1
 
