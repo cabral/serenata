@@ -1,8 +1,10 @@
 # ADR-0009: Keep the DCO, enforce it, and say what it means when an assistant wrote the patch
 
-- Status: accepted
+- Status: amended — the DCO decision stands; the operating model and sign-off practice below were added
 - Date: 2026-09-03
-- Enforced by: `.github/workflows/dco.yml`
+- Amendment: 2026-09-29
+- Enforced by: `.github/workflows/dco.yml` checks that a sign-off is present. The
+  operating rules in the amendment are policy; nothing mechanical holds them.
 
 ## Context
 
@@ -87,6 +89,48 @@ GitHub creates them server-side where no hook runs.
   `git rebase --signoff origin/main` fixes it, and the workflow says so.
 - This adds a required check to pull requests. It is ten lines of shell and no
   third-party action, so it costs nothing to keep and nothing to audit.
+
+## Amendment (2026-09-29): how assistants work, and who decides
+
+The maintainer set the operating model. The project runs like a small
+engineering shop that mostly runs itself: assistants design, write, test and
+commit on their own, and check each change against the law and the project's
+rules while they work. Those checks are part of the job. What they check against
+is `CLAUDE.md`, the skills, the ADRs and the escalation list in the legal skill.
+
+The decision rule is short. If those sources answer the question, the assistant
+acts on the answer and keeps going. If they don't, or the question is on the
+escalation list, the assistant stops that item, asks the maintainer, and carries
+on with other work in the meantime. An open question is not a reason to go idle.
+
+**Law decides, not policy.** What the project may store or process is a legal
+question (lawful basis, minimisation, retention). A preference written into this
+repository does not answer it in either direction. Open data the project has the
+right to keep should be kept, and being published by an authority does not by
+itself create that right. Whether it exists for personal data in notices is the
+open question in ADR-0010. It needs counsel, so until counsel answers, the
+drop-at-ingestion rule stays and ADR-0010 stays the record of what is unresolved.
+
+**What changes.** Commits and pushes to a working branch need no approval per
+step. `AGENTS.md`, `CONTRIBUTING.md` and the skills said otherwise and were
+edited in the same change.
+
+**What does not change.** These stay with the maintainer:
+
+- merging, publishing, and any external message;
+- anything that names or identifies a person or an entity;
+- the licence, and the drop-at-ingestion rule;
+- the CI checks, the merge guard and ADR-0012's delegation lane. An assistant
+  does not edit the checks that apply to its own work to get a change through.
+
+**Sign-off.** An assistant does not sign under its own name, and a trailer is not
+added under a name its owner has not configured. A sign-off still reads as "the
+maintainer takes responsibility for this contribution". Under this model that
+rests on three things: the checks the assistant ran while working, CI, and the
+maintainer's decision to merge. A session that runs under the assistant's own
+git identity leaves `Co-Authored-By` only, and the maintainer's sign-off is added
+before a pull request with `git rebase --signoff origin/main`, as the DCO
+workflow already says.
 
 ## What would change this
 
