@@ -134,4 +134,4 @@ Use this to prepare a review of any classifier or pipeline PR. Report unmet item
 
 ## ADRs
 
-Write one when a decision constrains future work, picks between real alternatives, or reverses an earlier ADR. Numbered files at `docs/adr/NNNN-slug.md` with four sections: Context, Decision, Consequences, and Revisit triggers. The revisit triggers are what make ADRs useful two years later; ADR-0001's Postgres triggers are the model. Keep each ADR under a page. If it needs more, the decision probably isn't crisp yet.
+Write one when a decision constrains future work, picks between real alternatives, or reverses an earlier ADR. Numbered files at `docs/adr/NNNN-slug.md` with four sections: Context, Decision, Consequences, and Revisit triggers. The revisit triggers are what make ADRs useful two years later; ADR-0001's Postgres triggers are the model. Keep the Decision section short enough to state in a paragraph; if it can't be, the decision probably isn't crisp yet.
