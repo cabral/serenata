@@ -210,6 +210,7 @@ docs/
   data-reuse.md # TED's reuse terms and this project's attribution
   hypotheses/   # one file per classifier: hypothesis, sources, base rates
 data/sample/    # six notices in package layout: the end-to-end test's input
+video/          # a motion-graphics briefing for counsel (Node, HyperFrames); apart from the pipeline
 .claude/skills/ # the working rules this project is built to, in long form
 ```
 
