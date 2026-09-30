@@ -339,9 +339,11 @@ It reads Markdown and nothing else. No dataset, archive or flag is an input, and
 the only flag records on any page are produced by running the real rule over an
 invented market and labelled synthetic. Each page is one file with its styles and
 script inside, makes no request to anyone, and opens from a folder or an email
-attachment. Nothing is deployed and the pages ask not to be indexed; why, and what
-would have to change first, is
-[ADR-0014](docs/adr/0014-a-site-that-cannot-show-a-flag.md).
+attachment. Nothing is deployed until someone runs the manual Pages workflow, and
+the pages ask not to be indexed. [ADR-0014](docs/adr/0014-a-site-that-cannot-show-a-flag.md)
+says why the site cannot show a flag, and
+[ADR-0015](docs/adr/0015-publish-the-pages-on-github-pages-by-hand.md) how it is
+published.
 
 ## Running the tests
 

@@ -18,7 +18,7 @@ from pathlib import Path
 from textwrap import dedent
 
 WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
-NAMES = ("ci", "audit", "contract", "dco", "merge-review")
+NAMES = ("ci", "audit", "contract", "dco", "merge-review", "pages")
 ACTION_LINE = re.compile(r"^\s*(?:-\s+)?uses:\s*(.+)$", re.MULTILINE)
 PINNED_ACTION = re.compile(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}\s+#\s+v\d[\w.-]*")
 UV_LINE = re.compile(r"^\s*run:\s*(uv\s+.+)$", re.MULTILINE)
@@ -56,6 +56,31 @@ def check_ci_measurement_gate(text: str) -> None:
         )
 
 
+def check_pages_is_manual(text: str) -> None:
+    """The Pages workflow may only be started by a person (ADR-0015).
+
+    Lexical, like the checks above: it reads the top-level ``on:`` block and the
+    branch guard, not the YAML. Anything that starts a run by itself (a push, a
+    pull request, a schedule) would turn a merge into a publication.
+    """
+    block = re.search(r"^on:\n((?:[ \t]+.*\n)+)", text, re.MULTILINE)
+    assert block, "No trigger block checked"
+    triggers = re.findall(r"^[ \t]{2}([\w-]+):", block.group(1), re.MULTILINE)
+    assert triggers == ["workflow_dispatch"], triggers
+    assert text.count("github.ref == 'refs/heads/main'") == 2, (
+        "both jobs must refuse any branch but main"
+    )
+
+
+def check_pages_write_access_is_the_deploy_jobs(text: str) -> None:
+    """Only the job that deploys may hold the two Pages permissions."""
+    assert re.search(r"^permissions:\n  contents: read$", text, re.MULTILINE)
+    deploy = text.index("\n  deploy:")
+    for permission in ("pages: write", "id-token: write"):
+        assert text.count(permission) == 1, permission
+        assert text.index(permission) > deploy, permission
+
+
 def dco_script() -> str:
     """Extract explicitly marked shell, without interpreting the surrounding YAML."""
     text = (WORKFLOWS / "dco.yml").read_text(encoding="utf-8")
@@ -87,7 +112,7 @@ class TestWorkflowSource(unittest.TestCase):
         check_action_pins(f"      - uses: actions/checkout@{sha} # v7\n")
 
     def test_inline_uv_commands_keep_the_lockfile(self) -> None:
-        for name in ("ci", "audit", "contract"):
+        for name in ("ci", "audit", "contract", "pages"):
             with self.subTest(workflow=name):
                 check_inline_uv_locks((WORKFLOWS / f"{name}.yml").read_text())
 
@@ -108,6 +133,56 @@ class TestWorkflowSource(unittest.TestCase):
             )
         with self.assertRaisesRegex(AssertionError, "No CI pytest"):
             check_ci_measurement_gate("run: uv run --locked ruff check .\n")
+
+
+class TestPagesWorkflow(unittest.TestCase):
+    """ADR-0015: publishing takes a person, on main, with narrow permissions."""
+
+    def text(self) -> str:
+        return (WORKFLOWS / "pages.yml").read_text(encoding="utf-8")
+
+    def test_it_can_only_be_started_by_hand_and_only_from_main(self) -> None:
+        check_pages_is_manual(self.text())
+
+    def test_only_the_deploy_job_can_write_to_pages(self) -> None:
+        check_pages_write_access_is_the_deploy_jobs(self.text())
+
+    def test_it_builds_from_the_lockfile_into_the_directory_it_uploads(self) -> None:
+        text = self.text()
+        self.assertIn("uv run --locked python -m serenata.site --out _site", text)
+        self.assertIn("path: _site", text)
+
+    def test_an_automatic_trigger_is_rejected(self) -> None:
+        text = self.text()
+        for trigger in ("push", "pull_request", "schedule", "release"):
+            with self.subTest(trigger=trigger):
+                changed = text.replace(
+                    "  workflow_dispatch:\n", f"  workflow_dispatch:\n  {trigger}:\n", 1
+                )
+                self.assertNotEqual(changed, text)
+                with self.assertRaises(AssertionError):
+                    check_pages_is_manual(changed)
+        with self.assertRaises(AssertionError):
+            check_pages_is_manual("name: Pages\n")
+
+    def test_a_job_that_runs_from_any_branch_is_rejected(self) -> None:
+        text = self.text()
+        self.assertEqual(text.count("github.ref == 'refs/heads/main'"), 2)
+        with self.assertRaisesRegex(AssertionError, "any branch but main"):
+            check_pages_is_manual(
+                text.replace("if: github.ref == 'refs/heads/main'", "", 1)
+            )
+
+    def test_write_access_at_the_top_level_is_rejected(self) -> None:
+        text = self.text()
+        widened = text.replace(
+            "permissions:\n  contents: read\n",
+            "permissions:\n  contents: read\n  pages: write\n",
+            1,
+        )
+        self.assertNotEqual(widened, text)
+        with self.assertRaises(AssertionError):
+            check_pages_write_access_is_the_deploy_jobs(widened)
 
 
 class TestDcoShell(unittest.TestCase):

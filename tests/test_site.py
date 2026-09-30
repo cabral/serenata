@@ -779,6 +779,12 @@ class TestPagesAreWellFormed:
                     continue
                 assert link.split("#")[0] in names, f"{name}: {link}"
 
+    def test_links_work_under_a_subpath(self, pages: dict[str, str]) -> None:
+        # GitHub Pages serves a repository at /<name>/ (ADR-0015), so a link that
+        # starts with a slash would leave the site. Every internal one is relative.
+        for name, source in pages.items():
+            assert not re.search(r"""(?:href|src|action)=["']/(?!/)""", source), name
+
     def test_every_field_has_a_label(self, audits: dict[str, Audit]) -> None:
         for name, audit in audits.items():
             assert audit.inputs_outside_label == [], name

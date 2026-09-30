@@ -124,8 +124,10 @@ joining on it may match more rows than it means to**.
 verification interface: it shows no real flag, and the only flag records on it are
 the real rule's output on an invented market. What to know before relying on it:
 
-- **Nothing is deployed**, and the pages ask not to be indexed. Hosting,
-  analytics and indexing each need their own privacy assessment first.
+- **Nothing is deployed until someone runs the Pages workflow by hand**
+  ([ADR-0015](adr/0015-publish-the-pages-on-github-pages-by-hand.md)), and the
+  pages ask not to be indexed. A custom domain, analytics and indexing each need
+  their own privacy assessment first.
 - **Its links point at the default branch.** Pages built from an unmerged branch
   link to files that branch adds before they exist there.
 - **The documents it reads are interfaces.** Renaming a heading or reshaping a

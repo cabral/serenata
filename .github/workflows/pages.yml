@@ -1,0 +1,57 @@
+name: Pages
+
+# Publishes the site to GitHub Pages (ADR-0015).
+#
+# Manual on purpose. Deploying is publishing, and publishing takes a person
+# saying so (CLAUDE.md, ADR-0009), so this workflow has no push, pull request or
+# schedule trigger. Do not add one without amending ADR-0015.
+#
+# It also refuses any branch but main: the pages link to files on main, and the
+# github-pages environment should carry the same rule (repository settings,
+# Environments). Nothing is published until the owner has set the Pages source
+# to "GitHub Actions" and started this workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked
+      # Stops here, naming the document, if one the site reads has changed shape
+      # or two of them disagree. A page is not published on a guess.
+      - name: Build the site
+        run: uv run --locked python -m serenata.site --out _site
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -2,6 +2,8 @@
 
 - Status: proposed
 - Date: 2026-09-29
+- Amendment: 2026-09-30, the hosting trigger fired: see
+  [ADR-0015](0015-publish-the-pages-on-github-pages-by-hand.md)
 - Enforced by: `tests/test_site.py::TestTheSiteCannotPublishFlags` and
   `tests/test_site.py::TestTheBuildIsReproducible`. Hosting, and whether the
   pages may be indexed, are not enforced by anything: nothing is deployed.
