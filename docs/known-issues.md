@@ -117,6 +117,26 @@ across all 19,180 notices measured. `source_notice_id` is kept on every row
 because it is what links a corrigendum to what it corrects, and **anything
 joining on it may match more rows than it means to**.
 
+## The site is a preview, and it reads the documents as written
+
+`python -m serenata.site` renders five pages from this repository's Markdown
+([ADR-0014](adr/0014-a-site-that-cannot-show-a-flag.md)). It is not milestone 5's
+verification interface: it shows no real flag, and the only flag records on it are
+the real rule's output on an invented market. What to know before relying on it:
+
+- **Nothing is deployed**, and the pages ask not to be indexed. Hosting,
+  analytics and indexing each need their own privacy assessment first.
+- **Its links point at the default branch.** Pages built from an unmerged branch
+  link to files that branch adds before they exist there.
+- **The documents it reads are interfaces.** Renaming a heading or reshaping a
+  table it reads fails `tests/test_site.py`, naming the document, by design.
+- **The rule explainer is a second implementation** of the rule's comparison, in
+  JavaScript, held to the Python by a test that needs Node. CI has Node; a
+  machine without it skips that test and says so.
+- **It borrows the original project's layout and palette**, and none of its words,
+  logo or partner marks. The independence statement in each footer discloses the
+  resemblance.
+
 ## Legacy TED notices are refused, not parsed
 
 Notices published before eForms became mandatory during 2024 use the legacy TED

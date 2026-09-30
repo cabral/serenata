@@ -34,6 +34,11 @@ publication is not built.
 packages and writes the generated reports under `docs/`. It is analysis, not a
 stage, and nothing downstream depends on it.
 
+`site` sits beside them the same way. It renders the project's own documents as
+pages for counsel, journalists and funders, reads no data, and is not the
+`publish` stage: no real flag can reach a page through it
+([ADR-0014](adr/0014-a-site-that-cannot-show-a-flag.md)).
+
 ## The four boundaries, and what each one guarantees
 
 ### 1. TED → the raw archive: *this is the only place the network exists*

@@ -166,7 +166,7 @@ what the pipeline does not do, or does incompletely. The milestone plan:
 | 2 | Anomaly classifier suite, each a documented hypothesis with measured base rates | one rule built and measured; verification pending |
 | 3 | Entity resolution against open national company registers | not started |
 | 4 | Public API and versioned bulk data releases | not started |
-| 5 | Verification interface (every flag, its hypothesis, its source notice) | not started |
+| 5 | Verification interface (every flag, its hypothesis, its source notice) | not started; a preview with synthetic records only exists ([ADR-0014](docs/adr/0014-a-site-that-cannot-show-a-flag.md)) |
 | 6 | Documentation, packaging, contributor onboarding | underway |
 
 ## Layout
@@ -191,6 +191,7 @@ serenata/
     dataset.py  #   sorted, pinned, partitioned Parquet writing
   classify/     # hypothesis classifiers, one module each
   survey/       # measures which eForms fields notices populate (analysis, not a stage)
+  site/         # renders status pages from the docs: reads no data, not a stage
   cli.py        # entry point: serenata fetch|normalise|classify
 tests/
   test_constraints.py  # the hard constraints, executable
@@ -320,6 +321,27 @@ in a single publication day.
 Rerunning a package rewrites its own files, byte for byte identically. A notice
 that cannot be read, or that the model cannot map, is reported and counted
 rather than dropped, and the command exits non-zero when a run loses one.
+
+## The site
+
+```
+uv run --locked python -m serenata.site        # writes the pages to the site directory
+```
+
+Five pages for people who need something to look at that is not a terminal: an
+overview, how the pipeline works, how a flag is read and checked, status, and a
+page for counsel on what the project holds and what it is asking. They are
+rendered from this repository's own documents, so no figure on them has a second
+home, and the build stops, naming the document, if one of them changes shape or
+two disagree.
+
+It reads Markdown and nothing else. No dataset, archive or flag is an input, and
+the only flag records on any page are produced by running the real rule over an
+invented market and labelled synthetic. Each page is one file with its styles and
+script inside, makes no request to anyone, and opens from a folder or an email
+attachment. Nothing is deployed and the pages ask not to be indexed; why, and what
+would have to change first, is
+[ADR-0014](docs/adr/0014-a-site-that-cannot-show-a-flag.md).
 
 ## Running the tests
 
